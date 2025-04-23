@@ -17,10 +17,11 @@ function populateFilters(data) {
   const filters = [
     { id: 'campeonato', index: 0 },
     { id: 'mandante', index: 4 },
-    { id: 'visitante', index: 6 },
+    { id: 'visitante', index: 7 },
     { id: 'local', index: 8 },
     { id: 'rodada', index: 9 },
-    { id: 'diaSemana', index: 10 }
+    { id: 'diaSemana', index: 10 },
+    { id: 'gol', index: 11 }
   ];
 
   filters.forEach(filter => {
@@ -40,7 +41,7 @@ function displayData(data, filters = {}) {
   tbody.innerHTML = '';
 
   const filteredData = data.slice(1).filter(row => {
-    const [campeonato, dataStr, horario, ginasio, mandante, placar1, visitante, placar2, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate] = row;
+    const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate] = row;
     const data = new Date(dataStr.split('/').reverse().join('-'));
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
@@ -49,7 +50,6 @@ function displayData(data, filters = {}) {
       (!filters.campeonato || campeonato === filters.campeonato) &&
       (!dataInicio || data >= dataInicio) &&
       (!dataFim || data <= dataFim) &&
-      (!filters.horario || horario.includes(filters.horario)) &&
       (!filters.ginasio || ginasio.includes(filters.ginasio)) &&
       (!filters.mandante || mandante === filters.mandante) &&
       (!filters.visitante || visitante === filters.visitante) &&
@@ -65,9 +65,14 @@ function displayData(data, filters = {}) {
 
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
-    row.forEach(cell => {
+    row.forEach((cell, index) => {
       const td = document.createElement('td');
-      td.textContent = cell;
+      // Para Vitória (index 13), Derrota (index 14), Empate (index 15), mostrar "Sim" para 1, vazio para 0
+      if (index === 13 || index === 14 || index === 15) {
+        td.textContent = cell === '1' ? 'Sim' : '';
+      } else {
+        td.textContent = cell;
+      }
       td.className = 'p-2 border';
       tr.appendChild(td);
     });
@@ -80,7 +85,6 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
     campeonato: document.getElementById('campeonato').value,
     dataInicio: document.getElementById('dataInicio').value,
     dataFim: document.getElementById('dataFim').value,
-    horario: document.getElementById('horario').value,
     ginasio: document.getElementById('ginasio').value,
     mandante: document.getElementById('mandante').value,
     visitante: document.getElementById('visitante').value,
@@ -94,6 +98,23 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
   };
   const data = await fetchSheetData();
   displayData(data, filters);
+});
+
+document.getElementById('limparFiltros').addEventListener('click', () => {
+  document.getElementById('campeonato').value = '';
+  document.getElementById('dataInicio').value = '';
+  document.getElementById('dataFim').value = '';
+  document.getElementById('ginasio').value = '';
+  document.getElementById('mandante').value = '';
+  document.getElementById('visitante').value = '';
+  document.getElementById('local').value = '';
+  document.getElementById('rodada').value = '';
+  document.getElementById('diaSemana').value = '';
+  document.getElementById('gol').value = '';
+  document.getElementById('assistencias').value = '';
+  document.getElementById('vitoria').value = '';
+  document.getElementById('empate').value = '';
+  fetchSheetData().then(data => displayData(data));
 });
 
 async function init() {

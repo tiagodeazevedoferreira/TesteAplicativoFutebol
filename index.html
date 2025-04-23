@@ -72,10 +72,6 @@
           <input type="date" id="dataFim" class="w-full p-2 border rounded">
         </div>
         <div>
-          <label for="horario">Horário:</label>
-          <input type="text" id="horario" class="w-full p-2 border rounded" placeholder="Ex.: 15:00">
-        </div>
-        <div>
           <label for="ginasio">Ginásio:</label>
           <input type="text" id="ginasio" class="w-full p-2 border rounded" placeholder="Ex.: Municipal">
         </div>
@@ -110,8 +106,10 @@
           </select>
         </div>
         <div>
-          <label for="gol">Gol:</label>
-          <input type="text" id="gol" class="w-full p-2 border rounded" placeholder="Ex.: 3">
+          <label for="gol">Gols:</label>
+          <select id="gol" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
         </div>
         <div>
           <label for="assistencias">Assistências:</label>
@@ -121,20 +119,23 @@
           <label for="vitoria">Vitória:</label>
           <select id="vitoria" class="w-full p-2 border rounded">
             <option value="">Todos</option>
-            <option value="Sim">Sim</option>
-            <option value="Não">Não</option>
+            <option value="1">Sim</option>
+            <option value="0">Não</option>
           </select>
         </div>
         <div>
           <label for="empate">Empate:</label>
           <select id="empate" class="w-full p-2 border rounded">
             <option value="">Todos</option>
-            <option value="Sim">Sim</option>
-            <option value="Não">Não</option>
+            <option value="1">Sim</option>
+            <option value="0">Não</option>
           </select>
         </div>
       </div>
-      <button id="aplicarFiltros" class="mt-4 bg-blue-500 text-white p-2 rounded">Aplicar Filtros</button>
+      <div class="mt-4">
+        <button id="aplicarFiltros" class="bg-blue-500 text-white p-2 rounded mr-2">Aplicar Filtros</button>
+        <button id="limparFiltros" class="bg-gray-500 text-white p-2 rounded">Limpar Filtros</button>
+      </div>
     </div>
     
     <!-- Tabela -->
@@ -147,9 +148,9 @@
             <th class="p-2">Horário</th>
             <th class="p-2">Ginásio</th>
             <th class="p-2">Mandante</th>
-            <th class="p-2">Placar1</th>
+            <th class="p-2"></th>
+            <th class="p-2"></th>
             <th class="p-2">Visitante</th>
-            <th class="p-2">Placar2</th>
             <th class="p-2">Local</th>
             <th class="p-2">Rodada</th>
             <th class="p-2">Dia da Semana</th>
