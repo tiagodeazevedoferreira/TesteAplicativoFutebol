@@ -67,7 +67,6 @@ function displayData(data, filters = {}) {
     const tr = document.createElement('tr');
     row.forEach((cell, index) => {
       const td = document.createElement('td');
-      // Para Vitória (index 13), Derrota (index 14), Empate (index 15), mostrar "Sim" para 1, vazio para 0
       if (index === 13 || index === 14 || index === 15) {
         td.textContent = cell === '1' ? 'Sim' : '';
       } else {
