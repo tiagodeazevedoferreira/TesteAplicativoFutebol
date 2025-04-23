@@ -67,12 +67,14 @@ function displayData(data, filters = {}) {
   // Calcular Big Numbers
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
   filteredData.forEach(row => {
-    if (row[11] !== '') {
-      jogos++;
-      gols += parseInt(row[11]) || 0; // Soma apenas se Gol está preenchido
+    if (row[5] !== '') {
+      jogos++; // Conta jogos onde Placar1 (coluna F) está preenchido
     }
-    if (row[12] !== '') {
-      assistencias += parseInt(row[12]) || 0; // Soma apenas se Assistências está preenchido
+    if (row[11] !== '' && !isNaN(parseInt(row[11]))) {
+      gols += parseInt(row[11]); // Soma apenas se Gol está preenchido e é numérico
+    }
+    if (row[12] !== '' && !isNaN(parseInt(row[12]))) {
+      assistencias += parseInt(row[12]); // Soma apenas se Assistências está preenchido e é numérico
     }
     vitorias += row[13] ? parseInt(row[13]) : 0;
     derrotas += row[14] ? parseInt(row[14]) : 0;
@@ -85,11 +87,11 @@ function displayData(data, filters = {}) {
   // Atualizar Big Numbers na interface
   document.getElementById('bigNumberJogos').textContent = jogos;
   document.getElementById('bigNumberGols').textContent = gols;
-  document.getElementById('bigNumberMedia').textContent = media;
   document.getElementById('bigNumberAssistencias').textContent = assistencias;
   document.getElementById('bigNumberVitorias').textContent = vitorias;
   document.getElementById('bigNumberEmpates').textContent = empates;
   document.getElementById('bigNumberDerrotas').textContent = derrotas;
+  document.getElementById('bigNumberMedia').textContent = media;
 
   // Preencher tabela
   filteredData.forEach(row => {
