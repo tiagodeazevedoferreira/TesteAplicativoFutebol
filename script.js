@@ -67,8 +67,8 @@ function displayData(data, filters = {}) {
   // Calcular Big Numbers
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
   filteredData.forEach(row => {
-    if (row[5] !== '') {
-      jogos++; // Conta jogos onde Placar1 (coluna F) está preenchido
+    if (row[5] !== '' && row[5] !== undefined && row[5].trim() !== '') {
+      jogos++; // Conta jogos onde Placar1 (coluna F) está preenchido e não é espaço em branco
     }
     if (row[11] !== '' && !isNaN(parseInt(row[11]))) {
       gols += parseInt(row[11]); // Soma apenas se Gol está preenchido e é numérico
