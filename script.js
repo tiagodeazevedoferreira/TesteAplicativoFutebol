@@ -19,7 +19,7 @@ function populateFilters(data) {
     { id: 'mandante', index: 4 },
     { id: 'visitante', index: 7 },
     { id: 'local', index: 8 },
-    { id: 'rodada', index: 9 },
+    { id: 'rodada', index: 9 }, // Garante valores únicos para Rodada (ex.: "1ª Rodada" aparece uma vez)
     { id: 'diaSemana', index: 10 },
     { id: 'gol', index: 11 },
     { id: 'assistencias', index: 12 }
@@ -64,6 +64,26 @@ function displayData(data, filters = {}) {
     );
   });
 
+  // Calcular Big Numbers
+  let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
+  filteredData.forEach(row => {
+    if (row[11] !== '') jogos++;
+    gols += row[11] ? parseInt(row[11]) : 0;
+    assistencias += row[12] ? parseInt(row[12]) : 0;
+    vitorias += row[13] ? parseInt(row[13]) : 0;
+    derrotas += row[14] ? parseInt(row[14]) : 0;
+    empates += row[15] ? parseInt(row[15]) : 0;
+  });
+
+  // Atualizar Big Numbers na interface
+  document.getElementById('bigNumberJogos').textContent = jogos;
+  document.getElementById('bigNumberGols').textContent = gols;
+  document.getElementById('bigNumberAssistencias').textContent = assistencias;
+  document.getElementById('bigNumberVitorias').textContent = vitorias;
+  document.getElementById('bigNumberEmpates').textContent = empates;
+  document.getElementById('bigNumberDerrotas').textContent = derrotas;
+
+  // Preencher tabela
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
     row.forEach((cell, index) => {
