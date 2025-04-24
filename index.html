@@ -54,7 +54,7 @@
     <h1 class="text-2xl font-bold text-center mb-4">Controle de Jogos de Futebol</h1>
     
     <!-- Big Numbers -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
       <div class="bg-white p-4 rounded shadow text-center">
         <h3 class="text-lg font-semibold">Jogos</h3>
         <p id="bigNumberJogos" class="text-2xl font-bold">0</p>
@@ -63,13 +63,17 @@
         <h3 class="text-lg font-semibold">Gols</h3>
         <p id="bigNumberGols" class="text-2xl font-bold">0</p>
       </div>
-            <div class="bg-white p-4 rounded shadow text-center">
-        <h3 class="text-lg font-semibold">Média</h3>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <h3 class="text-lg font-semibold">Média de Gols</h3>
         <p id="bigNumberMedia" class="text-2xl font-bold">0.00</p>
       </div>
       <div class="bg-white p-4 rounded shadow text-center">
         <h3 class="text-lg font-semibold">Assistências</h3>
         <p id="bigNumberAssistencias" class="text-2xl font-bold">0</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <h3 class="text-lg font-semibold">Gol a Cada</h3>
+        <p id="bigNumberGolACada" class="text-2xl font-bold">0.00</p>
       </div>
       <div class="bg-white p-4 rounded shadow text-center">
         <h3 class="text-lg font-semibold">Vitórias</h3>
@@ -83,7 +87,6 @@
         <h3 class="text-lg font-semibold">Derrotas</h3>
         <p id="bigNumberDerrotas" class="text-2xl font-bold">0</p>
       </div>
-
     </div>
     
     <!-- Filtros -->
@@ -106,7 +109,9 @@
         </div>
         <div>
           <label for="ginasio">Ginásio:</label>
-          <input type="text" id="ginasio" class="w-full p-2 border rounded" placeholder="Ex.: Municipal">
+          <select id="ginasio" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
         </div>
         <div>
           <label for="mandante">Mandante:</label>
