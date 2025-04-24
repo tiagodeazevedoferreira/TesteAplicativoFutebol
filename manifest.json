@@ -1,0 +1,22 @@
+{
+  "name": "Jogos Futebol",
+  "short_name": "Futebol",
+  "description": "Aplicação para controle de jogos de futebol",
+  "start_url": "./",
+  "scope": "/TesteAplicativoFutebol/",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/TesteAplicativoFutebol/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/TesteAplicativoFutebol/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
