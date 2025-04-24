@@ -59,9 +59,9 @@ function displayData(data, filters = {}) {
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
-    // Verificar filtros R e Considerar com condições robustas
-    const isValidR = row[17] && row[17].trim() !== '0' && row[17].trim() !== '';
-    const isValidConsiderar = row[16] && row[16].trim() !== '0' && row[16].trim() !== '';
+    // Verificar filtros R e Considerar
+    const isValidR = row[17] !== '0';
+    const isValidConsiderar = row[16] !== '0';
 
     // Log temporário para debugging
     if (isValidR && isValidConsiderar && placar1 && placar1.trim() !== '') {
