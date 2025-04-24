@@ -2,7 +2,7 @@ const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
 const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
 async function fetchSheetData() {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet2!A1:R1000?key=${API_KEY}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet2!A1:S1000?key=${API_KEY}`;
   try {
     const response = await fetch(url);
     const data = await response.json();
@@ -17,8 +17,6 @@ function populateFilters(data) {
   const filters = [
     { id: 'campeonato', index: 0 },
     { id: 'ginasio', index: 3 },
-    { id: 'mandante', index: 4 },
-    { id: 'visitante', index: 7 },
     { id: 'local', index: 8 },
     { id: 'rodada', index: 9 },
     { id: 'diaSemana', index: 10 },
@@ -26,6 +24,19 @@ function populateFilters(data) {
     { id: 'assistencias', index: 12 }
   ];
 
+  // Filtro Time (combina Mandante e Visitante)
+  const timeSelect = document.getElementById('time');
+  const mandantes = data.slice(1).map(row => row[4]?.trim()).filter(v => v);
+  const visitantes = data.slice(1).map(row => row[7]?.trim()).filter(v => v);
+  const times = [...new Set([...mandantes, ...visitantes])].sort();
+  times.forEach(value => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value;
+    timeSelect.appendChild(option);
+  });
+
+  // Outros filtros
   filters.forEach(filter => {
     const select = document.getElementById(filter.id);
     const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
@@ -43,19 +54,19 @@ function displayData(data, filters = {}) {
   tbody.innerHTML = '';
 
   const filteredData = data.slice(1).filter(row => {
-    const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, , colunaR] = row;
+    const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, , colunaR, considerar] = row;
     const data = new Date(dataStr.split('/').reverse().join('-'));
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
     return (
       colunaR !== '0' &&
+      considerar !== '0' &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
       (!dataInicio || data >= dataInicio) &&
       (!dataFim || data <= dataFim) &&
       (!filters.ginasio || ginasio === filters.ginasio) &&
-      (!filters.mandante || mandante === filters.mandante) &&
-      (!filters.visitante || visitante === filters.visitante) &&
+      (!filters.time || mandante === filters.time || visitante === filters.time) &&
       (!filters.local || local === filters.local) &&
       (!filters.rodada || rodada === filters.rodada) &&
       (!filters.diaSemana || diaSemana === filters.diaSemana) &&
@@ -120,8 +131,7 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
     dataInicio: document.getElementById('dataInicio').value,
     dataFim: document.getElementById('dataFim').value,
     ginasio: document.getElementById('ginasio').value,
-    mandante: document.getElementById('mandante').value,
-    visitante: document.getElementById('visitante').value,
+    time: document.getElementById('time').value,
     local: document.getElementById('local').value,
     rodada: document.getElementById('rodada').value,
     diaSemana: document.getElementById('diaSemana').value,
@@ -139,8 +149,7 @@ document.getElementById('limparFiltros').addEventListener('click', () => {
   document.getElementById('dataInicio').value = '';
   document.getElementById('dataFim').value = '';
   document.getElementById('ginasio').value = '';
-  document.getElementById('mandante').value = '';
-  document.getElementById('visitante').value = '';
+  document.getElementById('time').value = '';
   document.getElementById('local').value = '';
   document.getElementById('rodada').value = '';
   document.getElementById('diaSemana').value = '';
