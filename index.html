@@ -47,9 +47,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#1e40af">
   <title>Controle de Jogos de Futebol</title>
-  <link rel="stylesheet" href="https://tiagodeazevedoferreira.github.io/TesteAplicativoFutebol/style.css">
-  <link rel="manifest" href="https://tiagodeazevedoferreira.github.io/TesteAplicativoFutebol/manifest.json">
-  <link rel="apple-touch-icon" href="https://tiagodeazevedoferreira.github.io/TesteAplicativoFutebol/icon.png">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -214,9 +214,28 @@
             console.log('Service Worker desregistrado:', registration.scope);
           });
         }
+      }).catch(err => {
+        console.error('Erro ao desregistrar Service Workers:', err);
       });
     }
+
+    // Capturar erros de script
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('Erro de script detectado:', {
+        message: message,
+        source: source,
+        line: lineno,
+        column: colno,
+        error: error
+      });
+      const errorDiv = document.getElementById('errorMessage');
+      if (errorDiv) {
+        errorDiv.textContent = 'Erro ao carregar a aplicação. Verifique o console para detalhes.';
+        errorDiv.style.display = 'block';
+      }
+      return false;
+    };
   </script>
-  <script src="https://tiagodeazevedoferreira.github.io/TesteAplicativoFutebol/script.js"></script>
+  <script src="./script.js" onerror="console.error('Falha ao carregar script.js'); document.getElementById('errorMessage').textContent = 'Erro ao carregar script.js'; document.getElementById('errorMessage').style.display = 'block';"></script>
 </body>
 </html>
