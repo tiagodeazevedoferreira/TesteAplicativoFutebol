@@ -132,13 +132,11 @@ function displayData(data, filters = {}) {
     // Normalizar o valor de considerar
     const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim() : '';
     const isValidConsiderar = considerarValue !== '0';
-    const isValidPlacar1 = placar1 && placar1.trim() !== '';
 
-    console.log(`Linha ${index + 2}: Placar1=${placar1 || 'vazio'}, Considerar=${considerarValue || 'vazio'}, isValidConsiderar=${isValidConsiderar}, isValidPlacar1=${isValidPlacar1}, Incluída=${isValidConsiderar && isValidPlacar1}`);
+    console.log(`Linha ${index + 2}: Placar1=${placar1 || 'vazio'}, Considerar=${considerarValue || 'vazio'}, isValidConsiderar=${isValidConsiderar}, Incluída=${isValidConsiderar}`);
 
     return (
       isValidConsiderar &&
-      isValidPlacar1 &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
       (!dataInicio || (data && data >= dataInicio)) &&
       (!dataFim || (data && data <= dataFim)) &&
@@ -161,7 +159,9 @@ function displayData(data, filters = {}) {
 
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
   filteredData.forEach(row => {
-    if (row[5] && row[5].trim() !== '') {
+    const placar1 = row[5];
+    const isValidPlacar1 = placar1 && placar1.trim() !== '';
+    if (isValidPlacar1) {
       jogos++;
     }
     if (row[11] && !isNaN(parseInt(row[11]))) {
