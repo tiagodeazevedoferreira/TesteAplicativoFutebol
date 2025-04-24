@@ -57,7 +57,7 @@
     <h1 class="text-2xl font-bold mb-4">Controle de Jogos de Futebol</h1>
 
     <!-- Mensagem de Erro -->
-    <div id="errorMessage" class="hidden bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
+    <div id="errorMessage" style="display: none;" class="bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
 
     <!-- Navegação das Abas -->
     <div class="tabs">
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Aba Filtros -->
-    <div id="filtros" class="tab-content active">
+    <div id="filtros" class="tab-content" style="display: block;">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         <div>
           <label for="campeonato" class="block text-sm font-medium">Campeonato</label>
@@ -149,7 +149,7 @@
     </div>
 
     <!-- Aba Jogos -->
-    <div id="jogos" class="tab-content hidden">
+    <div id="jogos" class="tab-content" style="display: none;">
       <table class="w-full border-collapse">
         <thead>
           <tr class="bg-gray-200">
@@ -176,7 +176,7 @@
     </div>
 
     <!-- Aba Detalhe (BigNumber) -->
-    <div id="detalhe" class="tab-content hidden">
+    <div id="detalhe" class="tab-content" style="display: none;">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white p-2 border rounded text-center">
           <h2 class="text-sm font-semibold">Jogos</h2>

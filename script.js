@@ -3,15 +3,23 @@ const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
 async function fetchSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
+  console.log('Buscando dados da API:', url);
   try {
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
+    }
     const data = await response.json();
-    console.log('Dados recebidos da API:', data.values ? data.values.length : 'Nenhum dado');
-    return data.values || [];
+    console.log('Dados brutos recebidos:', data);
+    if (!data.values || data.values.length === 0) {
+      throw new Error('Nenhum dado retornado pela API');
+    }
+    console.log('Linhas recebidas:', data.values.length);
+    return data.values;
   } catch (error) {
     console.error('Erro ao buscar dados:', error);
-    showError(`Erro ao carregar dados: ${error.message}`);
+    showError(`Erro ao carregar dados: ${error.message}. Verifique a chave API, ID da planilha ou se a planilha está pública.`);
     return [];
   }
 }
@@ -29,7 +37,7 @@ function clearError() {
 }
 
 function populateFilters(data) {
-  console.log('Populando filtros com dados:', data.length);
+  console.log('Populando filtros com', data.length, 'linhas');
   const filters = [
     { id: 'campeonato', index: 0 },
     { id: 'ginasio', index: 3 },
@@ -70,17 +78,22 @@ function displayData(data, filters = {}) {
   tbody.innerHTML = '';
 
   const filteredData = data.slice(1).filter((row, index) => {
-    if (!row || row.length < 17) return false;
+    if (!row || row.length < 17) {
+      console.log(`Linha ${index + 2} inválida:`, row);
+      return false;
+    }
     const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar] = row;
     const data = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
-    const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
+    const dataFim = filters.dataFim ? filters.dataFim ? new Date(filters.dataFim) : null;
 
     const isValidConsiderar = String(considerar) !== '0';
     const isValidPlacar1 = placar1 && placar1.trim() !== '';
 
     if (isValidConsiderar && isValidPlacar1) {
       console.log(`Linha ${index + 2} incluída: Placar1=${placar1}, Considerar=${considerar || 'nulo'}`);
+    } else {
+      console.log(`Linha ${index + 2} excluída: Placar1=${placar1}, Considerar=${considerar || 'nulo'}`);
     }
 
     return (
@@ -94,7 +107,7 @@ function displayData(data, filters = {}) {
       (!filters.local || local === filters.local) &&
       (!filters.rodada || rodada === filters.rodada) &&
       (!filters.diaSemana || diaSemana === filters.diaSemana) &&
-      (!filters.gol || gol Resort('gol', gol === filters.gol) &&
+      (!filters.gol || gol === filters.gol) &&
       (!filters.assistencias || assistencias === filters.assistencias) &&
       (!filters.vitoria || vitoria === filters.vitoria) &&
       (!filters.empate || empate === filters.empate)
@@ -103,7 +116,7 @@ function displayData(data, filters = {}) {
 
   console.log('Linhas filtradas:', filteredData.length);
   if (filteredData.length === 0) {
-    showError('Nenhum jogo encontrado com os filtros aplicados.');
+    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
   }
 
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
@@ -152,43 +165,39 @@ function displayData(data, filters = {}) {
 
 function openTab(tabName) {
   console.log('Abrindo aba:', tabName);
-
-  const tabs = document.querySelectorAll('.tab-content');
-  const buttons = document.querySelectorAll('.tab-button');
-
+  const tabs = ['filtros', 'jogos', 'detalhe'];
   tabs.forEach(tab => {
-    tab.classList.remove('active');
-    tab.style.display = 'none';
+    const element = document.getElementById(tab);
+    const button = document.getElementById(`tab-${tab}`);
+    if (tab === tabName) {
+      element.style.display = 'block';
+      element.classList.add('active');
+      button.classList.add('active');
+      console.log(`Aba ${tab} ativada`);
+    } else {
+      element.style.display = 'none';
+      element.classList.remove('active');
+      button.classList.remove('active');
+      console.log(`Aba ${tab} desativada`);
+    }
   });
-
-  buttons.forEach(button => {
-    button.classList.remove('active');
-  });
-
-  const targetTab = document.getElementById(tabName);
-  const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
-
-  if (targetTab) {
-    targetTab.classList.add('active');
-    targetTab.style.display = 'block';
-    console.log('Aba ativada:', tabName);
-  } else {
-    console.error('Aba não encontrada:', tabName);
-  }
-
-  if (targetButton) {
-    targetButton.classList.add('active');
-    console.log('Botão ativado:', tabName);
-  } else {
-    console.error('Botão não encontrado:', tabName);
-  }
 }
 
-document.getElementById('tab-filtros').addEventListener('click', () => openTab('filtros'));
-document.getElementById('tab-jogos').addEventListener('click', () => openTab('jogos'));
-document.getElementById('tab-detalhe').addEventListener('click', () => openTab('detalhe'));
+document.getElementById('tab-filtros').addEventListener('click', () => {
+  console.log('Clique em Filtros');
+  openTab('filtros');
+});
+document.getElementById('tab-jogos').addEventListener('click', () => {
+  console.log('Clique em Jogos');
+  openTab('jogos');
+});
+document.getElementById('tab-detalhe').addEventListener('click', () => {
+  console.log('Clique em Detalhe');
+  openTab('detalhe');
+});
 
 document.getElementById('aplicarFiltros').addEventListener('click', async () => {
+  console.log('Aplicando filtros');
   const filters = {
     campeonato: document.getElementById('campeonato').value,
     dataInicio: document.getElementById('dataInicio').value,
@@ -203,7 +212,7 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
     vitoria: document.getElementById('vitoria').value,
     empate: document.getElementById('empate').value
   };
-  console.log('Aplicando filtros:', filters);
+  console.log('Filtros aplicados:', filters);
   const data = await fetchSheetData();
   if (data.length > 0) {
     displayData(data, filters);
@@ -237,7 +246,7 @@ async function init() {
   const data = await fetchSheetData();
   if (data.length === 0) {
     console.error('Nenhum dado retornado na inicialização');
-    showError('Nenhum dado disponível. Verifique a conexão ou a planilha.');
+    showError('Nenhum dado disponível. Verifique a conexão, chave API ou planilha.');
     return;
   }
   populateFilters(data);
