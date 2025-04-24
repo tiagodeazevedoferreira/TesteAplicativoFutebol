@@ -24,6 +24,7 @@ function populateFilters(data) {
     { id: 'assistencias', index: 12 }
   ];
 
+  // Filtro Time (combina Mandante e Visitante)
   const timeSelect = document.getElementById('time');
   const mandantes = data.slice(1).map(row => row[4]?.trim()).filter(v => v);
   const visitantes = data.slice(1).map(row => row[7]?.trim()).filter(v => v);
@@ -35,6 +36,7 @@ function populateFilters(data) {
     timeSelect.appendChild(option);
   });
 
+  // Outros filtros
   filters.forEach(filter => {
     const select = document.getElementById(filter.id);
     const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
@@ -51,16 +53,25 @@ function displayData(data, filters = {}) {
   const tbody = document.getElementById('jogosBody');
   tbody.innerHTML = '';
 
-  const filteredData = data.slice(1).filter((row) => {
-    const [campeonato, dataStr, , ginasio, mandante, , , visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate] = row;
-    const date = new Date(dataStr?.split('/').reverse().join('-'));
+  const filteredData = data.slice(1).filter((row, index) => {
+    const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar] = row;
+    const data = new Date(dataStr.split('/').reverse().join('-'));
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
+    // Verificar filtro Considerar
+    const isValidConsiderar = String(row[16]) !== '0';
+
+    // Log temporário para debugging
+    if (isValidConsiderar && placar1 && placar1.trim() !== '') {
+      console.log(`Linha ${index + 2} incluída: Placar1=${placar1}, Considerar=${row[16] || 'nulo'}`);
+    }
+
     return (
+      isValidConsiderar &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
-      (!dataInicio || date >= dataInicio) &&
-      (!dataFim || date <= dataFim) &&
+      (!dataInicio || data >= dataInicio) &&
+      (!dataFim || data <= dataFim) &&
       (!filters.ginasio || ginasio === filters.ginasio) &&
       (!filters.time || mandante === filters.time || visitante === filters.time) &&
       (!filters.local || local === filters.local) &&
@@ -73,36 +84,47 @@ function displayData(data, filters = {}) {
     );
   });
 
-  let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, derrotas = 0, empates = 0;
+  // Calcular Big Numbers
+  let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
   filteredData.forEach(row => {
+    if (row[5] && row[5].trim() !== '') {
+      jogos++; // Conta jogos onde Placar1 (coluna F) está preenchido
+    }
     if (row[11] && !isNaN(parseInt(row[11]))) {
-      gols += parseInt(row[11]);
+      gols += parseInt(row[11]); // Soma apenas se Gol está preenchido e é numérico
     }
     if (row[12] && !isNaN(parseInt(row[12]))) {
-      assistencias += parseInt(row[12]);
+      assistencias += parseInt(row[12]); // Soma apenas se Assistências está preenchido e é numérico
     }
-    vitorias += parseInt(row[13] || 0);
-    derrotas += parseInt(row[14] || 0);
-    empates += parseInt(row[15] || 0);
-    jogos++;
+    vitorias += row[13] ? parseInt(row[13]) : 0;
+    derrotas += row[14] ? parseInt(row[14]) : 0;
+    empates += row[15] ? parseInt(row[15]) : 0;
   });
 
+  // Calcular Média de Gols (Gols / Jogos) e Gol a Cada (Jogos / Gols)
   const media = jogos > 0 ? (gols / jogos).toFixed(2) : '0.00';
-  const golACada = gols > 0 ? (jogos / gols).toFixed(2) : '0.00';
+  const golACada = jogos > 0 && gols > 0 ? (jogos / gols).toFixed(2) : '0.00';
 
+  // Atualizar Big Numbers na interface
   document.getElementById('bigNumberJogos').textContent = jogos;
   document.getElementById('bigNumberGols').textContent = gols;
   document.getElementById('bigNumberAssistencias').textContent = assistencias;
   document.getElementById('bigNumberVitorias').textContent = vitorias;
-  document.getElementById('bigNumberDerrotas').textContent = derrotas;
   document.getElementById('bigNumberEmpates').textContent = empates;
+  document.getElementById('bigNumberDerrotas').textContent = derrotas;
   document.getElementById('bigNumberMedia').textContent = media;
+  document.getElementById('bigNumberGolACada').textContent = golACada;
 
+  // Preencher tabela
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
-    row.slice(0, 16).forEach(cell => {
+    row.slice(0, 16).forEach((cell, index) => { // Exibir apenas colunas A a P
       const td = document.createElement('td');
-      td.textContent = cell;
+      if (index === 13 || index === 14 || index === 15) {
+        td.textContent = cell === '1' ? 'Sim' : '';
+      } else {
+        td.textContent = cell;
+      }
       td.className = 'p-2 border';
       tr.appendChild(td);
     });
@@ -125,13 +147,23 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
     vitoria: document.getElementById('vitoria').value,
     empate: document.getElementById('empate').value
   };
-
   const data = await fetchSheetData();
   displayData(data, filters);
 });
 
 document.getElementById('limparFiltros').addEventListener('click', () => {
-  document.querySelectorAll('#contentFiltros select, #contentFiltros input').forEach(input => input.value = '');
+  document.getElementById('campeonato').value = '';
+  document.getElementById('dataInicio').value = '';
+  document.getElementById('dataFim').value = '';
+  document.getElementById('ginasio').value = '';
+  document.getElementById('time').value = '';
+  document.getElementById('local').value = '';
+  document.getElementById('rodada').value = '';
+  document.getElementById('diaSemana').value = '';
+  document.getElementById('gol').value = '';
+  document.getElementById('assistencias').value = '';
+  document.getElementById('vitoria').value = '';
+  document.getElementById('empate').value = '';
   fetchSheetData().then(data => displayData(data));
 });
 
