@@ -20,11 +20,11 @@ tr:nth-child(even) {
   .filters {
     font-size: 0.9rem;
   }
-  
+
   table {
     font-size: 0.8rem;
   }
-  
+
   th, td {
     padding: 4px;
   }
