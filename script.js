@@ -105,7 +105,7 @@ function displayData(data, filters = {}) {
   const media = jogos > 0 ? (gols / jogos).toFixed(2) : '0.00';
   const golACada = jogos > 0 && gols > 0 ? (jogos / gols).toFixed(2) : '0.00';
 
-  // Atualizar Big Numbers na interface
+  // Atualizar Big Numbers na aba Detalhe
   document.getElementById('bigNumberJogos').textContent = jogos;
   document.getElementById('bigNumberGols').textContent = gols;
   document.getElementById('bigNumberAssistencias').textContent = assistencias;
@@ -115,7 +115,7 @@ function displayData(data, filters = {}) {
   document.getElementById('bigNumberMedia').textContent = media;
   document.getElementById('bigNumberGolACada').textContent = golACada;
 
-  // Preencher tabela
+  // Preencher tabela na aba Jogos
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
     row.slice(0, 16).forEach((cell, index) => { // Exibir apenas colunas A a P
@@ -130,6 +130,18 @@ function displayData(data, filters = {}) {
     });
     tbody.appendChild(tr);
   });
+}
+
+// Função para alternar abas
+function openTab(tabName) {
+  const tabs = document.querySelectorAll('.tab-content');
+  const buttons = document.querySelectorAll('.tab-button');
+
+  tabs.forEach(tab => tab.classList.add('hidden'));
+  buttons.forEach(button => button.classList.remove('active'));
+
+  document.getElementById(tabName).classList.remove('hidden');
+  document.querySelector(`button[onclick="openTab('${tabName}')"]`).classList.add('active');
 }
 
 document.getElementById('aplicarFiltros').addEventListener('click', async () => {
@@ -149,6 +161,7 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
   };
   const data = await fetchSheetData();
   displayData(data, filters);
+  openTab('jogos'); // Após aplicar filtros, mudar para a aba Jogos
 });
 
 document.getElementById('limparFiltros').addEventListener('click', () => {
@@ -165,12 +178,14 @@ document.getElementById('limparFiltros').addEventListener('click', () => {
   document.getElementById('vitoria').value = '';
   document.getElementById('empate').value = '';
   fetchSheetData().then(data => displayData(data));
+  openTab('filtros'); // Após limpar filtros, voltar para a aba Filtros
 });
 
 async function init() {
   const data = await fetchSheetData();
   populateFilters(data);
   displayData(data);
+  openTab('filtros'); // Iniciar na aba Filtros
 }
 
 init();
