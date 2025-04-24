@@ -121,14 +121,10 @@ function displayData(data, filters = {}) {
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
-    const isValidConsiderar = String(considerar) !== '0';
+    const isValidConsiderar = String(considerar).trim() !== '0';
     const isValidPlacar1 = placar1 && placar1.trim() !== '';
 
-    if (isValidConsiderar && isValidPlacar1) {
-      console.log(`Linha ${index + 2} incluída: Placar1=${placar1}, Considerar=${considerar || 'nulo'}`);
-    } else {
-      console.log(`Linha ${index + 2} excluída: Placar1=${placar1}, Considerar=${considerar || 'nulo'}`);
-    }
+    console.log(`Linha ${index + 2}: Placar1=${placar1 || 'vazio'}, Considerar=${considerar || 'vazio'}, Incluída=${isValidConsiderar && isValidPlacar1}`);
 
     return (
       isValidConsiderar &&
@@ -148,7 +144,7 @@ function displayData(data, filters = {}) {
     );
   });
 
-  console.log('Linhas filtradas:', filteredData.length);
+  console.log('Total de linhas filtradas:', filteredData.length);
   if (filteredData.length === 0) {
     showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
   }
