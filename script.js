@@ -53,21 +53,23 @@ function displayData(data, filters = {}) {
   const tbody = document.getElementById('jogosBody');
   tbody.innerHTML = '';
 
-  const filteredData = data.slice(1).filter((row, index) => {
-    const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar] = row;
+  const filteredData = data.slice(1).filter(row => {
+    const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar, colunaR] = row;
     const data = new Date(dataStr.split('/').reverse().join('-'));
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
-    // Verificar filtro Considerar
-    const isValidConsiderar = String(row[16]) !== '0';
+    // Verificar filtros R e Considerar com condições robustas
+    const isValidR = row[17] && row[17].trim() !== '0' && row[17].trim() !== '';
+    const isValidConsiderar = row[16] && row[16].trim() !== '0' && row[16].trim() !== '';
 
     // Log temporário para debugging
-    if (isValidConsiderar && placar1 && placar1.trim() !== '') {
-      console.log(`Linha ${index + 2} incluída: Placar1=${placar1}, Considerar=${row[16] || 'nulo'}`);
+    if (isValidR && isValidConsiderar && placar1 && placar1.trim() !== '') {
+      console.log(`Linha incluída: Placar1=${placar1}, R=${row[17]}, Considerar=${row[16]}`);
     }
 
     return (
+      isValidR &&
       isValidConsiderar &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
       (!dataInicio || data >= dataInicio) &&
@@ -167,6 +169,11 @@ document.getElementById('limparFiltros').addEventListener('click', () => {
   fetchSheetData().then(data => displayData(data));
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Marcar a primeira aba como ativa
+  document.querySelector('.tab').click();
+});
+
 async function init() {
   const data = await fetchSheetData();
   populateFilters(data);
@@ -174,3 +181,6 @@ async function init() {
 }
 
 init();
+
+
+

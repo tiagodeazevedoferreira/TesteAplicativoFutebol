@@ -29,3 +29,28 @@ tr:nth-child(even) {
     padding: 4px;
   }
 }
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+.tab.active {
+  background-color: #1e40af;
+  color: white;
+  font-weight: bold;
+}
+
+.tab-content.hidden {
+  display: none;
+}
