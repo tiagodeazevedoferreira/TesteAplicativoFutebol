@@ -13,13 +13,13 @@ async function fetchSheetData() {
     const data = await response.json();
     console.log('Dados brutos:', data);
     if (!data.values || data.values.length === 0) {
-      throw new Error('Nenhum dado retornado');
+      throw new Error('Nenhum dado retornado da planilha');
     }
     console.log('Linhas recebidas:', data.values.length);
     return data.values;
   } catch (error) {
     console.error('Erro ao buscar dados:', error);
-    showError(`Erro ao carregar dados: ${error.message}. Verifique a chave API, ID da planilha ou se a planilha está pública.`);
+    showError(`Erro ao carregar dados: ${error.message}. Verifique se a planilha está pública, a chave API está correta e o ID da planilha é válido.`);
     return [];
   }
 }
@@ -44,7 +44,7 @@ function populateFilters(data) {
     { id: 'local', index: 8 },
     { id: 'rodada', index: 9 },
     { id: 'diaSemana', index: 10 },
-    { id Photographic Coverage': 'gol', index: 11 },
+    { id: 'gol', index: 11 },
     { id: 'assistencias', index: 12 }
   ];
 
@@ -116,7 +116,7 @@ function displayData(data, filters = {}) {
 
   console.log('Linhas filtradas:', filteredData.length);
   if (filteredData.length === 0) {
-    showError('Nenhum jogo encontrado com os filtros aplicados.');
+    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
   }
 
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
@@ -157,7 +157,7 @@ function displayData(data, filters = {}) {
         td.textContent = cell || '';
       }
       td.className = 'p-2 border';
-      tr.appendChild(td);
+      tr.appendChild(tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
