@@ -3,17 +3,41 @@ const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
 async function fetchSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
+  console.log('Buscando dados:', url);
   try {
     const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro HTTP: ${response.status} - ${errorText}`);
+    }
     const data = await response.json();
-    return data.values || [];
+    console.log('Dados brutos:', data);
+    if (!data.values || data.values.length === 0) {
+      throw new Error('Nenhum dado retornado');
+    }
+    console.log('Linhas recebidas:', data.values.length);
+    return data.values;
   } catch (error) {
     console.error('Erro ao buscar dados:', error);
+    showError(`Erro ao carregar dados: ${error.message}. Verifique a chave API, ID da planilha ou se a planilha está pública.`);
     return [];
   }
 }
 
+function showError(message) {
+  const errorDiv = document.getElementById('errorMessage');
+  errorDiv.textContent = message;
+  errorDiv.style.display = 'block';
+}
+
+function clearError() {
+  const errorDiv = document.getElementById('errorMessage');
+  errorDiv.textContent = '';
+  errorDiv.style.display = 'none';
+}
+
 function populateFilters(data) {
+  console.log('Populando filtros com', data.length, 'linhas');
   const filters = [
     { id: 'campeonato', index: 0 },
     { id: 'ginasio', index: 3 },
@@ -24,7 +48,6 @@ function populateFilters(data) {
     { id: 'assistencias', index: 12 }
   ];
 
-  // Filtro Time (combina Mandante e Visitante)
   const timeSelect = document.getElementById('time');
   const mandantes = data.slice(1).map(row => row[4]?.trim()).filter(v => v);
   const visitantes = data.slice(1).map(row => row[7]?.trim()).filter(v => v);
@@ -36,7 +59,6 @@ function populateFilters(data) {
     timeSelect.appendChild(option);
   });
 
-  // Outros filtros
   filters.forEach(filter => {
     const select = document.getElementById(filter.id);
     const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
@@ -50,28 +72,36 @@ function populateFilters(data) {
 }
 
 function displayData(data, filters = {}) {
+  console.log('Exibindo dados com filtros:', filters);
+  clearError();
   const tbody = document.getElementById('jogosBody');
   tbody.innerHTML = '';
 
   const filteredData = data.slice(1).filter((row, index) => {
+    if (!row || row.length < 17) {
+      console.log(`Linha ${index + 2} inválida:`, row);
+      return false;
+    }
     const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar] = row;
-    const data = new Date(dataStr.split('/').reverse().join('-'));
+    const data = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
-    // Verificar filtro Considerar
-    const isValidConsiderar = String(row[16]) !== '0';
+    const isValidConsiderar = String(considerar) !== '0';
+    const isValidPlacar1 = placar1 && placar1.trim() !== '';
 
-    // Log temporário para debugging
-    if (isValidConsiderar && placar1 && placar1.trim() !== '') {
-      console.log(`Linha ${index + 2} incluída: Placar1=${placar1}, Considerar=${row[16] || 'nulo'}`);
+    if (isValidConsiderar && isValidPlacar1) {
+      console.log(`Linha ${index + 2} incluída: Placar1=${placar1}, Considerar=${considerar || 'nulo'}`);
+    } else {
+      console.log(`Linha ${index + 2} excluída: Placar1=${placar1}, Considerar=${considerar || 'nulo'}`);
     }
 
     return (
       isValidConsiderar &&
+      isValidPlacar1 &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
-      (!dataInicio || data >= dataInicio) &&
-      (!dataFim || data <= dataFim) &&
+      (!dataInicio || (data && data >= dataInicio)) &&
+      (!dataFim || (data && data <= dataFim)) &&
       (!filters.ginasio || ginasio === filters.ginasio) &&
       (!filters.time || mandante === filters.time || visitante === filters.time) &&
       (!filters.local || local === filters.local) &&
@@ -84,28 +114,30 @@ function displayData(data, filters = {}) {
     );
   });
 
-  // Calcular Big Numbers
+  console.log('Linhas filtradas:', filteredData.length);
+  if (filteredData.length === 0) {
+    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
+  }
+
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
   filteredData.forEach(row => {
     if (row[5] && row[5].trim() !== '') {
-      jogos++; // Conta jogos onde Placar1 (coluna F) está preenchido
+      jogos++;
     }
     if (row[11] && !isNaN(parseInt(row[11]))) {
-      gols += parseInt(row[11]); // Soma apenas se Gol está preenchido e é numérico
+      gols += parseInt(row[11]);
     }
     if (row[12] && !isNaN(parseInt(row[12]))) {
-      assistencias += parseInt(row[12]); // Soma apenas se Assistências está preenchido e é numérico
+      assistencias += parseInt(row[12]);
     }
     vitorias += row[13] ? parseInt(row[13]) : 0;
     derrotas += row[14] ? parseInt(row[14]) : 0;
     empates += row[15] ? parseInt(row[15]) : 0;
   });
 
-  // Calcular Média de Gols (Gols / Jogos) e Gol a Cada (Jogos / Gols)
   const media = jogos > 0 ? (gols / jogos).toFixed(2) : '0.00';
   const golACada = jogos > 0 && gols > 0 ? (jogos / gols).toFixed(2) : '0.00';
 
-  // Atualizar Big Numbers na interface
   document.getElementById('bigNumberJogos').textContent = jogos;
   document.getElementById('bigNumberGols').textContent = gols;
   document.getElementById('bigNumberAssistencias').textContent = assistencias;
@@ -115,15 +147,14 @@ function displayData(data, filters = {}) {
   document.getElementById('bigNumberMedia').textContent = media;
   document.getElementById('bigNumberGolACada').textContent = golACada;
 
-  // Preencher tabela
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
-    row.slice(0, 16).forEach((cell, index) => { // Exibir apenas colunas A a P
+    row.slice(0, 16).forEach((cell, index) => {
       const td = document.createElement('td');
       if (index === 13 || index === 14 || index === 15) {
         td.textContent = cell === '1' ? 'Sim' : '';
       } else {
-        td.textContent = cell;
+        td.textContent = cell || '';
       }
       td.className = 'p-2 border';
       tr.appendChild(td);
@@ -132,7 +163,41 @@ function displayData(data, filters = {}) {
   });
 }
 
+function openTab(tabName) {
+  console.log('Abrindo aba:', tabName);
+  const tabs = ['filtros', 'jogos', 'detalhe'];
+  tabs.forEach(tab => {
+    const element = document.getElementById(tab);
+    const button = document.getElementById(`tab-${tab}`);
+    if (tab === tabName) {
+      element.style.display = 'block';
+      element.classList.add('active');
+      button.classList.add('active');
+      console.log(`Aba ${tab} ativada`);
+    } else {
+      element.style.display = 'none';
+      element.classList.remove('active');
+      button.classList.remove('active');
+      console.log(`Aba ${tab} desativada`);
+    }
+  });
+}
+
+document.getElementById('tab-filtros').addEventListener('click', () => {
+  console.log('Clique em Filtros');
+  openTab('filtros');
+});
+document.getElementById('tab-jogos').addEventListener('click', () => {
+  console.log('Clique em Jogos');
+  openTab('jogos');
+});
+document.getElementById('tab-detalhe').addEventListener('click', () => {
+  console.log('Clique em Detalhe');
+  openTab('detalhe');
+});
+
 document.getElementById('aplicarFiltros').addEventListener('click', async () => {
+  console.log('Aplicando filtros');
   const filters = {
     campeonato: document.getElementById('campeonato').value,
     dataInicio: document.getElementById('dataInicio').value,
@@ -148,10 +213,14 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
     empate: document.getElementById('empate').value
   };
   const data = await fetchSheetData();
-  displayData(data, filters);
+  if (data.length > 0) {
+    displayData(data, filters);
+    openTab('jogos');
+  }
 });
 
-document.getElementById('limparFiltros').addEventListener('click', () => {
+document.getElementById('limparFiltros').addEventListener('click', async () => {
+  console.log('Limpando filtros');
   document.getElementById('campeonato').value = '';
   document.getElementById('dataInicio').value = '';
   document.getElementById('dataFim').value = '';
@@ -164,13 +233,24 @@ document.getElementById('limparFiltros').addEventListener('click', () => {
   document.getElementById('assistencias').value = '';
   document.getElementById('vitoria').value = '';
   document.getElementById('empate').value = '';
-  fetchSheetData().then(data => displayData(data));
+  const data = await fetchSheetData();
+  if (data.length > 0) {
+    displayData(data);
+    openTab('filtros');
+  }
 });
 
 async function init() {
+  console.log('Inicializando aplicação');
   const data = await fetchSheetData();
+  if (data.length === 0) {
+    console.error('Nenhum dado retornado');
+    showError('Nenhum dado disponível. Verifique a conexão, chave API ou planilha.');
+    return;
+  }
   populateFilters(data);
   displayData(data);
+  openTab('filtros');
 }
 
 init();
