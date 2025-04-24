@@ -47,9 +47,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#1e40af">
   <title>Controle de Jogos de Futebol</title>
-  <link rel="stylesheet" href="/TesteAplicativoFutebol/style.css">
-  <link rel="manifest" href="/TesteAplicativoFutebol/manifest.json">
-  <link rel="apple-touch-icon" href="/TesteAplicativoFutebol/icon.png">
+  <link rel="stylesheet" href="https://tiagodeazevedoferreira.github.io/TesteAplicativoFutebol/style.css">
+  <link rel="manifest" href="https://tiagodeazevedoferreira.github.io/TesteAplicativoFutebol/manifest.json">
+  <link rel="apple-touch-icon" href="https://tiagodeazevedoferreira.github.io/TesteAplicativoFutebol/icon.png">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -205,6 +205,18 @@
       </table>
     </div>
   </div>
-  <script src="/TesteAplicativoFutebol/script.js"></script>
+  <script>
+    // Desregistrar Service Workers antigos
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.unregister().then(() => {
+            console.log('Service Worker desregistrado:', registration.scope);
+          });
+        }
+      });
+    }
+  </script>
+  <script src="https://tiagodeazevedoferreira.github.io/TesteAplicativoFutebol/script.js"></script>
 </body>
 </html>

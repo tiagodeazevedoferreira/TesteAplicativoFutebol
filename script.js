@@ -44,7 +44,7 @@ function populateFilters(data) {
     { id: 'local', index: 8 },
     { id: 'rodada', index: 9 },
     { id: 'diaSemana', index: 10 },
-    { id: 'gol', index: 11 },
+    { id Photographic Coverage': 'gol', index: 11 },
     { id: 'assistencias', index: 12 }
   ];
 
