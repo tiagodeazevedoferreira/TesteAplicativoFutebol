@@ -53,23 +53,21 @@ function displayData(data, filters = {}) {
   const tbody = document.getElementById('jogosBody');
   tbody.innerHTML = '';
 
-  const filteredData = data.slice(1).filter(row => {
-    const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar, colunaR] = row;
+  const filteredData = data.slice(1).filter((row, index) => {
+    const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar] = row;
     const data = new Date(dataStr.split('/').reverse().join('-'));
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
-    // Verificar filtros R e Considerar
-    const isValidR = row[17] !== '0';
-    const isValidConsiderar = row[16] !== '0';
+    // Verificar filtro Considerar
+    const isValidConsiderar = String(row[16]) !== '0';
 
     // Log temporário para debugging
-    if (isValidR && isValidConsiderar && placar1 && placar1.trim() !== '') {
-      console.log(`Linha incluída: Placar1=${placar1}, R=${row[17]}, Considerar=${row[16]}`);
+    if (isValidConsiderar && placar1 && placar1.trim() !== '') {
+      console.log(`Linha ${index + 2} incluída: Placar1=${placar1}, Considerar=${row[16] || 'nulo'}`);
     }
 
     return (
-      isValidR &&
       isValidConsiderar &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
       (!dataInicio || data >= dataInicio) &&
