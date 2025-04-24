@@ -5,15 +5,31 @@ async function fetchSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
   try {
     const response = await fetch(url);
+    if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
     const data = await response.json();
+    console.log('Dados recebidos da API:', data.values ? data.values.length : 'Nenhum dado');
     return data.values || [];
   } catch (error) {
     console.error('Erro ao buscar dados:', error);
+    showError(`Erro ao carregar dados: ${error.message}`);
     return [];
   }
 }
 
+function showError(message) {
+  const errorDiv = document.getElementById('errorMessage');
+  errorDiv.textContent = message;
+  errorDiv.classList.remove('hidden');
+}
+
+function clearError() {
+  const errorDiv = document.getElementById('errorMessage');
+  errorDiv.textContent = '';
+  errorDiv.classList.add('hidden');
+}
+
 function populateFilters(data) {
+  console.log('Populando filtros com dados:', data.length);
   const filters = [
     { id: 'campeonato', index: 0 },
     { id: 'ginasio', index: 3 },
@@ -50,28 +66,33 @@ function populateFilters(data) {
 }
 
 function displayData(data, filters = {}) {
+  console.log('Exibindo dados com filtros:', filters);
+  clearError();
   const tbody = document.getElementById('jogosBody');
   tbody.innerHTML = '';
 
   const filteredData = data.slice(1).filter((row, index) => {
+    if (!row || row.length < 17) return false; // Validação de linha incompleta
     const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar] = row;
-    const data = new Date(dataStr.split('/').reverse().join('-'));
+    const data = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
-    // Verificar filtro Considerar
-    const isValidConsiderar = String(row[16]) !== '0';
+    // Filtro Considerar
+    const isValidConsiderar = String(considerar) !== '0';
+    const isValidPlacar1 = placar1 && placar1.trim() !== '';
 
-    // Log temporário para debugging
-    if (isValidConsiderar && placar1 && placar1.trim() !== '') {
-      console.log(`Linha ${index + 2} incluída: Placar1=${placar1}, Considerar=${row[16] || 'nulo'}`);
+    // Log para debugging
+    if (isValidConsiderar && isValidPlacar1) {
+      console.log(`Linha ${index + 2} incluída: Placar1=${placar1}, Considerar=${considerar || 'nulo'}`);
     }
 
     return (
       isValidConsiderar &&
+      isValidPlacar1 &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
-      (!dataInicio || data >= dataInicio) &&
-      (!dataFim || data <= dataFim) &&
+      (!dataInicio || (data && data >= dataInicio)) &&
+      (!dataFim || (data && data <= dataFim)) &&
       (!filters.ginasio || ginasio === filters.ginasio) &&
       (!filters.time || mandante === filters.time || visitante === filters.time) &&
       (!filters.local || local === filters.local) &&
@@ -84,28 +105,33 @@ function displayData(data, filters = {}) {
     );
   });
 
+  console.log('Linhas filtradas:', filteredData.length);
+  if (filteredData.length === 0) {
+    showError('Nenhum jogo encontrado com os filtros aplicados.');
+  }
+
   // Calcular Big Numbers
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
   filteredData.forEach(row => {
     if (row[5] && row[5].trim() !== '') {
-      jogos++; // Conta jogos onde Placar1 (coluna F) está preenchido
+      jogos++;
     }
     if (row[11] && !isNaN(parseInt(row[11]))) {
-      gols += parseInt(row[11]); // Soma apenas se Gol está preenchido e é numérico
+      gols += parseInt(row[11]);
     }
     if (row[12] && !isNaN(parseInt(row[12]))) {
-      assistencias += parseInt(row[12]); // Soma apenas se Assistências está preenchido e é numérico
+      assistencias += parseInt(row[12]);
     }
     vitorias += row[13] ? parseInt(row[13]) : 0;
     derrotas += row[14] ? parseInt(row[14]) : 0;
     empates += row[15] ? parseInt(row[15]) : 0;
   });
 
-  // Calcular Média de Gols (Gols / Jogos) e Gol a Cada (Jogos / Gols)
+  // Calcular Média de Gols e Gol a Cada
   const media = jogos > 0 ? (gols / jogos).toFixed(2) : '0.00';
   const golACada = jogos > 0 && gols > 0 ? (jogos / gols).toFixed(2) : '0.00';
 
-  // Atualizar Big Numbers na aba Detalhe
+  // Atualizar Big Numbers
   document.getElementById('bigNumberJogos').textContent = jogos;
   document.getElementById('bigNumberGols').textContent = gols;
   document.getElementById('bigNumberAssistencias').textContent = assistencias;
@@ -115,15 +141,15 @@ function displayData(data, filters = {}) {
   document.getElementById('bigNumberMedia').textContent = media;
   document.getElementById('bigNumberGolACada').textContent = golACada;
 
-  // Preencher tabela na aba Jogos
+  // Preencher tabela
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
-    row.slice(0, 16).forEach((cell, index) => { // Exibir apenas colunas A a P
+    row.slice(0, 16).forEach((cell, index) => {
       const td = document.createElement('td');
       if (index === 13 || index === 14 || index === 15) {
         td.textContent = cell === '1' ? 'Sim' : '';
       } else {
-        td.textContent = cell;
+        td.textContent = cell || '';
       }
       td.className = 'p-2 border';
       tr.appendChild(td);
@@ -132,17 +158,37 @@ function displayData(data, filters = {}) {
   });
 }
 
-// Função para alternar abas
 function openTab(tabName) {
+  console.log('Abrindo aba:', tabName);
   const tabs = document.querySelectorAll('.tab-content');
   const buttons = document.querySelectorAll('.tab-button');
 
   tabs.forEach(tab => tab.classList.add('hidden'));
   buttons.forEach(button => button.classList.remove('active'));
 
-  document.getElementById(tabName).classList.remove('hidden');
-  document.querySelector(`button[onclick="openTab('${tabName}')"]`).classList.add('active');
+  const targetTab = document.getElementById(tabName);
+  const targetButton = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
+
+  if (targetTab) {
+    targetTab.classList.remove('hidden');
+  } else {
+    console.error('Aba não encontrada:', tabName);
+  }
+
+  if (targetButton) {
+    targetButton.classList.add('active');
+  } else {
+    console.error('Botão da aba não encontrado:', tabName);
+  }
 }
+
+// Configurar eventos das abas
+document.querySelectorAll('.tab-button').forEach(button => {
+  button.addEventListener('click', () => {
+    const tabName = button.getAttribute('data-tab');
+    openTab(tabName);
+  });
+});
 
 document.getElementById('aplicarFiltros').addEventListener('click', async () => {
   const filters = {
@@ -159,12 +205,16 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
     vitoria: document.getElementById('vitoria').value,
     empate: document.getElementById('empate').value
   };
+  console.log('Aplicando filtros:', filters);
   const data = await fetchSheetData();
-  displayData(data, filters);
-  openTab('jogos'); // Após aplicar filtros, mudar para a aba Jogos
+  if (data.length > 0) {
+    displayData(data, filters);
+    openTab('jogos');
+  }
 });
 
-document.getElementById('limparFiltros').addEventListener('click', () => {
+document.getElementById('limparFiltros').addEventListener('click', async () => {
+  console.log('Limpando filtros');
   document.getElementById('campeonato').value = '';
   document.getElementById('dataInicio').value = '';
   document.getElementById('dataFim').value = '';
@@ -177,15 +227,24 @@ document.getElementById('limparFiltros').addEventListener('click', () => {
   document.getElementById('assistencias').value = '';
   document.getElementById('vitoria').value = '';
   document.getElementById('empate').value = '';
-  fetchSheetData().then(data => displayData(data));
-  openTab('filtros'); // Após limpar filtros, voltar para a aba Filtros
+  const data = await fetchSheetData();
+  if (data.length > 0) {
+    displayData(data);
+    openTab('filtros');
+  }
 });
 
 async function init() {
+  console.log('Inicializando aplicação');
   const data = await fetchSheetData();
+  if (data.length === 0) {
+    console.error('Nenhum dado retornado na inicialização');
+    showError('Nenhum dado disponível. Verifique a conexão ou a planilha.');
+    return;
+  }
   populateFilters(data);
-  displayData(data);
-  openTab('filtros'); // Iniciar na aba Filtros
+  displayData(data); // Inicializa sem filtros
+  openTab('filtros');
 }
 
 init();
