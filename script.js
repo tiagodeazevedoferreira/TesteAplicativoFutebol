@@ -111,6 +111,14 @@ function displayData(data, filters = {}) {
   }
   tbody.innerHTML = '';
 
+  // Logar todas as linhas recebidas para depuração
+  console.log('Processando linhas recebidas:', data.slice(1).length);
+  data.slice(1).forEach((row, index) => {
+    const considerar = row[16];
+    const placar1 = row[5];
+    console.log(`Linha ${index + 2} (bruta): Placar1=${placar1 || 'vazio'}, Considerar=${considerar || 'vazio'}`);
+  });
+
   const filteredData = data.slice(1).filter((row, index) => {
     if (!row || row.length < 17) {
       console.log(`Linha ${index + 2} inválida:`, row);
@@ -122,7 +130,7 @@ function displayData(data, filters = {}) {
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
     // Normalizar o valor de considerar
-    const considerarValue = considerar !== undefined ? String(considerar).trim() : '';
+    const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim() : '';
     const isValidConsiderar = considerarValue !== '0';
     const isValidPlacar1 = placar1 && placar1.trim() !== '';
 
