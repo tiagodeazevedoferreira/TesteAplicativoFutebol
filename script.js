@@ -2,7 +2,7 @@ const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
 const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
 async function fetchSheetData() {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet2!A1:R1000?key=${API_KEY}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
   try {
     const response = await fetch(url);
     const data = await response.json();
@@ -60,11 +60,11 @@ function displayData(data, filters = {}) {
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
 
     // Verificar filtros R e Considerar com condições robustas
-    const isValidR = row[17] !== '0' && row[17] !== undefined && row[17]?.trim() !== '';
-    const isValidConsiderar = row[16] !== '0' && row[16] !== undefined && row[16]?.trim() !== '';
+    const isValidR = row[17] && row[17].trim() !== '0' && row[17].trim() !== '';
+    const isValidConsiderar = row[16] && row[16].trim() !== '0' && row[16].trim() !== '';
 
     // Log temporário para debugging
-    if (isValidR && isValidConsiderar && placar1 !== '' && placar1 !== undefined && placar1.trim() !== '') {
+    if (isValidR && isValidConsiderar && placar1 && placar1.trim() !== '') {
       console.log(`Linha incluída: Placar1=${placar1}, R=${row[17]}, Considerar=${row[16]}`);
     }
 
@@ -89,13 +89,13 @@ function displayData(data, filters = {}) {
   // Calcular Big Numbers
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
   filteredData.forEach(row => {
-    if (row[5] !== '' && row[5] !== undefined && row[5].trim() !== '') {
+    if (row[5] && row[5].trim() !== '') {
       jogos++; // Conta jogos onde Placar1 (coluna F) está preenchido
     }
-    if (row[11] !== '' && !isNaN(parseInt(row[11]))) {
+    if (row[11] && !isNaN(parseInt(row[11]))) {
       gols += parseInt(row[11]); // Soma apenas se Gol está preenchido e é numérico
     }
-    if (row[12] !== '' && !isNaN(parseInt(row[12]))) {
+    if (row[12] && !isNaN(parseInt(row[12]))) {
       assistencias += parseInt(row[12]); // Soma apenas se Assistências está preenchido e é numérico
     }
     vitorias += row[13] ? parseInt(row[13]) : 0;
