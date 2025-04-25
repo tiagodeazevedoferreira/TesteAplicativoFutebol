@@ -433,6 +433,7 @@ function clearFilters() {
 }
 
 function switchTab(tabId) {
+  console.log(`Trocando para aba ${tabId}`);
   clearFilters();
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
@@ -522,11 +523,6 @@ document.getElementById('pivotMode-tab3').addEventListener('click', () => {
   displayTab3();
 });
 
-// Navegação entre abas
-document.getElementById('tab1-btn').addEventListener('click', () => switchTab('tab1'));
-document.getElementById('tab2-btn').addEventListener('click', () => switchTab('tab2'));
-document.getElementById('tab3-btn').addEventListener('click', () => switchTab('tab3'));
-
 async function init() {
   console.log('Inicializando aplicação');
   try {
@@ -537,7 +533,33 @@ async function init() {
       return;
     }
     populateFilters(allData);
-    switchTab('tab1'); // Inicia na Aba 1
+
+    // Registrar eventos de clique para os botões de navegação
+    const tab1Btn = document.getElementById('tab1-btn');
+    const tab2Btn = document.getElementById('tab2-btn');
+    const tab3Btn = document.getElementById('tab3-btn');
+
+    if (!tab1Btn || !tab2Btn || !tab3Btn) {
+      console.error('Botões de navegação não encontrados:', { tab1Btn, tab2Btn, tab3Btn });
+      showError('Erro interno: botões de navegação não encontrados.');
+      return;
+    }
+
+    tab1Btn.addEventListener('click', () => {
+      console.log('Clique no botão da Aba 1');
+      switchTab('tab1');
+    });
+    tab2Btn.addEventListener('click', () => {
+      console.log('Clique no botão da Aba 2');
+      switchTab('tab2');
+    });
+    tab3Btn.addEventListener('click', () => {
+      console.log('Clique no botão da Aba 3');
+      switchTab('tab3');
+    });
+
+    // Inicia na Aba 1
+    switchTab('tab1');
   } catch (error) {
     console.error('Erro na inicialização:', error.message);
     showError(`Erro na inicialização: ${error.message}`);
