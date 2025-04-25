@@ -111,35 +111,72 @@ function displayData(data, filters = {}) {
   }
   tbody.innerHTML = '';
 
-  // Logar todas as linhas recebidas para depuração
-  console.log('Processando linhas recebidas:', data.slice(1).length);
-  data.slice(1).forEach((row, index) => {
-    const considerar = row[16];
-    const placar1 = row[5];
-    console.log(`Linha ${index + 2} (bruta): Placar1=${placar1 || 'vazio'}, Considerar=${considerar || 'vazio'}`);
+  const filteredData = filterData(data, filters);
+  console.log('Total de linhas filtradas:', filteredData.length);
+  if (filteredData.length === 0) {
+    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
+  }
+
+  filteredData.forEach(row => {
+    const tr = document.createElement('tr');
+    row.slice(0, 16).forEach((cell, index) => {
+      const td = document.createElement('td');
+      td.textContent = cell || '';
+      td.className = 'p-2 border';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function pivotTable(data) {
+  console.log("Transformando tabela para formato PIVOT");
+
+  const tbody = document.getElementById('jogosBody');
+  if (!tbody) {
+    console.error('Elemento #jogosBody não encontrado');
+    showError('Erro interno: tabela não encontrada.');
+    return;
+  }
+  tbody.innerHTML = '';
+
+  const headers = data[0];
+  headers.forEach((header, colIndex) => {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.textContent = header;
+    th.className = 'p-2 border bg-gray-200';
+    tr.appendChild(th);
+
+    data.slice(1).forEach(row => {
+      const td = document.createElement('td');
+      td.textContent = row[colIndex] || '';
+      td.className = 'p-2 border';
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
   });
 
-  const filteredData = data.slice(1).filter((row, index) => {
-    if (!row || row.length < 17) {
-      console.log(`Linha ${index + 2} inválida:`, row);
-      return false;
-    }
-    const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar] = row;
-    const data = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
+  console.log("Tabela transformada para formato PIVOT");
+}
+
+function filterData(data, filters) {
+  console.log('Aplicando filtros:', filters);
+
+  return data.slice(1).filter(row => {
+    const [
+      campeonato, dataStr, , ginasio, mandante, , , visitante, local, rodada, diaSemana, gol, assistencias, vitoria, , empate
+    ] = row;
+
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
-
-    // Normalizar o valor de considerar
-    const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim() : '';
-    const isValidConsiderar = considerarValue !== '0';
-
-    console.log(`Linha ${index + 2}: Placar1=${placar1 || 'vazio'}, Considerar=${considerarValue || 'vazio'}, isValidConsiderar=${isValidConsiderar}, Incluída=${isValidConsiderar}`);
+    const dataJogo = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
 
     return (
-      isValidConsiderar &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
-      (!dataInicio || (data && data >= dataInicio)) &&
-      (!dataFim || (data && data <= dataFim)) &&
+      (!dataInicio || (dataJogo && dataJogo >= dataInicio)) &&
+      (!dataFim || (dataJogo && dataJogo <= dataFim)) &&
       (!filters.ginasio || ginasio === filters.ginasio) &&
       (!filters.time || mandante === filters.time || visitante === filters.time) &&
       (!filters.local || local === filters.local) &&
@@ -151,60 +188,11 @@ function displayData(data, filters = {}) {
       (!filters.empate || empate === filters.empate)
     );
   });
-
-  console.log('Total de linhas filtradas:', filteredData.length);
-  if (filteredData.length === 0) {
-    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
-  }
-
-  let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
-  filteredData.forEach(row => {
-    const placar1 = row[5];
-    const isValidPlacar1 = placar1 && placar1.trim() !== '';
-    if (isValidPlacar1) {
-      jogos++;
-    }
-    if (row[11] && !isNaN(parseInt(row[11]))) {
-      gols += parseInt(row[11]);
-    }
-    if (row[12] && !isNaN(parseInt(row[12]))) {
-      assistencias += parseInt(row[12]);
-    }
-    vitorias += row[13] ? parseInt(row[13]) : 0;
-    derrotas += row[14] ? parseInt(row[14]) : 0;
-    empates += row[15] ? parseInt(row[15]) : 0;
-  });
-
-  const media = jogos > 0 ? (gols / jogos).toFixed(2) : '0.00';
-  const golACada = jogos > 0 && gols > 0 ? (jogos / gols).toFixed(2) : '0.00';
-
-  document.getElementById('bigNumberJogos').textContent = jogos;
-  document.getElementById('bigNumberGols').textContent = gols;
-  document.getElementById('bigNumberAssistencias').textContent = assistencias;
-  document.getElementById('bigNumberVitorias').textContent = vitorias;
-  document.getElementById('bigNumberEmpates').textContent = empates;
-  document.getElementById('bigNumberDerrotas').textContent = derrotas;
-  document.getElementById('bigNumberMedia').textContent = media;
-  document.getElementById('bigNumberGolACada').textContent = golACada;
-
-  filteredData.forEach(row => {
-    const tr = document.createElement('tr');
-    row.slice(0, 16).forEach((cell, index) => {
-      const td = document.createElement('td');
-      if (index === 13 || index === 14 || index === 15) {
-        td.textContent = cell === '1' ? 'Sim' : '';
-      } else {
-        td.textContent = cell || '';
-      }
-      td.className = 'p-2 border';
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
 }
 
-document.getElementById('aplicarFiltros').addEventListener('click', async () => {
-  console.log('Aplicando filtros');
+let isPivot = false;
+document.getElementById('pivotMode').addEventListener('click', async () => {
+  isPivot = !isPivot;
   const filters = {
     campeonato: document.getElementById('campeonato').value,
     dataInicio: document.getElementById('dataInicio').value,
@@ -219,42 +207,18 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
     vitoria: document.getElementById('vitoria').value,
     empate: document.getElementById('empate').value
   };
+
   const data = await fetchSheetData();
   if (data.length > 0) {
-    displayData(data, filters);
+    const filteredData = filterData(data, filters);
+    if (isPivot) {
+      pivotTable(filteredData);
+      document.getElementById('pivotMode').textContent = 'Voltar ao modo Tabela';
+    } else {
+      displayData(filteredData);
+      document.getElementById('pivotMode').textContent = 'Alternar para PIVOT';
+    }
   }
 });
-
-document.getElementById('limparFiltros').addEventListener('click', async () => {
-  console.log('Limpando filtros');
-  document.getElementById('campeonato').value = '';
-  document.getElementById('dataInicio').value = '';
-  document.getElementById('dataFim').value = '';
-  document.getElementById('ginasio').value = '';
-  document.getElementById('time').value = '';
-  document.getElementById('local').value = '';
-  document.getElementById('rodada').value = '';
-  document.getElementById('diaSemana').value = '';
-  document.getElementById('gol').value = '';
-  document.getElementById('assistencias').value = '';
-  document.getElementById('vitoria').value = '';
-  document.getElementById('empate').value = '';
-  const data = await fetchSheetData();
-  if (data.length > 0) {
-    displayData(data);
-  }
-});
-
-async function init() {
-  console.log('Inicializando aplicação');
-  const data = await fetchSheetData();
-  if (data.length === 0) {
-    console.error('Nenhum dado retornado');
-    showError('Nenhum dado disponível. Verifique a conexão, chave API ou planilha.');
-    return;
-  }
-  populateFilters(data);
-  displayData(data);
-}
 
 init();
