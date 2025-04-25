@@ -100,6 +100,44 @@ function populateFilters(data) {
   });
 }
 
+function pivotTable(data) {
+  console.log("Transformando tabela para formato PIVOT");
+
+  // Selecionar o corpo da tabela
+  const tbody = document.getElementById('jogosBody');
+  if (!tbody) {
+    console.error('Elemento #jogosBody não encontrado');
+    showError('Erro interno: tabela não encontrada.');
+    return;
+  }
+  tbody.innerHTML = '';
+
+  // A primeira linha contém os cabeçalhos
+  const headers = data[0];
+  
+  // Iterar pelas colunas e criar uma linha para cada uma
+  headers.forEach((header, colIndex) => {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.textContent = header;
+    th.className = 'p-2 border bg-gray-200';
+    tr.appendChild(th);
+
+    // Adicionar valores de cada linha correspondente ao cabeçalho
+    data.slice(1).forEach(row => {
+      const td = document.createElement('td');
+      td.textContent = row[colIndex] || ''; // Valor ou vazio
+      td.className = 'p-2 border';
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  console.log("Tabela transformada para formato PIVOT");
+}
+
+
 function displayData(data, filters = {}) {
   console.log('Exibindo dados com filtros:', filters);
   clearError();
@@ -556,5 +594,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verificar lembretes já agendados
     verificarLembretesAgendados();
 });
+
+let isPivot = false; // Estado para rastrear o modo atual
+
+document.getElementById('pivotMode').addEventListener('click', async () => {
+  isPivot = !isPivot; // Alternar estado
+  const data = await fetchSheetData();
+
+  if (data.length > 0) {
+    if (isPivot) {
+      pivotTable(data);
+      document.getElementById('pivotMode').textContent = 'Voltar ao modo Tabela';
+    } else {
+      displayData(data);
+      document.getElementById('pivotMode').textContent = 'Alternar para PIVOT';
+    }
+  }
+});
+
+
 
 init();

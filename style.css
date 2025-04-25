@@ -12,6 +12,15 @@ th, td {
   padding: 8px;
 }
 
+/* Adicionado para melhorar o estilo no modo PIVOT */
+th {
+  white-space: nowrap; /* Evitar quebra de texto nos cabeçalhos */
+}
+
+td {
+  max-width: 200px; /* Limitar largura das células no modo PIVOT */
+}
+
 tr:nth-child(even) {
   background-color: #f2f2f2;
 }
