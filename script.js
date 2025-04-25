@@ -100,18 +100,16 @@ function populateFilters(data) {
   });
 }
 
-function displayData(data, filters = {}, isPivot = false) {
-  console.log('Exibindo dados com filtros:', filters, 'isPivot:', isPivot);
+function displayData(data, filters = {}) {
+  console.log('Exibindo dados com filtros:', filters);
   clearError();
   const tbody = document.getElementById('jogosBody');
-  const thead = document.getElementById('tableHead');
-  if (!tbody || !thead) {
-    console.error('Elementos #jogosBody ou #tableHead não encontrados');
+  if (!tbody) {
+    console.error('Elemento #jogosBody não encontrado');
     showError('Erro interno: tabela não encontrada.');
     return;
   }
   tbody.innerHTML = '';
-  thead.innerHTML = '';
 
   // Logar todas as linhas recebidas para depuração
   console.log('Processando linhas recebidas:', data.slice(1).length);
@@ -157,7 +155,6 @@ function displayData(data, filters = {}, isPivot = false) {
   console.log('Total de linhas filtradas:', filteredData.length);
   if (filteredData.length === 0) {
     showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
-    return;
   }
 
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
@@ -190,175 +187,74 @@ function displayData(data, filters = {}, isPivot = false) {
   document.getElementById('bigNumberMedia').textContent = media;
   document.getElementById('bigNumberGolACada').textContent = golACada;
 
-  if (isPivot) {
-    // PIVOT: Transpor colunas para linhas
-    const headerRow = data[0].slice(0, 16); // Cabeçalho sem Considerar (índice 16)
-    console.log('Cabeçalho para PIVOT:', headerRow);
-
-    // Configurar cabeçalho da tabela para PIVOT
-    const trHead = document.createElement('tr');
-    trHead.className = 'bg-gray-200';
-    ['Coluna', 'Valor'].forEach(text => {
-      const th = document.createElement('th');
-      th.textContent = text;
-      th.className = 'p-2';
-      trHead.appendChild(th);
+  filteredData.forEach(row => {
+    const tr = document.createElement('tr');
+    row.slice(0, 16).forEach((cell, index) => {
+      const td = document.createElement('td');
+      if (index === 13 || index === 14 || index === 15) {
+        td.textContent = cell === '1' ? 'Sim' : '';
+      } else {
+        td.textContent = cell || '';
+      }
+      td.className = 'p-2 border';
+      tr.appendChild(td);
     });
-    thead.appendChild(trHead);
-
-    // Processar dados transpostos
-    filteredData.forEach((row, rowIndex) => {
-      row.slice(0, 16).forEach((cell, colIndex) => {
-        const tr = document.createElement('tr');
-        const columnName = headerRow[colIndex] || `Coluna ${colIndex + 1}`;
-        const cellValue = colIndex === 13 || colIndex === 14 || colIndex === 15 ? (cell === '1' ? 'Sim' : '') : (cell || '');
-
-        // Coluna "Coluna"
-        const tdCol = document.createElement('td');
-        tdCol.textContent = columnName;
-        tdCol.className = 'p-2 border';
-        tr.appendChild(tdCol);
-
-        // Coluna "Valor"
-        const tdVal = document.createElement('td');
-        tdVal.textContent = cellValue;
-        tdVal.className = 'p-2 border';
-        tr.appendChild(tdVal);
-
-        tbody.appendChild(tr);
-      });
-      console.log(`Linha ${rowIndex + 2} transposta para PIVOT`);
-    });
-  } else {
-    // Tabela normal
-    const trHead = document.createElement('tr');
-    trHead.className = 'bg-gray-200';
-    ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'].forEach(text => {
-      const th = document.createElement('th');
-      th.textContent = text;
-      th.className = 'p-2';
-      trHead.appendChild(th);
-    });
-    thead.appendChild(trHead);
-
-    filteredData.forEach(row => {
-      const tr = document.createElement('tr');
-      row.slice(0, 16).forEach((cell, index) => {
-        const td = document.createElement('td');
-        if (index === 13 || index === 14 || index === 15) {
-          td.textContent = cell === '1' ? 'Sim' : '';
-        } else {
-          td.textContent = cell || '';
-        }
-        td.className = 'p-2 border';
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    });
-  }
-}
-
-async function generatePivot() {
-  console.log('Botão PIVOT clicado');
-  try {
-    const data = await fetchSheetData();
-    if (data.length === 0) {
-      showError('Nenhum dado disponível para gerar o PIVOT.');
-      return;
-    }
-    const filters = {
-      campeonato: document.getElementById('campeonato').value,
-      dataInicio: document.getElementById('dataInicio').value,
-      dataFim: document.getElementById('dataFim').value,
-      ginasio: document.getElementById('ginasio').value,
-      time: document.getElementById('time').value,
-      local: document.getElementById('local').value,
-      rodada: document.getElementById('rodada').value,
-      diaSemana: document.getElementById('diaSemana').value,
-      gol: document.getElementById('gol').value,
-      assistencias: document.getElementById('assistencias').value,
-      vitoria: document.getElementById('vitoria').value,
-      empate: document.getElementById('empate').value
-    };
-    displayData(data, filters, true);
-  } catch (error) {
-    console.error('Erro ao gerar PIVOT:', error.message);
-    showError(`Erro ao gerar PIVOT: ${error.message}`);
-  }
+    tbody.appendChild(tr);
+  });
 }
 
 document.getElementById('aplicarFiltros').addEventListener('click', async () => {
   console.log('Aplicando filtros');
-  try {
-    const filters = {
-      campeonato: document.getElementById('campeonato').value,
-      dataInicio: document.getElementById('dataInicio').value,
-      dataFim: document.getElementById('dataFim').value,
-      ginasio: document.getElementById('ginasio').value,
-      time: document.getElementById('time').value,
-      local: document.getElementById('local').value,
-      rodada: document.getElementById('rodada').value,
-      diaSemana: document.getElementById('diaSemana').value,
-      gol: document.getElementById('gol').value,
-      assistencias: document.getElementById('assistencias').value,
-      vitoria: document.getElementById('vitoria').value,
-      empate: document.getElementById('empate').value
-    };
-    const data = await fetchSheetData();
-    if (data.length > 0) {
-      displayData(data, filters);
-    }
-  } catch (error) {
-    console.error('Erro ao aplicar filtros:', error.message);
-    showError(`Erro ao aplicar filtros: ${error.message}`);
+  const filters = {
+    campeonato: document.getElementById('campeonato').value,
+    dataInicio: document.getElementById('dataInicio').value,
+    dataFim: document.getElementById('dataFim').value,
+    ginasio: document.getElementById('ginasio').value,
+    time: document.getElementById('time').value,
+    local: document.getElementById('local').value,
+    rodada: document.getElementById('rodada').value,
+    diaSemana: document.getElementById('diaSemana').value,
+    gol: document.getElementById('gol').value,
+    assistencias: document.getElementById('assistencias').value,
+    vitoria: document.getElementById('vitoria').value,
+    empate: document.getElementById('empate').value
+  };
+  const data = await fetchSheetData();
+  if (data.length > 0) {
+    displayData(data, filters);
   }
 });
 
 document.getElementById('limparFiltros').addEventListener('click', async () => {
   console.log('Limpando filtros');
-  try {
-    document.getElementById('campeonato').value = '';
-    document.getElementById('dataInicio').value = '';
-    document.getElementById('dataFim').value = '';
-    document.getElementById('ginasio').value = '';
-    document.getElementById('time').value = '';
-    document.getElementById('local').value = '';
-    document.getElementById('rodada').value = '';
-    document.getElementById('diaSemana').value = '';
-    document.getElementById('gol').value = '';
-    document.getElementById('assistencias').value = '';
-    document.getElementById('vitoria').value = '';
-    document.getElementById('empate').value = '';
-    const data = await fetchSheetData();
-    if (data.length > 0) {
-      displayData(data);
-    }
-  } catch (error) {
-    console.error('Erro ao limpar filtros:', error.message);
-    showError(`Erro ao limpar filtros: ${error.message}`);
+  document.getElementById('campeonato').value = '';
+  document.getElementById('dataInicio').value = '';
+  document.getElementById('dataFim').value = '';
+  document.getElementById('ginasio').value = '';
+  document.getElementById('time').value = '';
+  document.getElementById('local').value = '';
+  document.getElementById('rodada').value = '';
+  document.getElementById('diaSemana').value = '';
+  document.getElementById('gol').value = '';
+  document.getElementById('assistencias').value = '';
+  document.getElementById('vitoria').value = '';
+  document.getElementById('empate').value = '';
+  const data = await fetchSheetData();
+  if (data.length > 0) {
+    displayData(data);
   }
-});
-
-document.getElementById('pivotButton').addEventListener('click', () => {
-  console.log('Evento de clique no botão PIVOT registrado');
-  generatePivot();
 });
 
 async function init() {
   console.log('Inicializando aplicação');
-  try {
-    const data = await fetchSheetData();
-    if (data.length === 0) {
-      console.error('Nenhum dado retornado');
-      showError('Nenhum dado disponível. Verifique a conexão, chave API ou planilha.');
-      return;
-    }
-    populateFilters(data);
-    displayData(data);
-  } catch (error) {
-    console.error('Erro na inicialização:', error.message);
-    showError(`Erro na inicialização: ${error.message}`);
+  const data = await fetchSheetData();
+  if (data.length === 0) {
+    console.error('Nenhum dado retornado');
+    showError('Nenhum dado disponível. Verifique a conexão, chave API ou planilha.');
+    return;
   }
+  populateFilters(data);
+  displayData(data);
 }
 
 init();
