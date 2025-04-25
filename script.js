@@ -213,16 +213,28 @@ function displayData(data, filteredData) {
     showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
   }
 
-  filteredData.forEach(row => {
+  filteredData.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
-    // Destaque visual baseado em Vitória, Derrota, Empate
-    if (row[13] === '1') {
+    // Validação dos dados: Verificar se mais de uma condição é verdadeira
+    const vitoria = row[13] === '1';
+    const derrota = row[14] === '1';
+    const empate = row[15] === '1';
+    const conditions = [vitoria, derrota, empate].filter(Boolean).length;
+    if (conditions > 1) {
+      console.warn(`Inconsistência nos dados da linha ${rowIndex + 2}: Vitória=${row[13]}, Derrota=${row[14]}, Empate=${row[15]}`);
+    }
+
+    // Destaque visual baseado em Vitória, Derrota, Empate (condições independentes)
+    if (vitoria) {
       tr.classList.add('victory-row');
-    } else if (row[14] === '1') {
+    }
+    if (derrota) {
       tr.classList.add('defeat-row');
-    } else if (row[15] === '1') {
+    }
+    if (empate) {
       tr.classList.add('draw-row');
     }
+
     row.slice(0, 16).forEach((cell, index) => {
       const td = document.createElement('td');
       if (index === 13 || index === 14 || index === 15) {
