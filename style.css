@@ -24,7 +24,6 @@ td {
   max-width: 200px; /* Limitar largura das células no modo PIVOT */
 }
 
-
 @media (max-width: 768px) {
   .filters {
     font-size: 0.9rem;
