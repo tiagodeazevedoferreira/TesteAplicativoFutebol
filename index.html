@@ -46,7 +46,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#1e40af">
-  <title>Jogos do JL</title>
+  <title>Controle de Jogos de Futebol</title>
   <link rel="stylesheet" href="./style.css">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon.png">
@@ -54,7 +54,7 @@
 </head>
 <body class="bg-gray-100 font-sans">
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold text-center mb-4">Jogos do JL</h1>
+    <h1 class="text-2xl font-bold text-center mb-4">Controle de Jogos de Futebol</h1>
     
     <!-- Mensagem de Erro -->
     <div id="errorMessage" style="display: none;" class="bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
@@ -172,15 +172,12 @@
           </select>
         </div>
       </div>
-
-	  <div class="mt-4">
-       <button id="aplicarFiltros" class="bg-blue-500 text-white p-2 rounded mr-2">Aplicar Filtros</button>
-       <button id="limparFiltros" class="bg-gray-500 text-white p-2 rounded">Limpar Filtros</button>
-       <button id="pivotMode" class="bg-green-500 text-white p-2 rounded">Alternar para PIVOT</button>
+      <div class="mt-4">
+        <button id="aplicarFiltros" class="bg-blue-500 text-white p-2 rounded mr-2">Aplicar Filtros</button>
+        <button id="limparFiltros" class="bg-gray-500 text-white p-2 rounded">Limpar Filtros</button>
       </div>
-
+    </div>
     
-
     <!-- Tabela -->
     <div class="overflow-x-auto">
       <table id="jogosTable" class="w-full bg-white border">

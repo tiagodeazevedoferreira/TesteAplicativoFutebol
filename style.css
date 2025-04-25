@@ -12,39 +12,8 @@ th, td {
   padding: 8px;
 }
 
-/* Estilos para o modo PIVOT */
-th {
-  white-space: nowrap;
-  background-color: #f2f2f2;
-  position: sticky;
-  left: 0;
-}
-
-td {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 tr:nth-child(even) {
   background-color: #f2f2f2;
-}
-
-/* Melhorias para o modo PIVOT */
-#jogosTable.pivot-mode {
-  display: block;
-  overflow-x: auto;
-}
-
-#jogosTable.pivot-mode thead {
-  display: none;
-}
-
-#jogosTable.pivot-mode tr {
-  display: flex;
-  flex-direction: column;
-  min-width: 150px;
 }
 
 @media (max-width: 768px) {
@@ -59,19 +28,4 @@ tr:nth-child(even) {
   th, td {
     padding: 4px;
   }
-  
-  /* Ajustes adicionais para mobile no modo PIVOT */
-  #jogosTable.pivot-mode td {
-    max-width: 120px;
-  }
-}
-
-/* Botão do modo PIVOT */
-#pivotMode {
-  transition: all 0.3s ease;
-}
-
-#pivotMode:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
