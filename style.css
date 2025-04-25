@@ -27,15 +27,6 @@ td {
   max-width: 200px; /* Limitar largura das células no modo PIVOT */
 }
 
-/* Sobrescrever cores do Tailwind para os botões */
-.bg-blue-500 {
-  background-color: #d91a2a !important; /* Vermelho da Portuguesa */
-}
-
-.bg-gray-500, .bg-green-500 {
-  background-color: #1a3c34 !important; /* Verde escuro da Portuguesa */
-}
-
 /* Mensagem de erro */
 .bg-red-100 {
   background-color: #f5e6e8 !important; /* Tom claro de vermelho */
