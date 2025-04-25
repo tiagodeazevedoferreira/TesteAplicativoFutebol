@@ -3,12 +3,6 @@ console.log('script.js iniciado');
 const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
 const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
-// Variáveis globais para armazenar dados
-let allData = [];
-let filteredData = [];
-let isPivot = false;
-let currentFilters = {};
-
 async function fetchSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
   console.log('Iniciando requisição à API:', url);
@@ -34,7 +28,6 @@ async function fetchSheetData() {
       throw new Error('Nenhum dado retornado. A planilha está vazia ou a aba Sheet1 não existe.');
     }
     console.log('Linhas recebidas:', data.values.length);
-    allData = data.values;
     return data.values;
   } catch (error) {
     console.error('Erro ao buscar dados:', error.message);
@@ -107,15 +100,30 @@ function populateFilters(data) {
   });
 }
 
-function applyFilters(data, filters) {
-  console.log('Aplicando filtros:', filters);
-  
-  return data.slice(1).filter((row, index) => {
+function displayData(data, filters = {}) {
+  console.log('Exibindo dados com filtros:', filters);
+  clearError();
+  const tbody = document.getElementById('jogosBody');
+  if (!tbody) {
+    console.error('Elemento #jogosBody não encontrado');
+    showError('Erro interno: tabela não encontrada.');
+    return;
+  }
+  tbody.innerHTML = '';
+
+  // Logar todas as linhas recebidas para depuração
+  console.log('Processando linhas recebidas:', data.slice(1).length);
+  data.slice(1).forEach((row, index) => {
+    const considerar = row[16];
+    const placar1 = row[5];
+    console.log(`Linha ${index + 2} (bruta): Placar1=${placar1 || 'vazio'}, Considerar=${considerar || 'vazio'}`);
+  });
+
+  const filteredData = data.slice(1).filter((row, index) => {
     if (!row || row.length < 17) {
       console.log(`Linha ${index + 2} inválida:`, row);
       return false;
     }
-    
     const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar] = row;
     const data = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
@@ -143,11 +151,13 @@ function applyFilters(data, filters) {
       (!filters.empate || empate === filters.empate)
     );
   });
-}
 
-function updateBigNumbers(filteredData) {
+  console.log('Total de linhas filtradas:', filteredData.length);
+  if (filteredData.length === 0) {
+    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
+  }
+
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
-  
   filteredData.forEach(row => {
     const placar1 = row[5];
     const isValidPlacar1 = placar1 && placar1.trim() !== '';
@@ -176,40 +186,10 @@ function updateBigNumbers(filteredData) {
   document.getElementById('bigNumberDerrotas').textContent = derrotas;
   document.getElementById('bigNumberMedia').textContent = media;
   document.getElementById('bigNumberGolACada').textContent = golACada;
-}
-
-function displayData(data, filters = {}) {
-  console.log('Exibindo dados com filtros:', filters);
-  clearError();
-  
-  // Aplicar filtros
-  filteredData = applyFilters(data, filters);
-  console.log('Total de linhas filtradas:', filteredData.length);
-  
-  if (filteredData.length === 0) {
-    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
-  }
-  
-  // Atualizar estatísticas
-  updateBigNumbers(filteredData);
-  
-  // Se estiver no modo PIVOT, exibir como PIVOT
-  if (isPivot) {
-    pivotTable(data[0], filteredData);
-    return;
-  }
-  
-  // Caso contrário, exibir como tabela normal
-  const tbody = document.getElementById('jogosBody');
-  if (!tbody) {
-    console.error('Elemento #jogosBody não encontrado');
-    showError('Erro interno: tabela não encontrada.');
-    return;
-  }
-  tbody.innerHTML = '';
 
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
+    // Exibir apenas colunas de índice 0 a 15 (exclui Considerar, índice 16)
     row.slice(0, 16).forEach((cell, index) => {
       const td = document.createElement('td');
       if (index === 13 || index === 14 || index === 15) {
@@ -224,49 +204,9 @@ function displayData(data, filters = {}) {
   });
 }
 
-function pivotTable(headers, data) {
-  console.log("Transformando tabela para formato PIVOT com", data.length, "linhas filtradas");
-
-  // Selecionar o corpo da tabela
-  const tbody = document.getElementById('jogosBody');
-  if (!tbody) {
-    console.error('Elemento #jogosBody não encontrado');
-    showError('Erro interno: tabela não encontrada.');
-    return;
-  }
-  tbody.innerHTML = '';
-
-  // Iterar pelas colunas e criar uma linha para cada uma
-  headers.forEach((header, colIndex) => {
-    const tr = document.createElement('tr');
-    const th = document.createElement('th');
-    th.textContent = header;
-    th.className = 'p-2 border bg-gray-200';
-    tr.appendChild(th);
-
-    // Adicionar valores de cada linha correspondente ao cabeçalho
-    data.forEach(row => {
-      const td = document.createElement('td');
-      // Verificar se é uma coluna de vitória/derrota/empate
-      if (colIndex === 13 || colIndex === 14 || colIndex === 15) {
-        td.textContent = row[colIndex] === '1' ? 'Sim' : '';
-      } else {
-        td.textContent = row[colIndex] || ''; // Valor ou vazio
-      }
-      td.className = 'p-2 border';
-      tr.appendChild(td);
-    });
-
-    tbody.appendChild(tr);
-  });
-
-  console.log("Tabela transformada para formato PIVOT");
-}
-
-// Event Listeners
 document.getElementById('aplicarFiltros').addEventListener('click', async () => {
   console.log('Aplicando filtros');
-  currentFilters = {
+  const filters = {
     campeonato: document.getElementById('campeonato').value,
     dataInicio: document.getElementById('dataInicio').value,
     dataFim: document.getElementById('dataFim').value,
@@ -280,14 +220,9 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
     vitoria: document.getElementById('vitoria').value,
     empate: document.getElementById('empate').value
   };
-  
-  if (allData.length === 0) {
-    const data = await fetchSheetData();
-    if (data.length > 0) {
-      displayData(data, currentFilters);
-    }
-  } else {
-    displayData(allData, currentFilters);
+  const data = await fetchSheetData();
+  if (data.length > 0) {
+    displayData(data, filters);
   }
 });
 
@@ -305,43 +240,12 @@ document.getElementById('limparFiltros').addEventListener('click', async () => {
   document.getElementById('assistencias').value = '';
   document.getElementById('vitoria').value = '';
   document.getElementById('empate').value = '';
-  
-  currentFilters = {};
-  
-  if (allData.length === 0) {
-    const data = await fetchSheetData();
-    if (data.length > 0) {
-      displayData(data);
-    }
-  } else {
-    displayData(allData);
+  const data = await fetchSheetData();
+  if (data.length > 0) {
+    displayData(data);
   }
 });
 
-document.getElementById('pivotMode').addEventListener('click', async () => {
-  isPivot = !isPivot; // Alternar estado
-  
-  if (isPivot) {
-    document.getElementById('pivotMode').textContent = 'Voltar ao modo Tabela';
-    document.getElementById('pivotMode').classList.remove('bg-green-500');
-    document.getElementById('pivotMode').classList.add('bg-blue-500');
-  } else {
-    document.getElementById('pivotMode').textContent = 'Alternar para PIVOT';
-    document.getElementById('pivotMode').classList.remove('bg-blue-500');
-    document.getElementById('pivotMode').classList.add('bg-green-500');
-  }
-  
-  if (allData.length === 0) {
-    const data = await fetchSheetData();
-    if (data.length > 0) {
-      displayData(data, currentFilters);
-    }
-  } else {
-    displayData(allData, currentFilters);
-  }
-});
-
-// Inicialização
 async function init() {
   console.log('Inicializando aplicação');
   const data = await fetchSheetData();
