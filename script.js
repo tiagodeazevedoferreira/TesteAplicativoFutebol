@@ -100,8 +100,8 @@ function populateFilters(data) {
   });
 }
 
-function displayData(data, filters = {}) {
-  console.log('Exibindo dados com filtros:', filters);
+function displayData(data, filters = {}, isPivot = false) {
+  console.log('Exibindo dados com filtros:', filters, 'isPivot:', isPivot);
   clearError();
   const tbody = document.getElementById('jogosBody');
   if (!tbody) {
@@ -204,58 +204,107 @@ function displayData(data, filters = {}) {
   });
 }
 
+async function generatePivot() {
+  console.log('Botão PIVOT clicado');
+  try {
+    const data = await fetchSheetData();
+    if (data.length === 0) {
+      showError('Nenhum dado disponível para gerar o PIVOT.');
+      return;
+    }
+    const filters = {
+      campeonato: document.getElementById('campeonato').value,
+      dataInicio: document.getElementById('dataInicio').value,
+      dataFim: document.getElementById('dataFim').value,
+      ginasio: document.getElementById('ginasio').value,
+      time: document.getElementById('time').value,
+      local: document.getElementById('local').value,
+      rodada: document.getElementById('rodada').value,
+      diaSemana: document.getElementById('diaSemana').value,
+      gol: document.getElementById('gol').value,
+      assistencias: document.getElementById('assistencias').value,
+      vitoria: document.getElementById('vitoria').value,
+      empate: document.getElementById('empate').value
+    };
+    displayData(data, filters, true);
+  } catch (error) {
+    console.error('Erro ao gerar PIVOT:', error.message);
+    showError(`Erro ao gerar PIVOT: ${error.message}`);
+  }
+}
+
 document.getElementById('aplicarFiltros').addEventListener('click', async () => {
   console.log('Aplicando filtros');
-  const filters = {
-    campeonato: document.getElementById('campeonato').value,
-    dataInicio: document.getElementById('dataInicio').value,
-    dataFim: document.getElementById('dataFim').value,
-    ginasio: document.getElementById('ginasio').value,
-    time: document.getElementById('time').value,
-    local: document.getElementById('local').value,
-    rodada: document.getElementById('rodada').value,
-    diaSemana: document.getElementById('diaSemana').value,
-    gol: document.getElementById('gol').value,
-    assistencias: document.getElementById('assistencias').value,
-    vitoria: document.getElementById('vitoria').value,
-    empate: document.getElementById('empate').value
-  };
-  const data = await fetchSheetData();
-  if (data.length > 0) {
-    displayData(data, filters);
+  try {
+    const filters = {
+      campeonato: document.getElementById('campeonato').value,
+      dataInicio: document.getElementById('dataInicio').value,
+      dataFim: document.getElementById('dataFim').value,
+      ginasio: document.getElementById('ginasio').value,
+      time: document.getElementById('time').value,
+      local: document.getElementById('local').value,
+      rodada: document.getElementById('rodada').value,
+      diaSemana: document.getElementById('diaSemana').value,
+      gol: document.getElementById('gol').value,
+      assistencias: document.getElementById('assistencias').value,
+      vitoria: document.getElementById('vitoria').value,
+      empate: document.getElementById('empate').value
+    };
+    const data = await fetchSheetData();
+    if (data.length > 0) {
+      displayData(data, filters);
+    }
+  } catch (error) {
+    console.error('Erro ao aplicar filtros:', error.message);
+    showError(`Erro ao aplicar filtros: ${error.message}`);
   }
 });
 
 document.getElementById('limparFiltros').addEventListener('click', async () => {
   console.log('Limpando filtros');
-  document.getElementById('campeonato').value = '';
-  document.getElementById('dataInicio').value = '';
-  document.getElementById('dataFim').value = '';
-  document.getElementById('ginasio').value = '';
-  document.getElementById('time').value = '';
-  document.getElementById('local').value = '';
-  document.getElementById('rodada').value = '';
-  document.getElementById('diaSemana').value = '';
-  document.getElementById('gol').value = '';
-  document.getElementById('assistencias').value = '';
-  document.getElementById('vitoria').value = '';
-  document.getElementById('empate').value = '';
-  const data = await fetchSheetData();
-  if (data.length > 0) {
-    displayData(data);
+  try {
+    document.getElementById('campeonato').value = '';
+    document.getElementById('dataInicio').value = '';
+    document.getElementById('dataFim').value = '';
+    document.getElementById('ginasio').value = '';
+    document.getElementById('time').value = '';
+    document.getElementById('local').value = '';
+    document.getElementById('rodada').value = '';
+    document.getElementById('diaSemana').value = '';
+    document.getElementById('gol').value = '';
+    document.getElementById('assistencias').value = '';
+    document.getElementById('vitoria').value = '';
+    document.getElementById('empate').value = '';
+    const data = await fetchSheetData();
+    if (data.length > 0) {
+      displayData(data);
+    }
+  } catch (error) {
+    console.error('Erro ao limpar filtros:', error.message);
+    showError(`Erro ao limpar filtros: ${error.message}`);
   }
+});
+
+document.getElementById('pivotButton').addEventListener('click', () => {
+  console.log('Evento de clique no botão PIVOT registrado');
+  generatePivot();
 });
 
 async function init() {
   console.log('Inicializando aplicação');
-  const data = await fetchSheetData();
-  if (data.length === 0) {
-    console.error('Nenhum dado retornado');
-    showError('Nenhum dado disponível. Verifique a conexão, chave API ou planilha.');
-    return;
+  try {
+    const data = await fetchSheetData();
+    if (data.length === 0) {
+      console.error('Nenhum dado retornado');
+      showError('Nenhum dado disponível. Verifique a conexão, chave API ou planilha.');
+      return;
+    }
+    populateFilters(data);
+    displayData(data);
+  } catch (error) {
+    console.error('Erro na inicialização:', error.message);
+    showError(`Erro na inicialização: ${error.message}`);
   }
-  populateFilters(data);
-  displayData(data);
 }
 
 init();
