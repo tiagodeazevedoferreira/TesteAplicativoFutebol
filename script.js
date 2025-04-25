@@ -3,6 +3,13 @@ console.log('script.js iniciado');
 const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
 const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
+let allData = [];
+let filteredDataTab1 = [];
+let filteredDataTab2 = [];
+let filteredDataTab3 = [];
+let isPivotTab1 = false; // Estado do PIVOT para Aba 1
+let isPivotTab3 = false; // Estado do PIVOT para Aba 3
+
 async function fetchSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
   console.log('Iniciando requisição à API:', url);
@@ -68,40 +75,41 @@ function populateFilters(data) {
     { id: 'assistencias', index: 12 }
   ];
 
-  const timeSelect = document.getElementById('time');
-  if (!timeSelect) {
-    console.error('Elemento #time não encontrado');
-    showError('Erro interno: elemento de filtro não encontrado.');
-    return;
-  }
-  const mandantes = data.slice(1).map(row => row[4]?.trim()).filter(v => v);
-  const visitantes = data.slice(1).map(row => row[7]?.trim()).filter(v => v);
-  const times = [...new Set([...mandantes, ...visitantes])].sort();
-  times.forEach(value => {
-    const option = document.createElement('option');
-    option.value = value;
-    option.textContent = value;
-    timeSelect.appendChild(option);
-  });
-
-  filters.forEach(filter => {
-    const select = document.getElementById(filter.id);
-    if (!select) {
-      console.error(`Elemento #${filter.id} não encontrado`);
-      return;
+  // Popula os filtros para todas as abas
+  const tabs = ['tab1', 'tab2', 'tab3'];
+  tabs.forEach(tab => {
+    // Popula o filtro de times (mandante/visitante)
+    const timeSelect = document.getElementById(`time-${tab}`);
+    if (timeSelect) {
+      const mandantes = data.slice(1).map(row => row[4]?.trim()).filter(v => v);
+      const visitantes = data.slice(1).map(row => row[7]?.trim()).filter(v => v);
+      const times = [...new Set([...mandantes, ...visitantes])].sort();
+      times.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        timeSelect.appendChild(option);
+      });
     }
-    const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
-    values.forEach(value => {
-      const option = document.createElement('option');
-      option.value = value;
-      option.textContent = value;
-      select.appendChild(option);
+
+    // Popula os outros filtros
+    filters.forEach(filter => {
+      const select = document.getElementById(`${filter.id}-${tab}`);
+      if (select) {
+        const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
+        values.forEach(value => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+      }
     });
   });
 }
 
-function updateBigNumbers(data) {
-  console.log('Atualizando Big Numbers');
+function updateBigNumbers(data, tabId) {
+  console.log(`Atualizando Big Numbers para ${tabId}`);
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
 
   data.forEach(row => {
@@ -130,19 +138,20 @@ function updateBigNumbers(data) {
   const media = jogos > 0 ? (gols / jogos).toFixed(2) : '0.00';
   const golACada = jogos > 0 && gols > 0 ? (jogos / gols).toFixed(2) : '0.00';
 
-  document.getElementById('bigNumberJogos').textContent = jogos;
-  document.getElementById('bigNumberGols').textContent = gols;
-  document.getElementById('bigNumberAssistencias').textContent = assistencias;
-  document.getElementById('bigNumberVitorias').textContent = vitorias;
-  document.getElementById('bigNumberEmpates').textContent = empates;
-  document.getElementById('bigNumberDerrotas').textContent = derrotas;
-  document.getElementById('bigNumberMedia').textContent = media;
-  document.getElementById('bigNumberGolACada').textContent = golACada;
+  document.getElementById(`bigNumberJogos-${tabId}`).textContent = jogos;
+  document.getElementById(`bigNumberGols-${tabId}`).textContent = gols;
+  document.getElementById(`bigNumberAssistencias-${tabId}`).textContent = assistencias;
+  document.getElementById(`bigNumberVitorias-${tabId}`).textContent = vitorias;
+  document.getElementById(`bigNumberEmpates-${tabId}`).textContent = empates;
+  document.getElementById(`bigNumberDerrotas-${tabId}`).textContent = derrotas;
+  document.getElementById(`bigNumberMedia-${tabId}`).textContent = media;
+  document.getElementById(`bigNumberGolACada-${tabId}`).textContent = golACada;
 
-  console.log('Big Numbers atualizados:', { jogos, gols, media, assistencias, golACada, vitorias, empates, derrotas });
+  console.log(`Big Numbers atualizados (${tabId}):`, { jogos, gols, media, assistencias, golACada, vitorias, empates, derrotas });
 }
 
-let sortConfig = { column: null, direction: 'asc' };
+let sortConfigTab1 = { column: null, direction: 'asc' };
+let sortConfigTab3 = { column: null, direction: 'asc' };
 
 function sortData(data, columnIndex, direction) {
   const sortedData = [...data];
@@ -172,13 +181,13 @@ function sortData(data, columnIndex, direction) {
   return sortedData;
 }
 
-function displayData(data, filteredData) {
-  console.log('Exibindo dados (modo tabela normal)');
+function displayData(data, filteredData, tabId) {
+  console.log(`Exibindo dados (modo tabela normal) para ${tabId}`);
   clearError();
-  const tbody = document.getElementById('jogosBody');
-  const thead = document.getElementById('tableHead');
+  const tbody = document.getElementById(`jogosBody-${tabId}`);
+  const thead = document.getElementById(`tableHead-${tabId}`);
   if (!tbody || !thead) {
-    console.error('Elementos #jogosBody ou #tableHead não encontrados');
+    console.error(`Elementos #jogosBody-${tabId} ou #tableHead-${tabId} não encontrados`);
     showError('Erro interno: tabela não encontrada.');
     return;
   }
@@ -189,6 +198,7 @@ function displayData(data, filteredData) {
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
   const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
+  const sortConfig = tabId === 'tab1' ? sortConfigTab1 : sortConfigTab3;
   headers.forEach((text, index) => {
     const th = document.createElement('th');
     th.textContent = text;
@@ -199,16 +209,20 @@ function displayData(data, filteredData) {
     }
     th.addEventListener('click', () => {
       const newDirection = sortConfig.column === index && sortConfig.direction === 'asc' ? 'desc' : 'asc';
-      sortConfig = { column: index, direction: newDirection };
+      if (tabId === 'tab1') {
+        sortConfigTab1 = { column: index, direction: newDirection };
+      } else {
+        sortConfigTab3 = { column: index, direction: newDirection };
+      }
       const sortedData = sortData(filteredData, index, newDirection);
-      displayData(data, sortedData);
-      console.log(`Ordenando por coluna ${text} (${index}) em ordem ${newDirection}`);
+      displayData(data, sortedData, tabId);
+      console.log(`Ordenando por coluna ${text} (${index}) em ordem ${newDirection} para ${tabId}`);
     });
     trHead.appendChild(th);
   });
   thead.appendChild(trHead);
 
-  console.log('Total de linhas filtradas (tabela normal):', filteredData.length);
+  console.log(`Total de linhas filtradas (tabela normal) para ${tabId}:`, filteredData.length);
   if (filteredData.length === 0) {
     showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
   }
@@ -247,17 +261,15 @@ function displayData(data, filteredData) {
     });
     tbody.appendChild(tr);
   });
-
-  updateBigNumbers(filteredData);
 }
 
-function pivotTable(data, filteredData) {
-  console.log("Transformando tabela para formato PIVOT");
+function pivotTable(data, filteredData, tabId) {
+  console.log(`Transformando tabela para formato PIVOT para ${tabId}`);
   clearError();
-  const tbody = document.getElementById('jogosBody');
-  const thead = document.getElementById('tableHead');
+  const tbody = document.getElementById(`jogosBody-${tabId}`);
+  const thead = document.getElementById(`tableHead-${tabId}`);
   if (!tbody || !thead) {
-    console.error('Elementos #jogosBody ou #tableHead não encontrados');
+    console.error(`Elementos #jogosBody-${tabId} ou #tableHead-${tabId} não encontrados`);
     showError('Erro interno: tabela não encontrada.');
     return;
   }
@@ -276,7 +288,7 @@ function pivotTable(data, filteredData) {
   thead.appendChild(trHead);
 
   const headers = data[0].slice(0, 16); // Excluir Considerar (índice 16)
-  console.log('Cabeçalho para PIVOT:', headers);
+  console.log(`Cabeçalho para PIVOT (${tabId}):`, headers);
 
   headers.forEach((header, colIndex) => {
     const tr = document.createElement('tr');
@@ -296,8 +308,7 @@ function pivotTable(data, filteredData) {
     tbody.appendChild(tr);
   });
 
-  console.log("Tabela transformada para formato PIVOT");
-  updateBigNumbers(filteredData);
+  console.log(`Tabela transformada para formato PIVOT (${tabId})`);
 }
 
 function filterData(data, filters) {
@@ -339,128 +350,194 @@ function filterData(data, filters) {
   });
 }
 
-let isPivot = false;
-document.getElementById('pivotMode').addEventListener('click', async () => {
-  console.log('Botão PIVOT clicado');
-  isPivot = !isPivot;
-  try {
-    const filters = {
-      campeonato: document.getElementById('campeonato').value,
-      dataInicio: document.getElementById('dataInicio').value,
-      dataFim: document.getElementById('dataFim').value,
-      ginasio: document.getElementById('ginasio').value,
-      time: document.getElementById('time').value,
-      local: document.getElementById('local').value,
-      rodada: document.getElementById('rodada').value,
-      diaSemana: document.getElementById('diaSemana').value,
-      gol: document.getElementById('gol').value,
-      assistencias: document.getElementById('assistencias').value,
-      vitoria: document.getElementById('vitoria').value,
-      empate: document.getElementById('empate').value
-    };
-
-    const data = await fetchSheetData();
-    if (data.length === 0) {
-      showError('Nenhum dado disponível para exibir.');
-      return;
-    }
-
-    const filteredData = filterData(data, filters);
-    if (isPivot) {
-      pivotTable(data, filteredData);
-      document.getElementById('pivotMode').textContent = 'Voltar ao modo Tabela';
-    } else {
-      displayData(data, filteredData);
-      document.getElementById('pivotMode').textContent = 'Alternar para PIVOT';
-    }
-  } catch (error) {
-    console.error('Erro ao alternar modo:', error.message);
-    showError(`Erro ao alternar modo: ${error.message}`);
+function displayTab1() {
+  const filters = {
+    campeonato: document.getElementById('campeonato-tab1').value,
+    dataInicio: document.getElementById('dataInicio-tab1').value,
+    dataFim: document.getElementById('dataFim-tab1').value
+  };
+  filteredDataTab1 = filterData(allData, filters);
+  if (isPivotTab1) {
+    pivotTable(allData, filteredDataTab1, 'tab1');
+    document.getElementById('pivotMode-tab1').textContent = 'Voltar ao modo Tabela';
+  } else {
+    displayData(allData, filteredDataTab1, 'tab1');
+    document.getElementById('pivotMode-tab1').textContent = 'Alternar para PIVOT';
   }
+}
+
+function displayTab2() {
+  const filters = {
+    campeonato: document.getElementById('campeonato-tab2').value,
+    dataInicio: document.getElementById('dataInicio-tab2').value,
+    dataFim: document.getElementById('dataFim-tab2').value,
+    ginasio: document.getElementById('ginasio-tab2').value,
+    time: document.getElementById('time-tab2').value,
+    local: document.getElementById('local-tab2').value,
+    rodada: document.getElementById('rodada-tab2').value,
+    diaSemana: document.getElementById('diaSemana-tab2').value,
+    gol: document.getElementById('gol-tab2').value,
+    assistencias: document.getElementById('assistencias-tab2').value,
+    vitoria: document.getElementById('vitoria-tab2').value,
+    empate: document.getElementById('empate-tab2').value
+  };
+  filteredDataTab2 = filterData(allData, filters);
+  updateBigNumbers(filteredDataTab2, 'tab2');
+}
+
+function displayTab3() {
+  const filters = {
+    campeonato: document.getElementById('campeonato-tab3').value,
+    dataInicio: document.getElementById('dataInicio-tab3').value,
+    dataFim: document.getElementById('dataFim-tab3').value,
+    ginasio: document.getElementById('ginasio-tab3').value,
+    time: document.getElementById('time-tab3').value,
+    local: document.getElementById('local-tab3').value,
+    rodada: document.getElementById('rodada-tab3').value,
+    diaSemana: document.getElementById('diaSemana-tab3').value,
+    gol: document.getElementById('gol-tab3').value,
+    assistencias: document.getElementById('assistencias-tab3').value,
+    vitoria: document.getElementById('vitoria-tab3').value,
+    empate: document.getElementById('empate-tab3').value
+  };
+  filteredDataTab3 = filterData(allData, filters);
+  if (isPivotTab3) {
+    pivotTable(allData, filteredDataTab3, 'tab3');
+    document.getElementById('pivotMode-tab3').textContent = 'Voltar ao modo Tabela';
+  } else {
+    displayData(allData, filteredDataTab3, 'tab3');
+    document.getElementById('pivotMode-tab3').textContent = 'Alternar para PIVOT';
+  }
+}
+
+function clearFilters() {
+  const tabs = ['tab1', 'tab2', 'tab3'];
+  tabs.forEach(tab => {
+    document.getElementById(`campeonato-${tab}`).value = '';
+    document.getElementById(`dataInicio-${tab}`).value = '';
+    document.getElementById(`dataFim-${tab}`).value = '';
+    if (tab !== 'tab1') {
+      document.getElementById(`ginasio-${tab}`).value = '';
+      document.getElementById(`time-${tab}`).value = '';
+      document.getElementById(`local-${tab}`).value = '';
+      document.getElementById(`rodada-${tab}`).value = '';
+      document.getElementById(`diaSemana-${tab}`).value = '';
+      document.getElementById(`gol-${tab}`).value = '';
+      document.getElementById(`assistencias-${tab}`).value = '';
+      document.getElementById(`vitoria-${tab}`).value = '';
+      document.getElementById(`empate-${tab}`).value = '';
+    }
+  });
+  isPivotTab1 = false;
+  isPivotTab3 = false;
+}
+
+function switchTab(tabId) {
+  clearFilters();
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+  document.getElementById(tabId).classList.add('active');
+  document.getElementById(`${tabId}-btn`).classList.add('active-tab');
+
+  if (tabId === 'tab1') {
+    displayTab1();
+  } else if (tabId === 'tab2') {
+    displayTab2();
+  } else if (tabId === 'tab3') {
+    displayTab3();
+  }
+}
+
+// Aba 1: Botões
+document.getElementById('aplicarFiltros-tab1').addEventListener('click', () => {
+  console.log('Aplicando filtros (Tab 1)');
+  displayTab1();
 });
 
-document.getElementById('aplicarFiltros').addEventListener('click', async () => {
-  console.log('Aplicando filtros');
-  try {
-    const filters = {
-      campeonato: document.getElementById('campeonato').value,
-      dataInicio: document.getElementById('dataInicio').value,
-      dataFim: document.getElementById('dataFim').value,
-      ginasio: document.getElementById('ginasio').value,
-      time: document.getElementById('time').value,
-      local: document.getElementById('local').value,
-      rodada: document.getElementById('rodada').value,
-      diaSemana: document.getElementById('diaSemana').value,
-      gol: document.getElementById('gol').value,
-      assistencias: document.getElementById('assistencias').value,
-      vitoria: document.getElementById('vitoria').value,
-      empate: document.getElementById('empate').value
-    };
-
-    const data = await fetchSheetData();
-    if (data.length === 0) {
-      showError('Nenhum dado disponível para exibir.');
-      return;
-    }
-
-    const filteredData = filterData(data, filters);
-    if (isPivot) {
-      pivotTable(data, filteredData);
-    } else {
-      displayData(data, filteredData);
-    }
-  } catch (error) {
-    console.error('Erro ao aplicar filtros:', error.message);
-    showError(`Erro ao aplicar filtros: ${error.message}`);
-  }
+document.getElementById('limparFiltros-tab1').addEventListener('click', () => {
+  console.log('Limpando filtros (Tab 1)');
+  document.getElementById('campeonato-tab1').value = '';
+  document.getElementById('dataInicio-tab1').value = '';
+  document.getElementById('dataFim-tab1').value = '';
+  isPivotTab1 = false;
+  displayTab1();
 });
 
-document.getElementById('limparFiltros').addEventListener('click', async () => {
-  console.log('Limpando filtros');
-  try {
-    document.getElementById('campeonato').value = '';
-    document.getElementById('dataInicio').value = '';
-    document.getElementById('dataFim').value = '';
-    document.getElementById('ginasio').value = '';
-    document.getElementById('time').value = '';
-    document.getElementById('local').value = '';
-    document.getElementById('rodada').value = '';
-    document.getElementById('diaSemana').value = '';
-    document.getElementById('gol').value = '';
-    document.getElementById('assistencias').value = '';
-    document.getElementById('vitoria').value = '';
-    document.getElementById('empate').value = '';
-
-    const data = await fetchSheetData();
-    if (data.length === 0) {
-      showError('Nenhum dado disponível para exibir.');
-      return;
-    }
-
-    const filteredData = filterData(data, {});
-    if (isPivot) {
-      pivotTable(data, filteredData);
-    } else {
-      displayData(data, filteredData);
-    }
-  } catch (error) {
-    console.error('Erro ao limpar filtros:', error.message);
-    showError(`Erro ao limpar filtros: ${error.message}`);
-  }
+document.getElementById('pivotMode-tab1').addEventListener('click', () => {
+  console.log('Botão PIVOT clicado (Tab 1)');
+  isPivotTab1 = !isPivotTab1;
+  displayTab1();
 });
+
+// Aba 2: Botões
+document.getElementById('aplicarFiltros-tab2').addEventListener('click', () => {
+  console.log('Aplicando filtros (Tab 2)');
+  displayTab2();
+});
+
+document.getElementById('limparFiltros-tab2').addEventListener('click', () => {
+  console.log('Limpando filtros (Tab 2)');
+  document.getElementById('campeonato-tab2').value = '';
+  document.getElementById('dataInicio-tab2').value = '';
+  document.getElementById('dataFim-tab2').value = '';
+  document.getElementById('ginasio-tab2').value = '';
+  document.getElementById('time-tab2').value = '';
+  document.getElementById('local-tab2').value = '';
+  document.getElementById('rodada-tab2').value = '';
+  document.getElementById('diaSemana-tab2').value = '';
+  document.getElementById('gol-tab2').value = '';
+  document.getElementById('assistencias-tab2').value = '';
+  document.getElementById('vitoria-tab2').value = '';
+  document.getElementById('empate-tab2').value = '';
+  displayTab2();
+});
+
+// Aba 3: Botões
+document.getElementById('aplicarFiltros-tab3').addEventListener('click', () => {
+  console.log('Aplicando filtros (Tab 3)');
+  displayTab3();
+});
+
+document.getElementById('limparFiltros-tab3').addEventListener('click', () => {
+  console.log('Limpando filtros (Tab 3)');
+  document.getElementById('campeonato-tab3').value = '';
+  document.getElementById('dataInicio-tab3').value = '';
+  document.getElementById('dataFim-tab3').value = '';
+  document.getElementById('ginasio-tab3').value = '';
+  document.getElementById('time-tab3').value = '';
+  document.getElementById('local-tab3').value = '';
+  document.getElementById('rodada-tab3').value = '';
+  document.getElementById('diaSemana-tab3').value = '';
+  document.getElementById('gol-tab3').value = '';
+  document.getElementById('assistencias-tab3').value = '';
+  document.getElementById('vitoria-tab3').value = '';
+  document.getElementById('empate-tab3').value = '';
+  isPivotTab3 = false;
+  displayTab3();
+});
+
+document.getElementById('pivotMode-tab3').addEventListener('click', () => {
+  console.log('Botão PIVOT clicado (Tab 3)');
+  isPivotTab3 = !isPivotTab3;
+  displayTab3();
+});
+
+// Navegação entre abas
+document.getElementById('tab1-btn').addEventListener('click', () => switchTab('tab1'));
+document.getElementById('tab2-btn').addEventListener('click', () => switchTab('tab2'));
+document.getElementById('tab3-btn').addEventListener('click', () => switchTab('tab3'));
 
 async function init() {
   console.log('Inicializando aplicação');
   try {
-    const data = await fetchSheetData();
-    if (data.length === 0) {
+    allData = await fetchSheetData();
+    if (allData.length === 0) {
       console.error('Nenhum dado retornado');
       showError('Nenhum dado disponível. Verifique a conexão, chave API ou planilha.');
       return;
     }
-    populateFilters(data);
-    const filteredData = filterData(data, {});
-    displayData(data, filteredData);
+    populateFilters(allData);
+    switchTab('tab1'); // Inicia na Aba 1
   } catch (error) {
     console.error('Erro na inicialização:', error.message);
     showError(`Erro na inicialização: ${error.message}`);
