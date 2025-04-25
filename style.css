@@ -1,10 +1,12 @@
 body {
   font-family: Arial, sans-serif;
+  background-color: #f9f9f9 !important; /* Sobrescrever Tailwind bg-gray-100 */
 }
 
 table {
   border-collapse: collapse;
   width: 100%;
+  min-width: 800px; /* Forçar rolagem horizontal em telas pequenas */
 }
 
 th, td {
@@ -13,15 +15,34 @@ th, td {
 }
 
 tr:nth-child(even) {
-  background-color: #f2f2f2;
+  background-color: #e6f0ea; /* Tom claro de verde (Portuguesa) */
 }
 
 th {
   white-space: nowrap; /* Evitar quebra de texto nos cabeçalhos */
+  background-color: #f5e6e8; /* Tom claro de vermelho (Portuguesa) */
 }
 
 td {
   max-width: 200px; /* Limitar largura das células no modo PIVOT */
+}
+
+/* Sobrescrever cores do Tailwind para os botões */
+.bg-blue-500 {
+  background-color: #d91a2a !important; /* Vermelho da Portuguesa */
+}
+
+.bg-gray-500, .bg-green-500 {
+  background-color: #1a3c34 !important; /* Verde escuro da Portuguesa */
+}
+
+/* Mensagem de erro */
+.bg-red-100 {
+  background-color: #f5e6e8 !important; /* Tom claro de vermelho */
+}
+
+.text-red-700 {
+  color: #d91a2a !important; /* Vermelho da Portuguesa */
 }
 
 @media (max-width: 768px) {
@@ -35,5 +56,15 @@ td {
   
   th, td {
     padding: 4px;
+    max-width: 150px; /* Reduzir largura das células no PIVOT em telas pequenas */
+  }
+
+  /* Ajustar Big Numbers para evitar quebras estranhas */
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .md\:grid-cols-5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

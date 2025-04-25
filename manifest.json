@@ -1,12 +1,12 @@
 {
-  "name": "Controle de Jogos de Futebol",
-  "short_name": "Jogos Futebol",
+  "name": "Jogos do JL",
+  "short_name": "Jogos JL",
   "description": "Aplicação para controle de jogos de futebol",
   "start_url": "https://tiagodeazevedoferreira.github.io/TesteAplicativoFutebol/",
   "scope": "/TesteAplicativoFutebol/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1e40af",
+  "theme_color": "#d91a2a",
   "icons": [
     {
       "src": "./icon.png",
