@@ -1,5 +1,5 @@
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Roboto', sans-serif;
   background-color: #f9f9f9 !important; /* Sobrescrever Tailwind bg-gray-100 */
 }
 
@@ -7,11 +7,13 @@ table {
   border-collapse: collapse;
   width: 100%;
   min-width: 800px; /* Forçar rolagem horizontal em telas pequenas */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra na tabela */
 }
 
 th, td {
   text-align: left;
   padding: 8px;
+  border: 1px solid #e2e8f0; /* Borda mais suave */
 }
 
 tr:nth-child(even) {
@@ -25,6 +27,56 @@ th {
 
 td {
   max-width: 200px; /* Limitar largura das células no modo PIVOT */
+}
+
+/* Destaque visual para linhas */
+.victory-row {
+  background-color: #d4edda !important; /* Verde claro para vitórias */
+}
+
+.defeat-row {
+  background-color: #f8d7da !important; /* Vermelho claro para derrotas */
+}
+
+.draw-row {
+  background-color: #fff3cd !important; /* Amarelo claro para empates */
+}
+
+/* Estilo para ordenação */
+th.sortable {
+  cursor: pointer;
+  position: relative;
+}
+
+th.sortable:hover {
+  text-decoration: underline;
+}
+
+th.sort-asc::after {
+  content: ' ↑';
+  font-size: 0.8rem;
+}
+
+th.sort-desc::after {
+  content: ' ↓';
+  font-size: 0.8rem;
+}
+
+/* Sombras e bordas para Big Numbers */
+.bg-white {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+/* Sombras e bordas para botões */
+.bg-blue-500, .bg-gray-500, .bg-green-500 {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 6px !important;
+  transition: transform 0.1s ease;
+}
+
+.bg-blue-500:hover, .bg-gray-500:hover, .bg-green-500:hover {
+  transform: translateY(-1px);
 }
 
 /* Mensagem de erro */

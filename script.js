@@ -142,6 +142,36 @@ function updateBigNumbers(data) {
   console.log('Big Numbers atualizados:', { jogos, gols, media, assistencias, golACada, vitorias, empates, derrotas });
 }
 
+let sortConfig = { column: null, direction: 'asc' };
+
+function sortData(data, columnIndex, direction) {
+  const sortedData = [...data];
+  sortedData.sort((a, b) => {
+    let valueA = a[columnIndex] || '';
+    let valueB = b[columnIndex] || '';
+
+    // Ordenação por data (índice 1 - Data)
+    if (columnIndex === 1) {
+      valueA = valueA ? new Date(valueA.split('/').reverse().join('-')) : new Date(0);
+      valueB = valueB ? new Date(valueB.split('/').reverse().join('-')) : new Date(0);
+      return direction === 'asc' ? valueA - valueB : valueB - valueA;
+    }
+
+    // Ordenação por números (índices 11, 12 - Gol, Assistências)
+    if (columnIndex === 11 || columnIndex === 12) {
+      valueA = parseInt(valueA) || 0;
+      valueB = parseInt(valueB) || 0;
+      return direction === 'asc' ? valueA - valueB : valueB - valueA;
+    }
+
+    // Ordenação por texto (outros campos)
+    valueA = valueA.toString().toLowerCase();
+    valueB = valueB.toString().toLowerCase();
+    return direction === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+  });
+  return sortedData;
+}
+
 function displayData(data, filteredData) {
   console.log('Exibindo dados (modo tabela normal)');
   clearError();
@@ -158,10 +188,22 @@ function displayData(data, filteredData) {
   // Configurar cabeçalho da tabela normal
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
-  ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'].forEach(text => {
+  const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
+  headers.forEach((text, index) => {
     const th = document.createElement('th');
     th.textContent = text;
-    th.className = 'p-2';
+    th.className = 'p-2 sortable';
+    th.dataset.index = index;
+    if (sortConfig.column === index) {
+      th.classList.add(sortConfig.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+    th.addEventListener('click', () => {
+      const newDirection = sortConfig.column === index && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+      sortConfig = { column: index, direction: newDirection };
+      const sortedData = sortData(filteredData, index, newDirection);
+      displayData(data, sortedData);
+      console.log(`Ordenando por coluna ${text} (${index}) em ordem ${newDirection}`);
+    });
     trHead.appendChild(th);
   });
   thead.appendChild(trHead);
@@ -173,6 +215,14 @@ function displayData(data, filteredData) {
 
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
+    // Destaque visual baseado em Vitória, Derrota, Empate
+    if (row[13] === '1') {
+      tr.classList.add('victory-row');
+    } else if (row[14] === '1') {
+      tr.classList.add('defeat-row');
+    } else if (row[15] === '1') {
+      tr.classList.add('draw-row');
+    }
     row.slice(0, 16).forEach((cell, index) => {
       const td = document.createElement('td');
       if (index === 13 || index === 14 || index === 15) {
