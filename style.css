@@ -49,6 +49,13 @@ tr:nth-child(even) {
     gap: 8px;
 }
 
+/* Adicionado novo estilo para o ponto 6 */
+select:focus {
+    outline: 2px solid #1e40af; /* Cor azul destacada */
+    outline-offset: 2px;        /* Distância entre o contorno e o elemento */
+    border-radius: 4px;         /* Mantém bordas arredondadas */
+}
+
 .btn-lembrete:hover {
     background-color: #e5e5e5;
 }
