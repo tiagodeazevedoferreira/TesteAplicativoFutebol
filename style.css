@@ -35,7 +35,7 @@ td {
 }
 
 .defeat-row {
-  background-color: #f8d7da !important; /* Vermelho claro para derrotas */
+  background-color: #e2e8f0 !important; /* Cinza claro para derrotas */
 }
 
 .draw-row {
