@@ -3,6 +3,12 @@ console.log('script.js iniciado');
 const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
 const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
+// Variáveis globais para armazenar dados
+let allData = [];
+let filteredData = [];
+let isPivot = false;
+let currentFilters = {};
+
 async function fetchSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
   console.log('Iniciando requisição à API:', url);
@@ -28,6 +34,7 @@ async function fetchSheetData() {
       throw new Error('Nenhum dado retornado. A planilha está vazia ou a aba Sheet1 não existe.');
     }
     console.log('Linhas recebidas:', data.values.length);
+    allData = data.values;
     return data.values;
   } catch (error) {
     console.error('Erro ao buscar dados:', error.message);
@@ -100,68 +107,15 @@ function populateFilters(data) {
   });
 }
 
-function pivotTable(data) {
-  console.log("Transformando tabela para formato PIVOT");
-
-  // Selecionar o corpo da tabela
-  const tbody = document.getElementById('jogosBody');
-  if (!tbody) {
-    console.error('Elemento #jogosBody não encontrado');
-    showError('Erro interno: tabela não encontrada.');
-    return;
-  }
-  tbody.innerHTML = '';
-
-  // A primeira linha contém os cabeçalhos
-  const headers = data[0];
+function applyFilters(data, filters) {
+  console.log('Aplicando filtros:', filters);
   
-  // Iterar pelas colunas e criar uma linha para cada uma
-  headers.forEach((header, colIndex) => {
-    const tr = document.createElement('tr');
-    const th = document.createElement('th');
-    th.textContent = header;
-    th.className = 'p-2 border bg-gray-200';
-    tr.appendChild(th);
-
-    // Adicionar valores de cada linha correspondente ao cabeçalho
-    data.slice(1).forEach(row => {
-      const td = document.createElement('td');
-      td.textContent = row[colIndex] || ''; // Valor ou vazio
-      td.className = 'p-2 border';
-      tr.appendChild(td);
-    });
-
-    tbody.appendChild(tr);
-  });
-
-  console.log("Tabela transformada para formato PIVOT");
-}
-
-
-function displayData(data, filters = {}) {
-  console.log('Exibindo dados com filtros:', filters);
-  clearError();
-  const tbody = document.getElementById('jogosBody');
-  if (!tbody) {
-    console.error('Elemento #jogosBody não encontrado');
-    showError('Erro interno: tabela não encontrada.');
-    return;
-  }
-  tbody.innerHTML = '';
-
-  // Logar todas as linhas recebidas para depuração
-  console.log('Processando linhas recebidas:', data.slice(1).length);
-  data.slice(1).forEach((row, index) => {
-    const considerar = row[16];
-    const placar1 = row[5];
-    console.log(`Linha ${index + 2} (bruta): Placar1=${placar1 || 'vazio'}, Considerar=${considerar || 'vazio'}`);
-  });
-
-  const filteredData = data.slice(1).filter((row, index) => {
+  return data.slice(1).filter((row, index) => {
     if (!row || row.length < 17) {
       console.log(`Linha ${index + 2} inválida:`, row);
       return false;
     }
+    
     const [campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar] = row;
     const data = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
@@ -189,13 +143,11 @@ function displayData(data, filters = {}) {
       (!filters.empate || empate === filters.empate)
     );
   });
+}
 
-  console.log('Total de linhas filtradas:', filteredData.length);
-  if (filteredData.length === 0) {
-    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
-  }
-
+function updateBigNumbers(filteredData) {
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
+  
   filteredData.forEach(row => {
     const placar1 = row[5];
     const isValidPlacar1 = placar1 && placar1.trim() !== '';
@@ -224,6 +176,37 @@ function displayData(data, filters = {}) {
   document.getElementById('bigNumberDerrotas').textContent = derrotas;
   document.getElementById('bigNumberMedia').textContent = media;
   document.getElementById('bigNumberGolACada').textContent = golACada;
+}
+
+function displayData(data, filters = {}) {
+  console.log('Exibindo dados com filtros:', filters);
+  clearError();
+  
+  // Aplicar filtros
+  filteredData = applyFilters(data, filters);
+  console.log('Total de linhas filtradas:', filteredData.length);
+  
+  if (filteredData.length === 0) {
+    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
+  }
+  
+  // Atualizar estatísticas
+  updateBigNumbers(filteredData);
+  
+  // Se estiver no modo PIVOT, exibir como PIVOT
+  if (isPivot) {
+    pivotTable(data[0], filteredData);
+    return;
+  }
+  
+  // Caso contrário, exibir como tabela normal
+  const tbody = document.getElementById('jogosBody');
+  if (!tbody) {
+    console.error('Elemento #jogosBody não encontrado');
+    showError('Erro interno: tabela não encontrada.');
+    return;
+  }
+  tbody.innerHTML = '';
 
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
@@ -241,9 +224,49 @@ function displayData(data, filters = {}) {
   });
 }
 
+function pivotTable(headers, data) {
+  console.log("Transformando tabela para formato PIVOT com", data.length, "linhas filtradas");
+
+  // Selecionar o corpo da tabela
+  const tbody = document.getElementById('jogosBody');
+  if (!tbody) {
+    console.error('Elemento #jogosBody não encontrado');
+    showError('Erro interno: tabela não encontrada.');
+    return;
+  }
+  tbody.innerHTML = '';
+
+  // Iterar pelas colunas e criar uma linha para cada uma
+  headers.forEach((header, colIndex) => {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    th.textContent = header;
+    th.className = 'p-2 border bg-gray-200';
+    tr.appendChild(th);
+
+    // Adicionar valores de cada linha correspondente ao cabeçalho
+    data.forEach(row => {
+      const td = document.createElement('td');
+      // Verificar se é uma coluna de vitória/derrota/empate
+      if (colIndex === 13 || colIndex === 14 || colIndex === 15) {
+        td.textContent = row[colIndex] === '1' ? 'Sim' : '';
+      } else {
+        td.textContent = row[colIndex] || ''; // Valor ou vazio
+      }
+      td.className = 'p-2 border';
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  console.log("Tabela transformada para formato PIVOT");
+}
+
+// Event Listeners
 document.getElementById('aplicarFiltros').addEventListener('click', async () => {
   console.log('Aplicando filtros');
-  const filters = {
+  currentFilters = {
     campeonato: document.getElementById('campeonato').value,
     dataInicio: document.getElementById('dataInicio').value,
     dataFim: document.getElementById('dataFim').value,
@@ -257,9 +280,14 @@ document.getElementById('aplicarFiltros').addEventListener('click', async () => 
     vitoria: document.getElementById('vitoria').value,
     empate: document.getElementById('empate').value
   };
-  const data = await fetchSheetData();
-  if (data.length > 0) {
-    displayData(data, filters);
+  
+  if (allData.length === 0) {
+    const data = await fetchSheetData();
+    if (data.length > 0) {
+      displayData(data, currentFilters);
+    }
+  } else {
+    displayData(allData, currentFilters);
   }
 });
 
@@ -277,12 +305,43 @@ document.getElementById('limparFiltros').addEventListener('click', async () => {
   document.getElementById('assistencias').value = '';
   document.getElementById('vitoria').value = '';
   document.getElementById('empate').value = '';
-  const data = await fetchSheetData();
-  if (data.length > 0) {
-    displayData(data);
+  
+  currentFilters = {};
+  
+  if (allData.length === 0) {
+    const data = await fetchSheetData();
+    if (data.length > 0) {
+      displayData(data);
+    }
+  } else {
+    displayData(allData);
   }
 });
 
+document.getElementById('pivotMode').addEventListener('click', async () => {
+  isPivot = !isPivot; // Alternar estado
+  
+  if (isPivot) {
+    document.getElementById('pivotMode').textContent = 'Voltar ao modo Tabela';
+    document.getElementById('pivotMode').classList.remove('bg-green-500');
+    document.getElementById('pivotMode').classList.add('bg-blue-500');
+  } else {
+    document.getElementById('pivotMode').textContent = 'Alternar para PIVOT';
+    document.getElementById('pivotMode').classList.remove('bg-blue-500');
+    document.getElementById('pivotMode').classList.add('bg-green-500');
+  }
+  
+  if (allData.length === 0) {
+    const data = await fetchSheetData();
+    if (data.length > 0) {
+      displayData(data, currentFilters);
+    }
+  } else {
+    displayData(allData, currentFilters);
+  }
+});
+
+// Inicialização
 async function init() {
   console.log('Inicializando aplicação');
   const data = await fetchSheetData();
@@ -294,324 +353,5 @@ async function init() {
   populateFilters(data);
   displayData(data);
 }
-
-// Complemento ao script.js - Sistema de Lembretes Programados
-
-// Função para converter string de data e hora para objeto Date
-function converterParaData(dataStr, horaStr) {
-    // Formato esperado: "DD/MM/YYYY" para data e "HH:MM" para hora
-    const [dia, mes, ano] = dataStr.split('/').map(Number);
-    const [hora, minuto] = horaStr.split(':').map(Number);
-    
-    // Mês em JavaScript é 0-indexed (0 = Janeiro, 11 = Dezembro)
-    return new Date(ano, mes - 1, dia, hora, minuto, 0);
-}
-
-// Função para calcular diferença de tempo em milissegundos
-function calcularDiferencaTempo(dataJogo) {
-    const agora = new Date();
-    return dataJogo.getTime() - agora.getTime();
-}
-
-// Função para agendar lembretes para um jogo
-function agendarLembretes(jogoId, timeA, timeB, dataStr, horaStr, opcoes) {
-    // Converter strings de data e hora para objeto Date
-    const dataJogo = converterParaData(dataStr, horaStr);
-    
-    // Salvar configurações de lembretes no localStorage
-    const lembretes = JSON.parse(localStorage.getItem('lembretes') || '{}');
-    lembretes[jogoId] = {
-        timeA,
-        timeB,
-        data: dataStr,
-        hora: horaStr,
-        timestamp: dataJogo.getTime(),
-        lembretes: opcoes
-    };
-    localStorage.setItem('lembretes', JSON.stringify(lembretes));
-    
-    // Verificar e configurar cada tipo de lembrete selecionado
-    opcoes.forEach(opcao => {
-        let tempoAntecedencia;
-        let mensagem;
-        
-        switch(opcao) {
-            case '24h':
-                tempoAntecedencia = 24 * 60 * 60 * 1000; // 24 horas em ms
-                mensagem = `O jogo ${timeA} vs ${timeB} acontecerá amanhã às ${horaStr}`;
-                break;
-            case '1h':
-                tempoAntecedencia = 60 * 60 * 1000; // 1 hora em ms
-                mensagem = `O jogo ${timeA} vs ${timeB} começará em 1 hora`;
-                break;
-            case '15min':
-                tempoAntecedencia = 15 * 60 * 1000; // 15 minutos em ms
-                mensagem = `O jogo ${timeA} vs ${timeB} começará em 15 minutos`;
-                break;
-        }
-        
-        // Calcular quando o lembrete deve ser disparado
-        const tempoRestante = calcularDiferencaTempo(dataJogo) - tempoAntecedencia;
-        
-        // Só agendar se o tempo for positivo (no futuro)
-        if (tempoRestante > 0) {
-            // Para demonstração, usamos setTimeout - em um app real seria um service worker
-            console.log(`Agendando lembrete ${opcao} para o jogo ${jogoId} em ${Math.floor(tempoRestante/1000)} segundos`);
-            
-            // Para fins de demonstração, reduziremos o tempo para ver a notificação mais rapidamente
-            // Em um app real, você usaria o tempoRestante real
-            const tempoSimulado = Math.min(tempoRestante, 10000) / 1000; // máximo 10 segundos para demo
-            
-            setTimeout(() => {
-                enviarNotificacao(
-                    `⚽ Lembrete: ${timeA} vs ${timeB}`,
-                    {
-                        body: mensagem,
-                        icon: "/api/placeholder/60/60",
-                        tag: `lembrete-${jogoId}-${opcao}`
-                    }
-                );
-                
-                // Registrar que o lembrete foi enviado
-                console.log(`Lembrete ${opcao} enviado para o jogo ${jogoId}`);
-                
-                // Em um app real, você atualizaria o status no backend
-            }, tempoSimulado * 1000); // Convertendo para milissegundos
-        } else {
-            console.log(`Tempo para lembrete ${opcao} já passou para o jogo ${jogoId}`);
-        }
-    });
-}
-
-// Função para cancelar lembretes
-function cancelarLembretes(jogoId) {
-    const lembretes = JSON.parse(localStorage.getItem('lembretes') || '{}');
-    
-    if (lembretes[jogoId]) {
-        delete lembretes[jogoId];
-        localStorage.setItem('lembretes', JSON.stringify(lembretes));
-        console.log(`Lembretes cancelados para o jogo ${jogoId}`);
-        return true;
-    }
-    return false;
-}
-
-// Função para abrir modal de configuração de lembretes
-function abrirModalLembretes(jogoId, timeA, timeB, data, hora) {
-    // Verificar primeiro se as notificações são permitidas
-    if (verificarSuporteNotificacoes()) {
-        if (Notification.permission !== "granted") {
-            solicitarPermissaoNotificacao();
-            return;
-        }
-    } else {
-        return;
-    }
-    
-    // Criar o modal
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'modal-lembretes';
-    
-    // Obter configurações atuais se existirem
-    const lembretes = JSON.parse(localStorage.getItem('lembretes') || '{}');
-    const lembreteAtual = lembretes[jogoId] || { lembretes: [] };
-    
-    // Conteúdo do modal
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Lembretes para ${timeA} vs ${timeB}</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Selecione quando você deseja receber notificações:</p>
-                
-                <div class="opcoes-lembretes">
-                    <label class="opcao-lembrete">
-                        <input type="checkbox" name="lembrete" value="24h" ${lembreteAtual.lembretes.includes('24h') ? 'checked' : ''}>
-                        <span class="lembrete-texto">24 horas antes</span>
-                    </label>
-                    
-                    <label class="opcao-lembrete">
-                        <input type="checkbox" name="lembrete" value="1h" ${lembreteAtual.lembretes.includes('1h') ? 'checked' : ''}>
-                        <span class="lembrete-texto">1 hora antes</span>
-                    </label>
-                    
-                    <label class="opcao-lembrete">
-                        <input type="checkbox" name="lembrete" value="15min" ${lembreteAtual.lembretes.includes('15min') ? 'checked' : ''}>
-                        <span class="lembrete-texto">15 minutos antes</span>
-                    </label>
-                </div>
-                
-                <div class="modal-info">
-                    <p><i class="fas fa-calendar"></i> ${data} às ${hora}</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-cancelar">Cancelar</button>
-                <button class="btn btn-salvar">Salvar</button>
-            </div>
-        </div>
-    `;
-    
-    // Adicionar o modal ao body
-    document.body.appendChild(modal);
-    
-    // Mostrar o modal com animação
-    setTimeout(() => {
-        modal.classList.add('ativo');
-    }, 10);
-    
-    // Eventos do modal
-    const btnFechar = modal.querySelector('.modal-close');
-    const btnCancelar = modal.querySelector('.btn-cancelar');
-    const btnSalvar = modal.querySelector('.btn-salvar');
-    
-    // Função para fechar o modal
-    function fecharModal() {
-        modal.classList.remove('ativo');
-        setTimeout(() => {
-            document.body.removeChild(modal);
-        }, 300);
-    }
-    
-    // Eventos para fechar o modal
-    btnFechar.addEventListener('click', fecharModal);
-    btnCancelar.addEventListener('click', fecharModal);
-    
-    // Evento para salvar as configurações
-    btnSalvar.addEventListener('click', () => {
-        // Coletar opções selecionadas
-        const checkboxes = modal.querySelectorAll('input[name="lembrete"]:checked');
-        const opcoesSelecionadas = Array.from(checkboxes).map(cb => cb.value);
-        
-        if (opcoesSelecionadas.length > 0) {
-            // Agendar os lembretes
-            agendarLembretes(jogoId, timeA, timeB, data, hora, opcoesSelecionadas);
-            
-            // Atualizar o botão de lembrete
-            const botaoLembrete = document.querySelector(`.btn-lembrete[data-id="${jogoId}"]`);
-            if (botaoLembrete) {
-                botaoLembrete.classList.add('ativo');
-                botaoLembrete.innerHTML = '<i class="fas fa-clock"></i> Lembretes configurados';
-            }
-            
-            // Mostrar confirmação
-            alert(`Lembretes configurados para o jogo ${timeA} vs ${timeB}`);
-        } else {
-            // Se nenhuma opção selecionada, cancelar os lembretes
-            if (cancelarLembretes(jogoId)) {
-                // Atualizar o botão de lembrete
-                const botaoLembrete = document.querySelector(`.btn-lembrete[data-id="${jogoId}"]`);
-                if (botaoLembrete) {
-                    botaoLembrete.classList.remove('ativo');
-                    botaoLembrete.innerHTML = '<i class="far fa-clock"></i> Configurar lembretes';
-                }
-                
-                alert(`Lembretes cancelados para o jogo ${timeA} vs ${timeB}`);
-            }
-        }
-        
-        fecharModal();
-    });
-    
-    // Fechar modal ao clicar fora
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            fecharModal();
-        }
-    });
-}
-
-// Função para verificar e atualizar todos os lembretes ao carregar a página
-function verificarLembretesAgendados() {
-    const lembretes = JSON.parse(localStorage.getItem('lembretes') || '{}');
-    
-    // Percorrer todos os lembretes salvos
-    Object.keys(lembretes).forEach(jogoId => {
-        const jogo = lembretes[jogoId];
-        
-        // Verificar se o jogo já aconteceu
-        const dataJogo = converterParaData(jogo.data, jogo.hora);
-        const agora = new Date();
-        
-        if (dataJogo < agora) {
-            // Jogo já aconteceu, remover dos lembretes
-            delete lembretes[jogoId];
-            console.log(`Jogo ${jogoId} já aconteceu. Removendo dos lembretes.`);
-        } else {
-            // Atualizar botão visual se existir
-            const botaoLembrete = document.querySelector(`.btn-lembrete[data-id="${jogoId}"]`);
-            if (botaoLembrete) {
-                botaoLembrete.classList.add('ativo');
-                botaoLembrete.innerHTML = '<i class="fas fa-clock"></i> Lembretes configurados';
-            }
-            
-            // Em um app real, você reconfiguraria os lembretes aqui
-            console.log(`Lembretes para jogo ${jogoId} ainda válidos.`);
-        }
-    });
-    
-    // Salvar lembretes atualizados
-    localStorage.setItem('lembretes', JSON.stringify(lembretes));
-}
-
-// Adicionar botões de lembrete aos cards de jogos
-document.addEventListener('DOMContentLoaded', function() {
-    // Esta função deve ser chamada depois que a função original de DOMContentLoaded for executada
-    
-    // Adicionar botões de lembretes aos cards de jogos
-    const jogosCards = document.querySelectorAll('.jogo-card');
-    
-    jogosCards.forEach(card => {
-        const jogoId = card.querySelector('.btn-detalhes').getAttribute('data-id');
-        const timeA = card.querySelector('.time:first-child span').textContent;
-        const timeB = card.querySelector('.time:last-child span').textContent;
-        const dataHora = card.querySelector('.jogo-data').textContent;
-        
-        // Extrair data e hora
-        const partes = dataHora.split(' - ');
-        const data = partes[0];
-        const hora = partes[1];
-        
-        // Criar botão de lembretes
-        const botaoLembrete = document.createElement('button');
-        botaoLembrete.className = 'btn-lembrete';
-        botaoLembrete.setAttribute('data-id', jogoId);
-        botaoLembrete.innerHTML = '<i class="far fa-clock"></i> Configurar lembretes';
-        
-        // Adicionar evento de clique
-        botaoLembrete.addEventListener('click', function() {
-            abrirModalLembretes(jogoId, timeA, timeB, data, hora);
-        });
-        
-        // Inserir o botão antes do botão de notificações
-        const btnNotificacao = card.querySelector('.btn-notificacao') || card.querySelector('.btn-detalhes');
-        card.insertBefore(botaoLembrete, btnNotificacao);
-    });
-    
-    // Verificar lembretes já agendados
-    verificarLembretesAgendados();
-});
-
-let isPivot = false; // Estado para rastrear o modo atual
-
-document.getElementById('pivotMode').addEventListener('click', async () => {
-  isPivot = !isPivot; // Alternar estado
-  const data = await fetchSheetData();
-
-  if (data.length > 0) {
-    if (isPivot) {
-      pivotTable(data);
-      document.getElementById('pivotMode').textContent = 'Voltar ao modo Tabela';
-    } else {
-      displayData(data);
-      document.getElementById('pivotMode').textContent = 'Alternar para PIVOT';
-    }
-  }
-});
-
-
 
 init();

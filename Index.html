@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#1e40af">
+  <title>Controle de Jogos de Futebol</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold text-center mb-4">Controle de Jogos de Futebol</h1>
+    
+    <!-- Mensagem de Erro -->
+    <div id="errorMessage" style="display: none;" class="bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
+    
+    <!-- Big Numbers -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div class="bg-white p-2 rounded shadow text-center">
+        <h3 class="text-sm font-semibold">Jogos</h3>
+        <p id="bigNumberJogos" class="text-lg font-bold">0</p>
+      </div>
+      <div class="bg-white p-2 rounded shadow text-center">
+        <h3 class="text-sm font-semibold">Gols</h3>
+        <p id="bigNumberGols" class="text-lg font-bold">0</p>
+      </div>
+      <div class="bg-white p-2 rounded shadow text-center">
+        <h3 class="text-sm font-semibold">Média de Gols</h3>
+        <p id="bigNumberMedia" class="text-lg font-bold">0.00</p>
+      </div>
+      <div class="bg-white p-2 rounded shadow text-center">
+        <h3 class="text-sm font-semibold">Assistências</h3>
+        <p id="bigNumberAssistencias" class="text-lg font-bold">0</p>
+      </div>
+      <div class="bg-white p-2 rounded shadow text-center">
+        <h3 class="text-sm font-semibold">Gol a Cada</h3>
+        <p id="bigNumberGolACada" class="text-lg font-bold">0.00</p>
+      </div>
+      <div class="bg-white p-2 rounded shadow text-center">
+        <h3 class="text-sm font-semibold">Vitórias</h3>
+        <p id="bigNumberVitorias" class="text-lg font-bold">0</p>
+      </div>
+      <div class="bg-white p-2 rounded shadow text-center">
+        <h3 class="text-sm font-semibold">Empates</h3>
+        <p id="bigNumberEmpates" class="text-lg font-bold">0</p>
+      </div>
+      <div class="bg-white p-2 rounded shadow text-center">
+        <h3 class="text-sm font-semibold">Derrotas</h3>
+        <p id="bigNumberDerrotas" class="text-lg font-bold">0</p>
+      </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filters mb-4">
+      <h2 class="text-lg font-semibold">Filtros</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="campeonato">Campeonato:</label>
+          <select id="campeonato" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label for="dataInicio">Data Início:</label>
+          <input type="date" id="dataInicio" class="w-full p-2 border rounded">
+        </div>
+        <div>
+          <label for="dataFim">Data Fim:</label>
+          <input type="date" id="dataFim" class="w-full p-2 border rounded">
+        </div>
+        <div>
+          <label for="ginasio">Ginásio:</label>
+          <select id="ginasio" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label for="time">Time:</label>
+          <select id="time" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label for="local">Local:</label>
+          <select id="local" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label for="rodada">Rodada:</label>
+          <select id="rodada" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label for="diaSemana">Dia da Semana:</label>
+          <select id="diaSemana" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label for="gol">Gols:</label>
+          <select id="gol" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label for="assistencias">Assistências:</label>
+          <select id="assistencias" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label for="vitoria">Vitória:</label>
+          <select id="vitoria" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+            <option value="1">Sim</option>
+            <option value="0">Não</option>
+          </select>
+        </div>
+        <div>
+          <label for="empate">Empate:</label>
+          <select id="empate" class="w-full p-2 border rounded">
+            <option value="">Todos</option>
+            <option value="1">Sim</option>
+            <option value="0">Não</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <button id="aplicarFiltros" class="bg-blue-500 text-white p-2 rounded mr-2">Aplicar Filtros</button>
+        <button id="limparFiltros" class="bg-gray-500 text-white p-2 rounded">Limpar Filtros</button>
+        <button id="pivotMode" class="bg-green-500 text-white p-2 rounded">Alternar para PIVOT</button>
+      </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="overflow-x-auto">
+      <table id="jogosTable" class="w-full bg-white border">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-2">Campeonato</th>
+            <th class="p-2">Data</th>
+            <th class="p-2">Horário</th>
+            <th class="p-2">Ginásio</th>
+            <th class="p-2">Mandante</th>
+            <th class="p-2"></th>
+            <th class="p-2"></th>
+            <th class="p-2">Visitante</th>
+            <th class="p-2">Local</th>
+            <th class="p-2">Rodada</th>
+            <th class="p-2">Dia da Semana</th>
+            <th class="p-2">Gol</th>
+            <th class="p-2">Assistências</th>
+            <th class="p-2">Vitória</th>
+            <th class="p-2">Derrota</th>
+            <th class="p-2">Empate</th>
+          </tr>
+        </thead>
+        <tbody id="jogosBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Desregistrar Service Workers antigos
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.unregister().then(() => {
+            console.log('Service Worker desregistrado:', registration.scope);
+          });
+        }
+      }).catch(err => {
+        console.error('Erro ao desregistrar Service Workers:', err);
+      });
+    }
+
+    // Capturar erros de script
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('Erro de script detectado:', {
+        message: message,
+        source: source,
+        line: lineno,
+        column: colno,
+        error: error
+      });
+      const errorDiv = document.getElementById('errorMessage');
+      if (errorDiv) {
+        errorDiv.textContent = 'Erro ao carregar a aplicação. Verifique o console para detalhes.';
+        errorDiv.style.display = 'block';
+      }
+      return false;
+    };
+  </script>
+  <script src="./script.js"></script>
+</body>
+</html>
