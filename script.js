@@ -102,20 +102,6 @@ function populateFilters(data) {
         });
       }
     });
-
-    // Filtro para Resultado (apenas na aba Tabela)
-    if (tab === 'tab2') {
-      const resultadoSelect = document.getElementById(`resultado-${tab}`);
-      if (resultadoSelect) {
-        const resultadoOptions = ['Vitória', 'Derrota', 'Empate'];
-        resultadoOptions.forEach(value => {
-          const option = document.createElement('option');
-          option.value = value;
-          option.textContent = value;
-          resultadoSelect.appendChild(option);
-        });
-      }
-    }
   });
 }
 
@@ -162,7 +148,7 @@ function updateBigNumbers(data, tabId) {
 }
 
 let sortConfigTab1 = { column: null, direction: 'asc' };
-let sortConfigTab2 = { column: null, direction: 'asc' };
+let sortConfigTab2 = { column: null, direction: 'asc' }; // Ajustado para Tabela (tab2)
 
 function sortData(data, columnIndex, direction) {
   const sortedData = [...data];
@@ -204,7 +190,7 @@ function displayData(data, filteredData, tabId) {
 
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
-  const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Resultado'];
+  const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
   const sortConfig = tabId === 'tab1' ? sortConfigTab1 : sortConfigTab2;
   headers.forEach((text, index) => {
     const th = document.createElement('th');
@@ -242,41 +228,37 @@ function displayData(data, filteredData, tabId) {
     const empate = row[15] === '1';
     const conditions = [vitoria, derrota, empate].filter(Boolean).length;
 
-    let resultado = '';
+    // Validar se há exatamente um '1' entre vitória, derrota e empate
     if (conditions > 1) {
       console.warn(`Inconsistência nos dados da linha ${rowIndex + 2}: Vitória=${row[13]}, Derrota=${row[14]}, Empate=${row[15]}`);
       hasInconsistency = true;
       // Não aplica destaque para evitar comportamento visual incorreto
     } else if (conditions === 1) {
+      // Aplica o destaque correspondente se houver exatamente um '1'
       if (vitoria) {
-        resultado = 'Vitória';
         tr.classList.add('victory-row');
       } else if (derrota) {
-        resultado = 'Derrota';
         tr.classList.add('defeat-row');
       } else if (empate) {
-        resultado = 'Empate';
         tr.classList.add('draw-row');
       }
     }
+    // Se conditions === 0, não aplica destaque (todos são '0' ou vazios)
 
-    // Exibir colunas 0 a 12 + Resultado
-    row.slice(0, 13).forEach((cell, index) => {
+    row.slice(0, 16).forEach((cell, index) => {
       const td = document.createElement('td');
-      td.textContent = cell || '';
+      if (index === 13 || index === 14 || index === 15) {
+        td.textContent = cell === '1' ? 'Sim' : '';
+      } else {
+        td.textContent = cell || '';
+      }
       td.className = 'p-2 border';
       tr.appendChild(td);
     });
-
-    // Adicionar a coluna Resultado
-    const tdResultado = document.createElement('td');
-    tdResultado.textContent = resultado;
-    tdResultado.className = 'p-2 border';
-    tr.appendChild(tdResultado);
-
     tbody.appendChild(tr);
   });
 
+  // Exibir erro na interface se houver inconsistências
   if (hasInconsistency) {
     showError('Inconsistência nos dados: Algumas linhas possuem mais de um resultado (Vitória, Derrota, Empate). Corrija a planilha.');
   }
@@ -305,7 +287,7 @@ function pivotTable(data, filteredData, tabId) {
   });
   thead.appendChild(trHead);
 
-  const headers = data[0].slice(0, 13).concat(['Resultado']);
+  const headers = data[0].slice(0, 16);
   console.log(`Cabeçalho para PIVOT (${tabId}):`, headers);
 
   headers.forEach((header, colIndex) => {
@@ -317,21 +299,8 @@ function pivotTable(data, filteredData, tabId) {
 
     filteredData.forEach(row => {
       const td = document.createElement('td');
-      if (colIndex === 13) { // Coluna Resultado
-        const vitoria = row[13] === '1';
-        const derrota = row[14] === '1';
-        const empate = row[15] === '1';
-        const conditions = [vitoria, derrota, empate].filter(Boolean).length;
-        let resultado = '';
-        if (conditions === 1) {
-          if (vitoria) resultado = 'Vitória';
-          else if (derrota) resultado = 'Derrota';
-          else if (empate) resultado = 'Empate';
-        }
-        td.textContent = resultado;
-      } else {
-        td.textContent = row[colIndex] || '';
-      }
+      const cellValue = colIndex === 13 || colIndex === 14 || colIndex === 15 ? (row[colIndex] === '1' ? 'Sim' : '') : (row[colIndex] || '');
+      td.textContent = cellValue;
       td.className = 'p-2 border';
       tr.appendChild(td);
     });
@@ -363,11 +332,6 @@ function filterData(data, filters) {
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
     const dataJogo = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
 
-    let resultado = '';
-    if (vitoria === '1') resultado = 'Vitória';
-    else if (derrota === '1') resultado = 'Derrota';
-    else if (empate === '1') resultado = 'Empate';
-
     return (
       isValidConsiderar &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
@@ -380,7 +344,8 @@ function filterData(data, filters) {
       (!filters.diaSemana || diaSemana === filters.diaSemana) &&
       (!filters.gol || gol === filters.gol) &&
       (!filters.assistencias || assistencias === filters.assistencias) &&
-      (!filters.resultado || resultado === filters.resultado)
+      (!filters.vitoria || vitoria === filters.vitoria) &&
+      (!filters.empate || empate === filters.empate)
     );
   });
 }
@@ -413,7 +378,8 @@ function displayTab2() { // Tabela
     diaSemana: document.getElementById('diaSemana-tab2').value,
     gol: document.getElementById('gol-tab2').value,
     assistencias: document.getElementById('assistencias-tab2').value,
-    resultado: document.getElementById('resultado-tab2').value
+    vitoria: document.getElementById('vitoria-tab2').value,
+    empate: document.getElementById('empate-tab2').value
   };
   filteredDataTab2 = filterData(allData, filters);
   if (isPivotTab2) {
@@ -444,7 +410,8 @@ function clearFilters() {
       document.getElementById(`diaSemana-${tab}`).value = '';
       document.getElementById(`gol-${tab}`).value = '';
       document.getElementById(`assistencias-${tab}`).value = '';
-      document.getElementById(`resultado-${tab}`).value = '';
+      document.getElementById(`vitoria-${tab}`).value = '';
+      document.getElementById(`empate-${tab}`).value = '';
     }
   });
   isPivotTab1 = false;
@@ -508,7 +475,8 @@ document.getElementById('limparFiltros-tab2').addEventListener('click', () => {
   document.getElementById('diaSemana-tab2').value = '';
   document.getElementById('gol-tab2').value = '';
   document.getElementById('assistencias-tab2').value = '';
-  document.getElementById('resultado-tab2').value = '';
+  document.getElementById('vitoria-tab2').value = '';
+  document.getElementById('empate-tab2').value = '';
   isPivotTab2 = false;
   displayTab2();
 });
