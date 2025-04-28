@@ -164,6 +164,16 @@ function updateBigNumbers(data, tabId) {
 let sortConfigTab1 = { column: null, direction: 'asc' };
 let sortConfigTab2 = { column: null, direction: 'asc' };
 
+// Função para formatar o horário de HH:MM:SS para HH:MM
+function formatTime(time) {
+  if (!time || typeof time !== 'string') return '';
+  const parts = time.split(':');
+  if (parts.length >= 2) {
+    return `${parts[0]}:${parts[1]}`; // Retorna apenas HH:MM
+  }
+  return time; // Retorna o valor original se não estiver no formato esperado
+}
+
 function sortData(data, columnIndex, direction) {
   const sortedData = [...data];
   sortedData.sort((a, b) => {
@@ -273,7 +283,12 @@ function displayData(data, filteredData, tabId) {
       // Aba 1: Exibir apenas até a coluna 10 (Dia da Semana)
       row.slice(0, 11).forEach((cell, index) => {
         const td = document.createElement('td');
-        td.textContent = cell || '';
+        // Formatar a coluna Horário (índice 2)
+        if (index === 2) {
+          td.textContent = formatTime(cell) || '';
+        } else {
+          td.textContent = cell || '';
+        }
         td.className = 'p-2 border';
         tr.appendChild(td);
       });
@@ -281,7 +296,12 @@ function displayData(data, filteredData, tabId) {
       // Outras abas: Exibir até a coluna 12 + Resultado
       row.slice(0, 13).forEach((cell, index) => {
         const td = document.createElement('td');
-        td.textContent = cell || '';
+        // Formatar a coluna Horário (índice 2)
+        if (index === 2) {
+          td.textContent = formatTime(cell) || '';
+        } else {
+          td.textContent = cell || '';
+        }
         td.className = 'p-2 border';
         tr.appendChild(td);
       });
@@ -357,6 +377,8 @@ function pivotTable(data, filteredData, tabId) {
           else if (empate) resultado = 'Empate';
         }
         td.textContent = resultado;
+      } else if (colIndex === 2) { // Coluna Horário
+        td.textContent = formatTime(row[colIndex]) || '';
       } else {
         td.textContent = row[colIndex] || '';
       }
