@@ -79,7 +79,7 @@ td {
 
 /* Destaque visual para linhas */
 .victory-row {
-  background-color: #d4edda !important; /* Verde claro para vitórias */
+  background-color: #fff3cd !important; /* Amarelo claro para vitórias */
 }
 
 .defeat-row {
@@ -87,7 +87,7 @@ td {
 }
 
 .draw-row {
-  background-color: #fff3cd !important; /* Amarelo claro para empates */
+  background-color: #d4edda !important; /* Verde claro para empates */
 }
 
 /* Estilo para ordenação */
