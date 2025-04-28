@@ -36,7 +36,7 @@ function applyFilters(data, tabId) {
   let filteredData = data.slice(1);
   const filters = [
     'campeonato', 'dataInicio', 'dataFim', 'ginasio', 'time', 'local',
-    'rodada', 'diaSemana', 'gol', 'assistencias', 'resultado'
+    'rodada', 'diaSemana', 'gol', 'assistencias', 'vitoria', 'empate'
   ];
 
   console.log(`[applyFilters] Iniciando aplicação de filtros para tabId ${tabId}`);
@@ -84,18 +84,18 @@ function applyFilters(data, tabId) {
           console.log(`[applyFilters] Comparando assistencias: ${assistValue} >= ${filterValue} -> ${result}`);
           return result;
         });
-      } else if (filter === 'resultado') {
+      } else if (filter === 'vitoria') {
         filteredData = filteredData.filter(row => {
-          const vitoria = row[13] === '1';
-          const derrota = row[14] === '1';
-          const empate = row[15] === '1';
-          let rowResultado;
-          if (vitoria) rowResultado = 'Vitória';
-          else if (derrota) rowResultado = 'Derrota';
-          else if (empate) rowResultado = 'Empate';
-          else rowResultado = 'N/A';
-          const result = rowResultado === element.value;
-          console.log(`[applyFilters] Comparando resultado: ${rowResultado} === ${element.value} -> ${result}`);
+          const vitoriaValue = row[13] || '0';
+          const result = vitoriaValue === element.value;
+          console.log(`[applyFilters] Comparando vitoria: ${vitoriaValue} === ${element.value} -> ${result}`);
+          return result;
+        });
+      } else if (filter === 'empate') {
+        filteredData = filteredData.filter(row => {
+          const empateValue = row[15] || '0';
+          const result = empateValue === element.value;
+          console.log(`[applyFilters] Comparando empate: ${empateValue} === ${element.value} -> ${result}`);
           return result;
         });
       } else {
@@ -132,7 +132,8 @@ function populateFilters(data, tabId) {
     { id: 'diaSemana', index: 10, tab: 'tab2' },
     { id: 'gol', index: 11, tab: 'tab2', range: true },
     { id: 'assistencias', index: 12, tab: 'tab2', range: true },
-    { id: 'resultado', index: [13, 14, 15], tab: 'tab2', custom: ['Vitória', 'Derrota', 'Empate'] }
+    { id: 'vitoria', index: 13, tab: 'tab2', custom: ['0', '1'] },
+    { id: 'empate', index: 15, tab: 'tab2', custom: ['0', '1'] }
   ];
 
   console.log(`[populateFilters] Preenchendo filtros para tabId ${tabId}`);
@@ -149,7 +150,7 @@ function populateFilters(data, tabId) {
       column.custom.forEach(value => {
         const option = document.createElement('option');
         option.value = value;
-        option.textContent = value;
+        option.textContent = value === '1' ? 'Sim' : 'Não';
         select.appendChild(option);
       });
     } else if (column.range) {
@@ -293,7 +294,7 @@ function populateTable(data, tableBodyId, tableHeadId, tabId) {
 
   console.log(`[populateTable] Renderizando tabela para tabId ${tabId} com dados:`, data);
 
-  const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', 'Placar Mandante', 'Placar Visitante', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Resultado'];
+  const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', 'Placar Mandante', 'Placar Visitante', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
   const headerRow = document.createElement('tr');
   headers.forEach((header, index) => {
     const th = document.createElement('th');
@@ -320,18 +321,13 @@ function populateTable(data, tableBodyId, tableHeadId, tabId) {
     else if (derrota) tr.classList.add('defeat-row');
     else if (empate) tr.classList.add('draw-row');
 
-    row.slice(0, 13).forEach((cell, index) => {
-      const td = document.createElement('td');
-      td.textContent = index === 2 ? formatTime(cell) : (cell || '');
-      tr.appendChild(td);
+    row.forEach((cell, index) => {
+      if (index <= 15) {
+        const td = document.createElement('td');
+        td.textContent = index === 2 ? formatTime(cell) : (cell || '');
+        tr.appendChild(td);
+      }
     });
-
-    const resultadoTd = document.createElement('td');
-    if (vitoria) resultadoTd.textContent = 'Vitória';
-    else if (derrota) resultadoTd.textContent = 'Derrota';
-    else if (empate) resultadoTd.textContent = 'Empate';
-    else resultadoTd.textContent = 'N/A';
-    tr.appendChild(resultadoTd);
 
     tbody.appendChild(tr);
   });
