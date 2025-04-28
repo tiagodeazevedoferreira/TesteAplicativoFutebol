@@ -1,0 +1,137 @@
+/* Estilos para o header */
+.header {
+  background-color: #1e40af;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Estilos para a navegação das abas */
+.tab-navigation {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.tab-button {
+  background-color: #3b82f6;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.tab-button:hover {
+  background-color: #2563eb;
+}
+
+.tab-button.active-tab {
+  background-color: #1d4ed8;
+}
+
+/* Estilos para a seção de informações do jogador */
+.player-info img {
+  object-fit: cover;
+}
+
+/* Estilos para as tabelas */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f2f2f2;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+.fixed-column {
+  position: sticky;
+  left: 0;
+  background-color: white;
+  z-index: 5;
+}
+
+th.fixed-column {
+  z-index: 15;
+}
+
+.victory-row {
+  background-color: #d4edda;
+}
+
+.defeat-row {
+  background-color: #f8d7da;
+}
+
+.draw-row {
+  background-color: #fff3cd;
+}
+
+/* Estilos para as seções das abas */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Estilos para ordenação */
+.sortable {
+  cursor: pointer;
+  position: relative;
+}
+
+.sortable:hover {
+  background-color: #e5e7eb;
+}
+
+.sort-asc::after {
+  content: ' ▲';
+  font-size: 0.75rem;
+}
+
+.sort-desc::after {
+  content: ' ▼';
+  font-size: 0.75rem;
+}
+
+/* Estilos para o footer */
+.footer {
+  background-color: #1e40af;
+  color: white;
+  text-align: center;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.footer p {
+  margin: 0;
+}
+
+/* Estilos para os filtros */
+.filters {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
