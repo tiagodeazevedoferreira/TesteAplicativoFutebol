@@ -3,6 +3,56 @@ body {
   background-color: #f9f9f9 !important; /* Sobrescrever Tailwind bg-gray-100 */
 }
 
+.header {
+  background-color: #d91a2a;
+  color: white;
+  text-align: center;
+  padding: 1rem;
+}
+
+.tab-navigation {
+  display: flex;
+  justify-content: center;
+  background-color: #f2f2f2;
+  padding: 0.5rem;
+}
+
+.tab-button {
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #e0e0e0;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.tab-button:hover {
+  background-color: #cccccc;
+}
+
+.tab-button.active-tab {
+  background-color: #fff;
+  font-weight: bold;
+  border-bottom: 2px solid #d91a2a;
+}
+
+.tab-content {
+  display: none;
+  padding: 1rem;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.footer {
+  text-align: center;
+  background-color: #d91a2a;
+  color: white;
+  padding: 1rem;
+}
+
+/* Estilo da tabela */
 table {
   border-collapse: collapse;
   width: 100%;
@@ -100,14 +150,5 @@ th.sort-desc::after {
   th, td {
     padding: 4px;
     max-width: 150px; /* Reduzir largura das células no PIVOT em telas pequenas */
-  }
-
-  /* Ajustar Big Numbers para evitar quebras estranhas */
-  .grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .md\:grid-cols-5 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -75,10 +75,8 @@ function populateFilters(data) {
     { id: 'assistencias', index: 12 }
   ];
 
-  // Popula os filtros para todas as abas
   const tabs = ['tab1', 'tab2', 'tab3'];
   tabs.forEach(tab => {
-    // Popula o filtro de times (mandante/visitante)
     const timeSelect = document.getElementById(`time-${tab}`);
     if (timeSelect) {
       const mandantes = data.slice(1).map(row => row[4]?.trim()).filter(v => v);
@@ -92,7 +90,6 @@ function populateFilters(data) {
       });
     }
 
-    // Popula os outros filtros
     filters.forEach(filter => {
       const select = document.getElementById(`${filter.id}-${tab}`);
       if (select) {
@@ -113,8 +110,8 @@ function updateBigNumbers(data, tabId) {
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
 
   data.forEach(row => {
-    const placar1 = row[5]; // Coluna F
-    const considerar = row[16]; // Coluna Q
+    const placar1 = row[5];
+    const considerar = row[16];
     const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim() : '';
     const isValidConsiderar = considerarValue !== '0';
     const isValidPlacar1 = placar1 && placar1.trim() !== '';
@@ -124,14 +121,14 @@ function updateBigNumbers(data, tabId) {
     }
     if (isValidConsiderar) {
       if (row[11] && !isNaN(parseInt(row[11]))) {
-        gols += parseInt(row[11]); // Coluna L
+        gols += parseInt(row[11]);
       }
       if (row[12] && !isNaN(parseInt(row[12]))) {
-        assistencias += parseInt(row[12]); // Coluna M
+        assistencias += parseInt(row[12]);
       }
-      vitorias += row[13] ? parseInt(row[13]) : 0; // Coluna N
-      derrotas += row[14] ? parseInt(row[14]) : 0; // Coluna O
-      empates += row[15] ? parseInt(row[15]) : 0; // Coluna P
+      vitorias += row[13] ? parseInt(row[13]) : 0;
+      derrotas += row[14] ? parseInt(row[14]) : 0;
+      empates += row[15] ? parseInt(row[15]) : 0;
     }
   });
 
@@ -159,21 +156,18 @@ function sortData(data, columnIndex, direction) {
     let valueA = a[columnIndex] || '';
     let valueB = b[columnIndex] || '';
 
-    // Ordenação por data (índice 1 - Data)
     if (columnIndex === 1) {
       valueA = valueA ? new Date(valueA.split('/').reverse().join('-')) : new Date(0);
       valueB = valueB ? new Date(valueB.split('/').reverse().join('-')) : new Date(0);
       return direction === 'asc' ? valueA - valueB : valueB - valueA;
     }
 
-    // Ordenação por números (índices 11, 12 - Gol, Assistências)
     if (columnIndex === 11 || columnIndex === 12) {
       valueA = parseInt(valueA) || 0;
       valueB = parseInt(valueB) || 0;
       return direction === 'asc' ? valueA - valueB : valueB - valueA;
     }
 
-    // Ordenação por texto (outros campos)
     valueA = valueA.toString().toLowerCase();
     valueB = valueB.toString().toLowerCase();
     return direction === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
@@ -194,7 +188,6 @@ function displayData(data, filteredData, tabId) {
   tbody.innerHTML = '';
   thead.innerHTML = '';
 
-  // Configurar cabeçalho da tabela normal
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
   const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
@@ -229,7 +222,6 @@ function displayData(data, filteredData, tabId) {
 
   filteredData.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
-    // Validação dos dados: Verificar se mais de uma condição é verdadeira
     const vitoria = row[13] === '1';
     const derrota = row[14] === '1';
     const empate = row[15] === '1';
@@ -238,7 +230,6 @@ function displayData(data, filteredData, tabId) {
       console.warn(`Inconsistência nos dados da linha ${rowIndex + 2}: Vitória=${row[13]}, Derrota=${row[14]}, Empate=${row[15]}`);
     }
 
-    // Destaque visual baseado em Vitória, Derrota, Empate (condições independentes)
     if (vitoria) {
       tr.classList.add('victory-row');
     }
@@ -276,7 +267,6 @@ function pivotTable(data, filteredData, tabId) {
   tbody.innerHTML = '';
   thead.innerHTML = '';
 
-  // Configurar cabeçalho para PIVOT
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
   ['', ''].forEach((_, index) => {
@@ -287,7 +277,7 @@ function pivotTable(data, filteredData, tabId) {
   });
   thead.appendChild(trHead);
 
-  const headers = data[0].slice(0, 16); // Excluir Considerar (índice 16)
+  const headers = data[0].slice(0, 16);
   console.log(`Cabeçalho para PIVOT (${tabId}):`, headers);
 
   headers.forEach((header, colIndex) => {
@@ -432,24 +422,24 @@ function clearFilters() {
   isPivotTab3 = false;
 }
 
-function switchTab(tabId) {
+function showTab(tabId) {
   console.log(`Trocando para aba ${tabId}`);
   clearFilters();
-  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
-  document.getElementById(tabId).classList.add('active');
-  document.getElementById(`${tabId}-btn`).classList.add('active-tab');
+  const tabs = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => tab.classList.remove('active'));
+  const buttons = document.querySelectorAll('.tab-button');
+  buttons.forEach(btn => btn.classList.remove('active-tab'));
 
-  if (tabId === 'tab1') {
-    displayTab1();
-  } else if (tabId === 'tab2') {
-    displayTab2();
-  } else if (tabId === 'tab3') {
-    displayTab3();
-  }
+  const activeTab = document.getElementById(tabId);
+  if (activeTab) activeTab.classList.add('active');
+  const activeButton = document.getElementById(`${tabId}-btn`);
+  if (activeButton) activeButton.classList.add('active-tab');
+
+  if (tabId === 'tab1') displayTab1();
+  else if (tabId === 'tab2') displayTab2();
+  else if (tabId === 'tab3') displayTab3();
 }
 
-// Aba 1: Botões
 document.getElementById('aplicarFiltros-tab1').addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 1)');
   displayTab1();
@@ -470,7 +460,6 @@ document.getElementById('pivotMode-tab1').addEventListener('click', () => {
   displayTab1();
 });
 
-// Aba 2: Botões
 document.getElementById('aplicarFiltros-tab2').addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 2)');
   displayTab2();
@@ -493,7 +482,6 @@ document.getElementById('limparFiltros-tab2').addEventListener('click', () => {
   displayTab2();
 });
 
-// Aba 3: Botões
 document.getElementById('aplicarFiltros-tab3').addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 3)');
   displayTab3();
@@ -534,7 +522,6 @@ async function init() {
     }
     populateFilters(allData);
 
-    // Registrar eventos de clique para os botões de navegação
     const tab1Btn = document.getElementById('tab1-btn');
     const tab2Btn = document.getElementById('tab2-btn');
     const tab3Btn = document.getElementById('tab3-btn');
@@ -547,19 +534,18 @@ async function init() {
 
     tab1Btn.addEventListener('click', () => {
       console.log('Clique no botão da Aba 1');
-      switchTab('tab1');
+      showTab('tab1');
     });
     tab2Btn.addEventListener('click', () => {
       console.log('Clique no botão da Aba 2');
-      switchTab('tab2');
+      showTab('tab2');
     });
     tab3Btn.addEventListener('click', () => {
       console.log('Clique no botão da Aba 3');
-      switchTab('tab3');
+      showTab('tab3');
     });
 
-    // Inicia na Aba 1
-    switchTab('tab1');
+    showTab('tab1');
   } catch (error) {
     console.error('Erro na inicialização:', error.message);
     showError(`Erro na inicialização: ${error.message}`);
