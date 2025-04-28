@@ -125,6 +125,25 @@ td {
   background-color: #e2e8f0 !important; /* Cinza claro para empates (trocado com derrota) */
 }
 
+/* Estilo para fixar a primeira coluna no modo PIVOT */
+.fixed-column {
+  position: sticky;
+  left: 0;
+  background-color: #f5e6e8; /* Mesma cor do cabeçalho para consistência */
+  z-index: 5; /* Garantir que a coluna fixa fique acima das outras células */
+}
+
+/* Ajustar o fundo da primeira coluna no corpo da tabela no modo PIVOT */
+tbody tr .fixed-column {
+  background-color: #ffffff; /* Fundo branco para as células do corpo */
+  border-right: 2px solid #e2e8f0; /* Borda mais visível para separar a coluna fixa */
+}
+
+/* Garantir que as linhas alternadas no modo PIVOT respeitem a cor da coluna fixa */
+tbody tr:nth-child(even) .fixed-column {
+  background-color: #ffffff; /* Sobrescrever a cor alternada para a coluna fixa */
+}
+
 /* Estilo para botões */
 .bg-blue-500, .bg-gray-500, .bg-green-500 {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -166,5 +185,10 @@ td {
   th, td {
     padding: 4px;
     max-width: 150px; /* Reduzir largura das células no PIVOT em telas pequenas */
+  }
+
+  /* Ajustar a coluna fixa em telas pequenas */
+  .fixed-column {
+    min-width: 100px; /* Garantir que a coluna fixa tenha uma largura mínima */
   }
 }

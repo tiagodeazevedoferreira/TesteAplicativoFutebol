@@ -318,8 +318,9 @@ function pivotTable(data, filteredData, tabId) {
   trHead.className = 'bg-gray-200';
   ['', ''].forEach((_, index) => {
     const th = document.createElement('th');
-    th.textContent = index === 0 ? 'Coluna' : 'Valores';
+    th.textContent = ''; // Removido "Coluna" e "Valores"
     th.className = 'p-2';
+    if (index === 0) th.classList.add('fixed-column'); // Adicionar classe para fixar a primeira coluna
     trHead.appendChild(th);
   });
   thead.appendChild(trHead);
@@ -339,7 +340,7 @@ function pivotTable(data, filteredData, tabId) {
     const tr = document.createElement('tr');
     const th = document.createElement('th');
     th.textContent = header;
-    th.className = 'p-2 border bg-gray-200';
+    th.className = 'p-2 border bg-gray-200 fixed-column'; // Adicionar classe para fixar a primeira coluna
     tr.appendChild(th);
 
     filteredData.forEach(row => {
