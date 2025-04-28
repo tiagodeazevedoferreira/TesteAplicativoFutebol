@@ -35,9 +35,12 @@ function applyFilters(data, tabId) {
     'rodada', 'diaSemana', 'gol', 'assistencias', 'resultado'
   ];
 
+  console.log(`Aplicando filtros para tabId ${tabId}`);
+
   filters.forEach(filter => {
     const element = document.getElementById(`${filter}-${tabId}`);
     if (element && element.value) {
+      console.log(`Filtro ${filter}: ${element.value}`);
       if (filter === 'dataInicio') {
         filteredData = filteredData.filter(row => {
           const date = new Date(row[1].split('/').reverse().join('-'));
@@ -75,6 +78,7 @@ function applyFilters(data, tabId) {
     }
   });
 
+  console.log(`Dados filtrados para tabId ${tabId}:`, filteredData);
   return filteredData;
 }
 
@@ -368,6 +372,7 @@ function updateBigNumbers(data, tabId) {
 }
 
 function displayTab1() {
+  console.log('Exibindo Tab1, isPivotMode:', isPivotMode.tab1);
   filteredDataTab1 = applyFilters(allData, 'tab1');
   if (isPivotMode.tab1) {
     pivotTable(filteredDataTab1, 'tab1');
@@ -378,6 +383,7 @@ function displayTab1() {
 }
 
 function displayTab2() {
+  console.log('Exibindo Tab2, isPivotMode:', isPivotMode.tab2);
   filteredDataTab2 = applyFilters(allData, 'tab2');
   if (isPivotMode.tab2) {
     pivotTable(filteredDataTab2, 'tab2');
@@ -446,6 +452,7 @@ function checkForUpcomingGames(data) {
 }
 
 async function init() {
+  console.log('Inicializando app, estado inicial de isPivotMode:', isPivotMode);
   allData = await fetchSheetData();
   if (allData.length === 0) return;
 
@@ -465,25 +472,35 @@ async function init() {
   document.getElementById('tab3-btn').addEventListener('click', () => showTab('tab3'));
 
   ['tab1', 'tab2'].forEach(tabId => {
+    const pivotButton = document.getElementById(`pivotMode-${tabId}`);
+    if (isPivotMode[tabId]) {
+      pivotButton.innerHTML = '<i class="fas fa-table mr-2"></i>Normal';
+    } else {
+      pivotButton.innerHTML = '<i class="fas fa-table mr-2"></i>Pivot';
+    }
+
     document.getElementById(`aplicarFiltros-${tabId}`).addEventListener('click', () => {
+      console.log(`Botão Aplicar Filtros clicado para tabId ${tabId}`);
       if (tabId === 'tab1') displayTab1();
       else displayTab2();
     });
 
     document.getElementById(`limparFiltros-${tabId}`).addEventListener('click', () => {
+      console.log(`Botão Limpar Filtros clicado para tabId ${tabId}`);
       clearFilters();
       if (tabId === 'tab1') displayTab1();
       else displayTab2();
     });
 
     document.getElementById(`pivotMode-${tabId}`).addEventListener('click', () => {
+      console.log(`Botão Pivot clicado para tabId ${tabId}, estado atual de isPivotMode: ${isPivotMode[tabId]}`);
       isPivotMode[tabId] = !isPivotMode[tabId];
-      const button = document.getElementById(`pivotMode-${tabId}`);
+      console.log(`Novo estado de isPivotMode[${tabId}]: ${isPivotMode[tabId]}`);
       if (isPivotMode[tabId]) {
-        button.innerHTML = '<i class="fas fa-table mr-2"></i>Normal';
+        pivotButton.innerHTML = '<i class="fas fa-table mr-2"></i>Normal';
         pivotTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, tabId);
       } else {
-        button.innerHTML = '<i class="fas fa-table mr-2"></i>Pivot';
+        pivotButton.innerHTML = '<i class="fas fa-table mr-2"></i>Pivot';
         populateTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, `jogosBody-${tabId}`, `tableHead-${tabId}`, tabId);
       }
     });
