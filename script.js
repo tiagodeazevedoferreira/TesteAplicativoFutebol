@@ -254,53 +254,10 @@ function populateTable(data, tableBodyId, tableHeadId, tabId) {
     else if (empate) resultadoTd.textContent = 'Empate';
     tr.appendChild(resultadoTd);
 
-    if (!isPivotMode[tabId]) {
-      console.log(`Adicionando evento de clique na linha para tabId ${tabId}, isPivotMode: ${isPivotMode[tabId]}`);
-      tr.addEventListener('click', () => {
-        console.log('Linha clicada, chamando showGameDetails com dados:', row);
-        showGameDetails(row);
-      });
-    }
-
     tbody.appendChild(tr);
   });
 
   addSortListeners(tabId);
-}
-
-function showGameDetails(row) {
-  console.log('showGameDetails chamado com row:', row);
-  const modal = document.getElementById('gameModal');
-  const detailsContainer = document.getElementById('gameDetails');
-  if (!modal || !detailsContainer) {
-    console.error('Elementos do modal não encontrados:', { modal, detailsContainer });
-    return;
-  }
-
-  detailsContainer.innerHTML = '';
-
-  const headers = [
-    'Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', 'Placar Mandante', 'Placar Visitante',
-    'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Resultado'
-  ];
-  const values = row.slice(0, 13);
-  let resultado = '';
-  const vitoria = row[13] ? row[13] === '1' : false;
-  const derrota = row[14] ? row[14] === '1' : false;
-  const empate = row[15] ? row[15] === '1' : false;
-  if (vitoria) resultado = 'Vitória';
-  else if (derrota) resultado = 'Derrota';
-  else if (empate) resultado = 'Empate';
-  values.push(resultado);
-
-  headers.forEach((header, index) => {
-    const value = index === 2 ? formatTime(values[index]) : (values[index] || '');
-    const p = document.createElement('p');
-    p.innerHTML = `<strong>${header}:</strong> ${value}`;
-    detailsContainer.appendChild(p);
-  });
-
-  modal.classList.remove('hidden');
 }
 
 function addSortListeners(tabId) {
@@ -504,11 +461,6 @@ async function init() {
         populateTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, `jogosBody-${tabId}`, `tableHead-${tabId}`, tabId);
       }
     });
-  });
-
-  document.getElementById('closeModal').addEventListener('click', () => {
-    console.log('Botão Fechar clicado');
-    document.getElementById('gameModal').classList.add('hidden');
   });
 }
 

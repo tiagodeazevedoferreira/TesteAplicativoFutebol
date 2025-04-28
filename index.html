@@ -52,41 +52,27 @@
   <link rel="apple-touch-icon" href="./icon.png">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Adicionando Font Awesome para ícones -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Adicionando Chart.js para gráficos -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
   <header class="header">
     <h1>Jogos do JL</h1>
   </header>
 
-  <!-- Seção para Foto e Informações do Jogador -->
   <div class="player-info container mx-auto p-4">
     <div class="flex items-center bg-white rounded-lg shadow-md p-4">
-      <img src="./Foto_Jogador.png" alt="Foto do Jogador" class="w-24 h-24 rounded-full mr-4">
+      <img src="./Foto_Jogador.png" alt="Foto de João Lucas" class="w-24 h-24 rounded-full mr-4">
       <div>
-        <h2 class="text-lg font-bold">JL</h2>
+        <h2 class="text-lg font-bold">João Lucas</h2>
         <p><strong>Posição:</strong> Fixo/Pivô</p>
         <p><strong>Times:</strong> Portuguesa, Opportunity</p>
       </div>
     </div>
   </div>
 
-  <!-- Seção para Notificações -->
   <div id="notifications" class="container mx-auto p-4 hidden">
     <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded" role="alert">
       <p id="notificationMessage"></p>
-    </div>
-  </div>
-
-  <!-- Modal para Visualização de Jogo Único -->
-  <div id="gameModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
-    <div class="bg-white rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
-      <h2 class="text-xl font-bold mb-4">Detalhes do Jogo</h2>
-      <div id="gameDetails" class="space-y-2"></div>
-      <button id="closeModal" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Fechar</button>
     </div>
   </div>
 
@@ -99,7 +85,6 @@
   <main class="container mx-auto p-4">
     <div id="errorMessage" style="display: none;" class="bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
 
-    <!-- Aba 1: Jogos -->
     <section id="tab1" class="tab-content active">
       <div class="filters mb-4">
         <h2 class="text-lg font-semibold">Filtros</h2>
@@ -139,7 +124,6 @@
       </div>
     </section>
 
-    <!-- Aba 2: Tabela -->
     <section id="tab2" class="tab-content">
       <div class="filters mb-4">
         <h2 class="text-lg font-semibold">Filtros</h2>
@@ -227,7 +211,6 @@
       </div>
     </section>
 
-    <!-- Aba 3: Resumo -->
     <section id="tab3" class="tab-content">
       <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div class="bg-white p-2 rounded shadow text-center">
@@ -263,17 +246,6 @@
           <p id="bigNumberDerrotas-tab3" class="text-lg font-bold">0</p>
         </div>
       </div>
-      <!-- Gráficos de Estatísticas -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h3 class="text-lg font-semibold mb-4">Jogos por Campeonato</h3>
-          <canvas id="gamesByChampionshipChart"></canvas>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h3 class="text-lg font-semibold mb-4">Resultados</h3>
-          <canvas id="resultsChart"></canvas>
-        </div>
-      </div>
     </section>
   </main>
 
@@ -282,7 +254,6 @@
   </footer>
 
   <script>
-    // Desregistrar Service Workers antigos
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
         for (let registration of registrations) {
@@ -295,7 +266,6 @@
       });
     }
 
-    // Capturar erros de script
     window.onerror = function(message, source, lineno, colno, error) {
       console.error('Erro de script detectado:', {
         message: message,

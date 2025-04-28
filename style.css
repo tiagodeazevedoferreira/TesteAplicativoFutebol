@@ -18,7 +18,7 @@ body {
 
 /* Estilo para o Card do Jogador */
 .player-info {
-  z-index: 10; /* Aumentado para ficar acima da coluna fixa */
+  z-index: 10; /* Mantido para ficar acima da coluna fixa */
 }
 
 .player-info img {
@@ -28,15 +28,6 @@ body {
 /* Estilo para Notificações */
 #notifications.hidden {
   display: none;
-}
-
-/* Estilo para o Modal */
-#gameModal.hidden {
-  display: none;
-}
-
-#gameModal .bg-white {
-  max-width: 90%;
 }
 
 /* Estilo para Animações */
@@ -155,7 +146,7 @@ td {
   position: sticky;
   left: 0;
   background-color: #f5e6e8;
-  z-index: 5; /* Reduzido para não sobrepor o card */
+  z-index: 5;
 }
 
 tbody tr .fixed-column {
