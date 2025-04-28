@@ -220,25 +220,30 @@ function displayData(data, filteredData, tabId) {
     showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
   }
 
+  let hasInconsistency = false;
   filteredData.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
     const vitoria = row[13] === '1';
     const derrota = row[14] === '1';
     const empate = row[15] === '1';
     const conditions = [vitoria, derrota, empate].filter(Boolean).length;
+
+    // Validar se há exatamente um '1' entre vitória, derrota e empate
     if (conditions > 1) {
       console.warn(`Inconsistência nos dados da linha ${rowIndex + 2}: Vitória=${row[13]}, Derrota=${row[14]}, Empate=${row[15]}`);
+      hasInconsistency = true;
+      // Não aplica destaque para evitar comportamento visual incorreto
+    } else if (conditions === 1) {
+      // Aplica o destaque correspondente se houver exatamente um '1'
+      if (vitoria) {
+        tr.classList.add('victory-row');
+      } else if (derrota) {
+        tr.classList.add('defeat-row');
+      } else if (empate) {
+        tr.classList.add('draw-row');
+      }
     }
-
-    if (vitoria) {
-      tr.classList.add('victory-row');
-    }
-    if (derrota) {
-      tr.classList.add('defeat-row');
-    }
-    if (empate) {
-      tr.classList.add('draw-row');
-    }
+    // Se conditions === 0, não aplica destaque (todos são '0' ou vazios)
 
     row.slice(0, 16).forEach((cell, index) => {
       const td = document.createElement('td');
@@ -252,6 +257,11 @@ function displayData(data, filteredData, tabId) {
     });
     tbody.appendChild(tr);
   });
+
+  // Exibir erro na interface se houver inconsistências
+  if (hasInconsistency) {
+    showError('Inconsistência nos dados: Algumas linhas possuem mais de um resultado (Vitória, Derrota, Empate). Corrija a planilha.');
+  }
 }
 
 function pivotTable(data, filteredData, tabId) {
