@@ -13,6 +13,7 @@ async function fetchSheetData() {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Erro ao carregar dados: ${response.statusText}`);
     const data = await response.json();
+    console.log('[fetchSheetData] Dados recebidos da API:', data.values);
     return data.values || [];
   } catch (error) {
     console.error('Erro ao buscar dados da planilha:', error);
@@ -491,6 +492,96 @@ function updatePivotButtonContent(button, isPivot) {
   // Adiciona o texto
   const text = document.createTextNode(isPivot ? 'Normal' : 'Pivot');
   button.appendChild(text);
+
+  console.log(`[updatePivotButtonContent] Botão atualizado para: ${isPivot ? 'Normal' : 'Pivot'}`);
+}
+
+function attachEventListeners() {
+  // Eventos das abas
+  const tab1Btn = document.getElementById('tab1-btn');
+  const tab2Btn = document.getElementById('tab2-btn');
+  const tab3Btn = document.getElementById('tab3-btn');
+
+  if (tab1Btn) {
+    tab1Btn.addEventListener('click', () => {
+      console.log('[attachEventListeners] Clique no botão tab1-btn');
+      showTab('tab1');
+    });
+    console.log('[attachEventListeners] Evento de clique adicionado ao botão tab1-btn');
+  } else {
+    console.error('[attachEventListeners] Botão tab1-btn não encontrado');
+  }
+
+  if (tab2Btn) {
+    tab2Btn.addEventListener('click', () => {
+      console.log('[attachEventListeners] Clique no botão tab2-btn');
+      showTab('tab2');
+    });
+    console.log('[attachEventListeners] Evento de clique adicionado ao botão tab2-btn');
+  } else {
+    console.error('[attachEventListeners] Botão tab2-btn não encontrado');
+  }
+
+  if (tab3Btn) {
+    tab3Btn.addEventListener('click', () => {
+      console.log('[attachEventListeners] Clique no botão tab3-btn');
+      showTab('tab3');
+    });
+    console.log('[attachEventListeners] Evento de clique adicionado ao botão tab3-btn');
+  } else {
+    console.error('[attachEventListeners] Botão tab3-btn não encontrado');
+  }
+
+  // Eventos dos botões de filtros e Pivot
+  const tabIds = ['tab1', 'tab2'];
+  tabIds.forEach(tabId => {
+    // Botão Pivot
+    const pivotButton = document.getElementById(`pivotMode-${tabId}`);
+    if (pivotButton) {
+      updatePivotButtonContent(pivotButton, isPivotMode[tabId]);
+      pivotButton.addEventListener('click', () => {
+        console.log(`[attachEventListeners] Botão Pivot clicado para tabId ${tabId}, estado atual de isPivotMode: ${isPivotMode[tabId]}`);
+        isPivotMode[tabId] = !isPivotMode[tabId];
+        console.log(`[attachEventListeners] Novo estado de isPivotMode[${tabId}]: ${isPivotMode[tabId]}`);
+        updatePivotButtonContent(pivotButton, isPivotMode[tabId]);
+        if (isPivotMode[tabId]) {
+          pivotTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, tabId);
+        } else {
+          populateTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, `jogosBody-${tabId}`, `tableHead-${tabId}`, tabId);
+        }
+      });
+      console.log(`[attachEventListeners] Evento de clique adicionado ao botão pivotMode-${tabId}`);
+    } else {
+      console.error(`[attachEventListeners] Botão pivotMode-${tabId} não encontrado`);
+    }
+
+    // Botão Aplicar Filtros
+    const aplicarFiltrosBtn = document.getElementById(`aplicarFiltros-${tabId}`);
+    if (aplicarFiltrosBtn) {
+      aplicarFiltrosBtn.addEventListener('click', () => {
+        console.log(`[attachEventListeners] Botão Aplicar Filtros clicado para tabId ${tabId}`);
+        if (tabId === 'tab1') displayTab1();
+        else displayTab2();
+      });
+      console.log(`[attachEventListeners] Evento de clique adicionado ao botão aplicarFiltros-${tabId}`);
+    } else {
+      console.error(`[attachEventListeners] Botão aplicarFiltros-${tabId} não encontrado`);
+    }
+
+    // Botão Limpar Filtros
+    const limparFiltrosBtn = document.getElementById(`limparFiltros-${tabId}`);
+    if (limparFiltrosBtn) {
+      limparFiltrosBtn.addEventListener('click', () => {
+        console.log(`[attachEventListeners] Botão Limpar Filtros clicado para tabId ${tabId}`);
+        clearFilters();
+        if (tabId === 'tab1') displayTab1();
+        else displayTab2();
+      });
+      console.log(`[attachEventListeners] Evento de clique adicionado ao botão limparFiltros-${tabId}`);
+    } else {
+      console.error(`[attachEventListeners] Botão limparFiltros-${tabId} não encontrado`);
+    }
+  });
 }
 
 async function init() {
@@ -513,94 +604,13 @@ async function init() {
     Notification.requestPermission();
   }
 
-  // Eventos das abas
-  const tab1Btn = document.getElementById('tab1-btn');
-  const tab2Btn = document.getElementById('tab2-btn');
-  const tab3Btn = document.getElementById('tab3-btn');
-
-  if (tab1Btn) {
-    tab1Btn.addEventListener('click', () => {
-      console.log('[init] Clique no botão tab1-btn');
-      showTab('tab1');
-    });
-  } else {
-    console.error('[init] Botão tab1-btn não encontrado');
-  }
-
-  if (tab2Btn) {
-    tab2Btn.addEventListener('click', () => {
-      console.log('[init] Clique no botão tab2-btn');
-      showTab('tab2');
-    });
-  } else {
-    console.error('[init] Botão tab2-btn não encontrado');
-  }
-
-  if (tab3Btn) {
-    tab3Btn.addEventListener('click', () => {
-      console.log('[init] Clique no botão tab3-btn');
-      showTab('tab3');
-    });
-  } else {
-    console.error('[init] Botão tab3-btn não encontrado');
-  }
-
-  // Eventos dos botões de filtros e Pivot
-  ['tab1', 'tab2'].forEach(tabId => {
-    // Botão Pivot
-    const pivotButton = document.getElementById(`pivotMode-${tabId}`);
-    if (!pivotButton) {
-      console.error(`[init] Botão pivotMode-${tabId} não encontrado`);
-      return;
-    }
-
-    updatePivotButtonContent(pivotButton, isPivotMode[tabId]);
-    console.log(`[init] Botão pivotMode-${tabId} inicializado com texto: ${pivotButton.textContent}`);
-
-    // Botão Aplicar Filtros
-    const aplicarFiltrosBtn = document.getElementById(`aplicarFiltros-${tabId}`);
-    if (aplicarFiltrosBtn) {
-      aplicarFiltrosBtn.addEventListener('click', () => {
-        console.log(`[init] Botão Aplicar Filtros clicado para tabId ${tabId}`);
-        if (tabId === 'tab1') displayTab1();
-        else displayTab2();
-      });
-      console.log(`[init] Evento de clique adicionado ao botão aplicarFiltros-${tabId}`);
-    } else {
-      console.error(`[init] Botão aplicarFiltros-${tabId} não encontrado`);
-    }
-
-    // Botão Limpar Filtros
-    const limparFiltrosBtn = document.getElementById(`limparFiltros-${tabId}`);
-    if (limparFiltrosBtn) {
-      limparFiltrosBtn.addEventListener('click', () => {
-        console.log(`[init] Botão Limpar Filtros clicado para tabId ${tabId}`);
-        clearFilters();
-        if (tabId === 'tab1') displayTab1();
-        else displayTab2();
-      });
-      console.log(`[init] Evento de clique adicionado ao botão limparFiltros-${tabId}`);
-    } else {
-      console.error(`[init] Botão limparFiltros-${tabId} não encontrado`);
-    }
-
-    // Evento do botão Pivot
-    pivotButton.addEventListener('click', () => {
-      console.log(`[init] Botão Pivot clicado para tabId ${tabId}, estado atual de isPivotMode: ${isPivotMode[tabId]}`);
-      isPivotMode[tabId] = !isPivotMode[tabId];
-      console.log(`[init] Novo estado de isPivotMode[${tabId}]: ${isPivotMode[tabId]}`);
-      updatePivotButtonContent(pivotButton, isPivotMode[tabId]);
-      console.log(`[init] Botão pivotMode-${tabId} atualizado com texto: ${pivotButton.textContent}`);
-      if (isPivotMode[tabId]) {
-        pivotTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, tabId);
-      } else {
-        populateTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, `jogosBody-${tabId}`, `tableHead-${tabId}`, tabId);
-      }
-    });
-    console.log(`[init] Evento de clique adicionado ao botão pivotMode-${tabId}`);
-  });
+  // Associa os eventos após a inicialização das abas
+  attachEventListeners();
 
   console.log('[init] Inicialização concluída');
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[DOMContentLoaded] DOM completamente carregado');
+  init();
+});
