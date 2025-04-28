@@ -35,33 +35,60 @@ function applyFilters(data, tabId) {
     'rodada', 'diaSemana', 'gol', 'assistencias', 'resultado'
   ];
 
-  console.log(`Aplicando filtros para tabId ${tabId}`);
+  console.log(`[applyFilters] Iniciando aplicação de filtros para tabId ${tabId}`);
+  console.log(`[applyFilters] Dados originais (sem cabeçalho):`, filteredData);
 
   filters.forEach(filter => {
     const element = document.getElementById(`${filter}-${tabId}`);
     if (element && element.value) {
-      console.log(`Filtro ${filter}: ${element.value}`);
+      console.log(`[applyFilters] Aplicando filtro ${filter} com valor: ${element.value}`);
       if (filter === 'dataInicio') {
         filteredData = filteredData.filter(row => {
           const date = new Date(row[1].split('/').reverse().join('-'));
-          return date >= new Date(element.value);
+          const filterDate = new Date(element.value);
+          const result = date >= filterDate;
+          console.log(`[applyFilters] Comparando dataInicio: ${row[1]} >= ${element.value} -> ${result}`);
+          return result;
         });
       } else if (filter === 'dataFim') {
         filteredData = filteredData.filter(row => {
           const date = new Date(row[1].split('/').reverse().join('-'));
-          return date <= new Date(element.value);
+          const filterDate = new Date(element.value);
+          const result = date <= filterDate;
+          console.log(`[applyFilters] Comparando dataFim: ${row[1]} <= ${element.value} -> ${result}`);
+          return result;
         });
       } else if (filter === 'time') {
-        filteredData = filteredData.filter(row => row[4] === element.value || row[7] === element.value);
+        filteredData = filteredData.filter(row => {
+          const result = row[4] === element.value || row[7] === element.value;
+          console.log(`[applyFilters] Comparando time: ${row[4]} ou ${row[7]} === ${element.value} -> ${result}`);
+          return result;
+        });
       } else if (filter === 'gol') {
-        filteredData = filteredData.filter(row => parseInt(row[11] || 0) >= parseInt(element.value));
+        filteredData = filteredData.filter(row => {
+          const golValue = parseInt(row[11] || 0);
+          const filterValue = parseInt(element.value);
+          const result = golValue >= filterValue;
+          console.log(`[applyFilters] Comparando gol: ${golValue} >= ${filterValue} -> ${result}`);
+          return result;
+        });
       } else if (filter === 'assistencias') {
-        filteredData = filteredData.filter(row => parseInt(row[12] || 0) >= parseInt(element.value));
+        filteredData = filteredData.filter(row => {
+          const assistValue = parseInt(row[12] || 0);
+          const filterValue = parseInt(element.value);
+          const result = assistValue >= filterValue;
+          console.log(`[applyFilters] Comparando assistencias: ${assistValue} >= ${filterValue} -> ${result}`);
+          return result;
+        });
       } else if (filter === 'resultado') {
-        const vitoria = element.value === 'Vitória' ? '1' : '0';
-        const derrota = element.value === 'Derrota' ? '1' : '0';
-        const empate = element.value === 'Empate' ? '1' : '0';
-        filteredData = filteredData.filter(row => row[13] === vitoria || row[14] === derrota || row[15] === empate);
+        filteredData = filteredData.filter(row => {
+          const vitoria = element.value === 'Vitória' ? '1' : '0';
+          const derrota = element.value === 'Derrota' ? '1' : '0';
+          const empate = element.value === 'Empate' ? '1' : '0';
+          const result = row[13] === vitoria || row[14] === derrota || row[15] === empate;
+          console.log(`[applyFilters] Comparando resultado: V=${row[13]}, D=${row[14]}, E=${row[15]} com filtro ${element.value} -> ${result}`);
+          return result;
+        });
       } else {
         const columnIndices = {
           campeonato: 0,
@@ -72,13 +99,17 @@ function applyFilters(data, tabId) {
         };
         const columnIndex = columnIndices[filter];
         if (columnIndex !== undefined) {
-          filteredData = filteredData.filter(row => row[columnIndex] === element.value);
+          filteredData = filteredData.filter(row => {
+            const result = row[columnIndex] === element.value;
+            console.log(`[applyFilters] Comparando ${filter} (índice ${columnIndex}): ${row[columnIndex]} === ${element.value} -> ${result}`);
+            return result;
+          });
         }
       }
     }
   });
 
-  console.log(`Dados filtrados para tabId ${tabId}:`, filteredData);
+  console.log(`[applyFilters] Dados filtrados para tabId ${tabId}:`, filteredData);
   return filteredData;
 }
 
@@ -86,7 +117,9 @@ function populateFilters(data, tabId) {
   const columns = [
     { id: 'campeonato', index: 0 },
     { id: 'ginasio', index: 3, tab: 'tab2' },
-    { id: 'time', index: [4, 7], tab: 'tab2' },
+    { id: ' 🙂
+
+time', index: [4, 7], tab: 'tab2' },
     { id: 'local', index: 8, tab: 'tab2' },
     { id: 'rodada', index: 9, tab: 'tab2' },
     { id: 'diaSemana', index: 10, tab: 'tab2' },
@@ -95,10 +128,15 @@ function populateFilters(data, tabId) {
     { id: 'resultado', index: [13, 14, 15], tab: 'tab2', custom: ['Vitória', 'Derrota', 'Empate'] }
   ];
 
+  console.log(`[populateFilters] Preenchendo filtros para tabId ${tabId}`);
+
   columns.forEach(column => {
     if (column.tab && column.tab !== tabId) return;
     const select = document.getElementById(`${column.id}-${tabId}`);
-    if (!select) return;
+    if (!select) {
+      console.warn(`[populateFilters] Elemento ${column.id}-${tabId} não encontrado`);
+      return;
+    }
 
     if (column.custom) {
       column.custom.forEach(value => {
@@ -132,11 +170,18 @@ function populateFilters(data, tabId) {
       });
     }
   });
+
+  console.log(`[populateFilters] Filtros preenchidos para tabId ${tabId}`);
 }
 
 function pivotTable(data, tabId) {
   const tbody = document.getElementById(`jogosBody-${tabId}`);
   const thead = document.getElementById(`tableHead-${tabId}`);
+  if (!tbody || !thead) {
+    console.error(`[pivotTable] Elementos tbody ou thead não encontrados para tabId ${tabId}`);
+    return;
+  }
+
   tbody.innerHTML = '';
   thead.innerHTML = '';
 
@@ -144,7 +189,9 @@ function pivotTable(data, tabId) {
   const columnHeader = tabId === 'tab1' ? 'Campeonato' : 'Campeonato';
   const rowHeaderIndex = tabId === 'tab1' ? 1 : [4, 7];
   const columnHeaderIndex = 0;
-  const valueHeader = tabId === 'tab1' ? 'Resultado' : 'Resultado';
+
+  console.log(`[pivotTable] Gerando tabela PIVOT para tabId ${tabId}`);
+  console.log(`[pivotTable] Dados recebidos:`, data);
 
   const rowValues = new Set();
   if (Array.isArray(rowHeaderIndex)) {
@@ -162,6 +209,9 @@ function pivotTable(data, tabId) {
   const columnValues = new Set(data.map(row => row[columnHeaderIndex]));
   const sortedRowValues = [...rowValues].sort();
   const sortedColumnValues = [...columnValues].sort();
+
+  console.log(`[pivotTable] Valores de linha (rowValues):`, sortedRowValues);
+  console.log(`[pivotTable] Valores de coluna (columnValues):`, sortedColumnValues);
 
   const headerRow = document.createElement('tr');
   const firstTh = document.createElement('th');
@@ -204,15 +254,27 @@ function pivotTable(data, tabId) {
 
     tbody.appendChild(tr);
   });
+
+  console.log(`[pivotTable] Tabela PIVOT renderizada para tabId ${tabId}`);
 }
 
 function populateTable(data, tableBodyId, tableHeadId, tabId) {
   const tbody = document.getElementById(tableBodyId);
   const thead = document.getElementById(tableHeadId);
+  if (!tbody || !thead) {
+    console.error(`[populateTable] Elementos tbody ou thead não encontrados para tabId ${tabId}`);
+    return;
+  }
+
   tbody.innerHTML = '';
   thead.innerHTML = '';
 
-  if (data.length === 0) return;
+  if (data.length === 0) {
+    console.warn(`[populateTable] Nenhum dado para renderizar em tabId ${tabId}`);
+    return;
+  }
+
+  console.log(`[populateTable] Renderizando tabela para tabId ${tabId} com dados:`, data);
 
   const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', 'Placar Mandante', 'Placar Visitante', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Resultado'];
   const headerRow = document.createElement('tr');
@@ -258,6 +320,7 @@ function populateTable(data, tableBodyId, tableHeadId, tabId) {
   });
 
   addSortListeners(tabId);
+  console.log(`[populateTable] Tabela renderizada para tabId ${tabId}`);
 }
 
 function addSortListeners(tabId) {
@@ -326,11 +389,14 @@ function updateBigNumbers(data, tabId) {
   document.getElementById(`bigNumberVitorias-${tabId}`).textContent = vitorias;
   document.getElementById(`bigNumberEmpates-${tabId}`).textContent = empates;
   document.getElementById(`bigNumberDerrotas-${tabId}`).textContent = derrotas;
+
+  console.log(`[updateBigNumbers] Números grandes atualizados para tabId ${tabId}`);
 }
 
 function displayTab1() {
-  console.log('Exibindo Tab1, isPivotMode:', isPivotMode.tab1);
+  console.log('[displayTab1] Exibindo Tab1, isPivotMode:', isPivotMode.tab1);
   filteredDataTab1 = applyFilters(allData, 'tab1');
+  console.log('[displayTab1] Dados filtrados:', filteredDataTab1);
   if (isPivotMode.tab1) {
     pivotTable(filteredDataTab1, 'tab1');
   } else {
@@ -340,8 +406,9 @@ function displayTab1() {
 }
 
 function displayTab2() {
-  console.log('Exibindo Tab2, isPivotMode:', isPivotMode.tab2);
+  console.log('[displayTab2] Exibindo Tab2, isPivotMode:', isPivotMode.tab2);
   filteredDataTab2 = applyFilters(allData, 'tab2');
+  console.log('[displayTab2] Dados filtrados:', filteredDataTab2);
   if (isPivotMode.tab2) {
     pivotTable(filteredDataTab2, 'tab2');
   } else {
@@ -353,10 +420,11 @@ function displayTab2() {
 function displayTab3() {
   filteredDataTab3 = allData.slice(1);
   updateBigNumbers(filteredDataTab3, 'tab3');
+  console.log('[displayTab3] Exibindo Tab3');
 }
 
 function showTab(tabId) {
-  console.log(`Trocando para aba ${tabId}`);
+  console.log(`[showTab] Trocando para aba ${tabId}`);
   clearFilters();
   const tabs = document.querySelectorAll('.tab-content');
   tabs.forEach(tab => tab.classList.remove('active'));
@@ -378,6 +446,7 @@ function clearFilters() {
   inputs.forEach(input => {
     input.value = '';
   });
+  console.log('[clearFilters] Filtros limpos');
 }
 
 function checkForUpcomingGames(data) {
@@ -406,12 +475,18 @@ function checkForUpcomingGames(data) {
   } else {
     notificationsDiv.classList.add('hidden');
   }
+
+  console.log('[checkForUpcomingGames] Verificação de jogos futuros concluída');
 }
 
 async function init() {
-  console.log('Inicializando app, estado inicial de isPivotMode:', isPivotMode);
+  console.log('[init] Inicializando app, estado inicial de isPivotMode:', isPivotMode);
   allData = await fetchSheetData();
-  if (allData.length === 0) return;
+  if (allData.length === 0) {
+    console.error('[init] Nenhum dado retornado da API');
+    return;
+  }
+  console.log('[init] Dados carregados da API:', allData);
 
   populateFilters(allData, 'tab1');
   populateFilters(allData, 'tab2');
@@ -424,12 +499,26 @@ async function init() {
     Notification.requestPermission();
   }
 
-  document.getElementById('tab1-btn').addEventListener('click', () => showTab('tab1'));
-  document.getElementById('tab2-btn').addEventListener('click', () => showTab('tab2'));
-  document.getElementById('tab3-btn').addEventListener('click', () => showTab('tab3'));
+  document.getElementById('tab1-btn').addEventListener('click', () => {
+    console.log('[init] Clique no botão tab1-btn');
+    showTab('tab1');
+  });
+  document.getElementById('tab2-btn').addEventListener('click', () => {
+    console.log('[init] Clique no botão tab2-btn');
+    showTab('tab2');
+  });
+  document.getElementById('tab3-btn').addEventListener('click', () => {
+    console.log('[init] Clique no botão tab3-btn');
+    showTab('tab3');
+  });
 
   ['tab1', 'tab2'].forEach(tabId => {
     const pivotButton = document.getElementById(`pivotMode-${tabId}`);
+    if (!pivotButton) {
+      console.error(`[init] Botão pivotMode-${tabId} não encontrado`);
+      return;
+    }
+
     if (isPivotMode[tabId]) {
       pivotButton.innerHTML = '<i class="fas fa-table mr-2"></i>Normal';
     } else {
@@ -437,31 +526,34 @@ async function init() {
     }
 
     document.getElementById(`aplicarFiltros-${tabId}`).addEventListener('click', () => {
-      console.log(`Botão Aplicar Filtros clicado para tabId ${tabId}`);
+      console.log(`[init] Botão Aplicar Filtros clicado para tabId ${tabId}`);
       if (tabId === 'tab1') displayTab1();
       else displayTab2();
     });
 
     document.getElementById(`limparFiltros-${tabId}`).addEventListener('click', () => {
-      console.log(`Botão Limpar Filtros clicado para tabId ${tabId}`);
+      console.log(`[init] Botão Limpar Filtros clicado para tabId ${tabId}`);
       clearFilters();
       if (tabId === 'tab1') displayTab1();
       else displayTab2();
     });
 
-    document.getElementById(`pivotMode-${tabId}`).addEventListener('click', () => {
-      console.log(`Botão Pivot clicado para tabId ${tabId}, estado atual de isPivotMode: ${isPivotMode[tabId]}`);
+    pivotButton.addEventListener('click', () => {
+      console.log(`[init] Botão Pivot clicado para tabId ${tabId}, estado atual de isPivotMode: ${isPivotMode[tabId]}`);
       isPivotMode[tabId] = !isPivotMode[tabId];
-      console.log(`Novo estado de isPivotMode[${tabId}]: ${isPivotMode[tabId]}`);
+      console.log(`[init] Novo estado de isPivotMode[${tabId}]: ${isPivotMode[tabId]}`);
+      pivotButton.innerHTML = isPivotMode[tabId]
+        ? '<i class="fas fa-table mr-2"></i>Normal'
+        : '<i class="fas fa-table mr-2"></i>Pivot';
       if (isPivotMode[tabId]) {
-        pivotButton.innerHTML = '<i class="fas fa-table mr-2"></i>Normal';
         pivotTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, tabId);
       } else {
-        pivotButton.innerHTML = '<i class="fas fa-table mr-2"></i>Pivot';
         populateTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, `jogosBody-${tabId}`, `tableHead-${tabId}`, tabId);
       }
     });
   });
+
+  console.log('[init] Inicialização concluída');
 }
 
 document.addEventListener('DOMContentLoaded', init);
