@@ -45,7 +45,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#d91a2a">
+  <meta name="theme-color" content="#1e40af">
   <title>Jogos do JL</title>
   <link rel="stylesheet" href="./style.css">
   <link rel="manifest" href="./manifest.json">
@@ -59,16 +59,16 @@
   </header>
 
   <nav class="tab-navigation">
-    <button id="tab1-btn" class="tab-button active-tab">Jogos Filtrados</button>
-    <button id="tab2-btn" class="tab-button">Resumo (Big Numbers)</button>
-    <button id="tab3-btn" class="tab-button">Todos os Jogos</button>
+    <button id="tab1-btn" class="tab-button active-tab">Jogos</button>
+    <button id="tab2-btn" class="tab-button">Tabela</button>
+    <button id="tab3-btn" class="tab-button">Resumo</button>
   </nav>
 
   <main class="container mx-auto p-4">
     <!-- Mensagem de Erro -->
     <div id="errorMessage" style="display: none;" class="bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
 
-    <!-- Aba 1: Jogos Filtrados -->
+    <!-- Aba 1: Jogos -->
     <section id="tab1" class="tab-content active">
       <!-- Filtros (Apenas Campeonato, Data Início, Data Fim) -->
       <div class="filters mb-4">
@@ -92,7 +92,7 @@
         <div class="mt-4">
           <button id="aplicarFiltros-tab1" class="bg-blue-500 text-white p-2 rounded mr-2">Aplicar Filtros</button>
           <button id="limparFiltros-tab1" class="bg-gray-500 text-white p-2 rounded mr-2">Limpar Filtros</button>
-          <button id="pivotMode-tab1" class="bg-green-500 text-white p-2 rounded">Alternar para PIVOT</button>
+          <button id="pivotMode-tab1" class="bg-green-500 text-white p-2 rounded">Pivot</button>
         </div>
       </div>
       <!-- Tabela -->
@@ -123,7 +123,7 @@
       </div>
     </section>
 
-    <!-- Aba 2: Resumo (Big Numbers) -->
+    <!-- Aba 2: Tabela -->
     <section id="tab2" class="tab-content">
       <!-- Filtros (Todos) -->
       <div class="filters mb-4">
@@ -204,135 +204,14 @@
         </div>
         <div class="mt-4">
           <button id="aplicarFiltros-tab2" class="bg-blue-500 text-white p-2 rounded mr-2">Aplicar Filtros</button>
-          <button id="limparFiltros-tab2" class="bg-gray-500 text-white p-2 rounded">Limpar Filtros</button>
-        </div>
-      </div>
-      <!-- Big Numbers -->
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <div class="bg-white p-2 rounded shadow text-center">
-          <h3 class="text-sm font-semibold">Jogos</h3>
-          <p id="bigNumberJogos-tab2" class="text-lg font-bold">0</p>
-        </div>
-        <div class="bg-white p-2 rounded shadow text-center">
-          <h3 class="text-sm font-semibold">Gols</h3>
-          <p id="bigNumberGols-tab2" class="text-lg font-bold">0</p>
-        </div>
-        <div class="bg-white p-2 rounded shadow text-center">
-          <h3 class="text-sm font-semibold">Média de Gols</h3>
-          <p id="bigNumberMedia-tab2" class="text-lg font-bold">0.00</p>
-        </div>
-        <div class="bg-white p-2 rounded shadow text-center">
-          <h3 class="text-sm font-semibold">Assistências</h3>
-          <p id="bigNumberAssistencias-tab2" class="text-lg font-bold">0</p>
-        </div>
-        <div class="bg-white p-2 rounded shadow text-center">
-          <h3 class="text-sm font-semibold">Gol a Cada</h3>
-          <p id="bigNumberGolACada-tab2" class="text-lg font-bold">0.00</p>
-        </div>
-        <div class="bg-white p-2 rounded shadow text-center">
-          <h3 class="text-sm font-semibold">Vitórias</h3>
-          <p id="bigNumberVitorias-tab2" class="text-lg font-bold">0</p>
-        </div>
-        <div class="bg-white p-2 rounded shadow text-center">
-          <h3 class="text-sm font-semibold">Empates</h3>
-          <p id="bigNumberEmpates-tab2" class="text-lg font-bold">0</p>
-        </div>
-        <div class="bg-white p-2 rounded shadow text-center">
-          <h3 class="text-sm font-semibold">Derrotas</h3>
-          <p id="bigNumberDerrotas-tab2" class="text-lg font-bold">0</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Aba 3: Todos os Jogos -->
-    <section id="tab3" class="tab-content">
-      <!-- Filtros (Todos) -->
-      <div class="filters mb-4">
-        <h2 class="text-lg font-semibold">Filtros</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label for="campeonato-tab3">Campeonato:</label>
-            <select id="campeonato-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label for="dataInicio-tab3">Data Início:</label>
-            <input type="date" id="dataInicio-tab3" class="w-full p-2 border rounded">
-          </div>
-          <div>
-            <label for="dataFim-tab3">Data Fim:</label>
-            <input type="date" id="dataFim-tab3" class="w-full p-2 border rounded">
-          </div>
-          <div>
-            <label for="ginasio-tab3">Ginásio:</label>
-            <select id="ginasio-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label for="time-tab3">Time:</label>
-            <select id="time-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label for="local-tab3">Local:</label>
-            <select id="local-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label for="rodada-tab3">Rodada:</label>
-            <select id="rodada-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label for="diaSemana-tab3">Dia da Semana:</label>
-            <select id="diaSemana-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label for="gol-tab3">Gols:</label>
-            <select id="gol-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label for="assistencias-tab3">Assistências:</label>
-            <select id="assistencias-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label for="vitoria-tab3">Vitória:</label>
-            <select id="vitoria-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-              <option value="1">Sim</option>
-              <option value="0">Não</option>
-            </select>
-          </div>
-          <div>
-            <label for="empate-tab3">Empate:</label>
-            <select id="empate-tab3" class="w-full p-2 border rounded">
-              <option value="">Todos</option>
-              <option value="1">Sim</option>
-              <option value="0">Não</option>
-            </select>
-          </div>
-        </div>
-        <div class="mt-4">
-          <button id="aplicarFiltros-tab3" class="bg-blue-500 text-white p-2 rounded mr-2">Aplicar Filtros</button>
-          <button id="limparFiltros-tab3" class="bg-gray-500 text-white p-2 rounded mr-2">Limpar Filtros</button>
-          <button id="pivotMode-tab3" class="bg-green-500 text-white p-2 rounded">Alternar para PIVOT</button>
+          <button id="limparFiltros-tab2" class="bg-gray-500 text-white p-2 rounded mr-2">Limpar Filtros</button>
+          <button id="pivotMode-tab2" class="bg-green-500 text-white p-2 rounded">Pivot</button>
         </div>
       </div>
       <!-- Tabela -->
       <div class="overflow-x-auto">
-        <table id="jogosTable-tab3" class="w-full bg-white border">
-          <thead id="tableHead-tab3">
+        <table id="jogosTable-tab2" class="w-full bg-white border">
+          <thead id="tableHead-tab2">
             <tr class="bg-gray-200">
               <th class="p-2">Campeonato</th>
               <th class="p-2">Data</th>
@@ -352,8 +231,47 @@
               <th class="p-2">Empate</th>
             </tr>
           </thead>
-          <tbody id="jogosBody-tab3"></tbody>
+          <tbody id="jogosBody-tab2"></tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- Aba 3: Resumo -->
+    <section id="tab3" class="tab-content">
+      <!-- Big Numbers -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Jogos</h3>
+          <p id="bigNumberJogos-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Gols</h3>
+          <p id="bigNumberGols-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Média de Gols</h3>
+          <p id="bigNumberMedia-tab3" class="text-lg font-bold">0.00</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Assistências</h3>
+          <p id="bigNumberAssistencias-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Gol a Cada</h3>
+          <p id="bigNumberGolACada-tab3" class="text-lg font-bold">0.00</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Vitórias</h3>
+          <p id="bigNumberVitorias-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Empates</h3>
+          <p id="bigNumberEmpates-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Derrotas</h3>
+          <p id="bigNumberDerrotas-tab3" class="text-lg font-bold">0</p>
+        </div>
       </div>
     </section>
   </main>

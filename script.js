@@ -4,11 +4,11 @@ const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
 const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
 let allData = [];
-let filteredDataTab1 = [];
-let filteredDataTab2 = [];
-let filteredDataTab3 = [];
-let isPivotTab1 = false; // Estado do PIVOT para Aba 1
-let isPivotTab3 = false; // Estado do PIVOT para Aba 3
+let filteredDataTab1 = []; // Jogos
+let filteredDataTab2 = []; // Tabela
+let filteredDataTab3 = []; // Resumo
+let isPivotTab1 = false; // Estado do PIVOT para Aba 1 (Jogos)
+let isPivotTab2 = false; // Estado do PIVOT para Aba 2 (Tabela)
 
 async function fetchSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
@@ -75,7 +75,7 @@ function populateFilters(data) {
     { id: 'assistencias', index: 12 }
   ];
 
-  const tabs = ['tab1', 'tab2', 'tab3'];
+  const tabs = ['tab1', 'tab2']; // Removido tab3 (Resumo), pois não tem filtros
   tabs.forEach(tab => {
     const timeSelect = document.getElementById(`time-${tab}`);
     if (timeSelect) {
@@ -148,7 +148,7 @@ function updateBigNumbers(data, tabId) {
 }
 
 let sortConfigTab1 = { column: null, direction: 'asc' };
-let sortConfigTab3 = { column: null, direction: 'asc' };
+let sortConfigTab2 = { column: null, direction: 'asc' }; // Ajustado para Tabela (tab2)
 
 function sortData(data, columnIndex, direction) {
   const sortedData = [...data];
@@ -191,7 +191,7 @@ function displayData(data, filteredData, tabId) {
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
   const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
-  const sortConfig = tabId === 'tab1' ? sortConfigTab1 : sortConfigTab3;
+  const sortConfig = tabId === 'tab1' ? sortConfigTab1 : sortConfigTab2;
   headers.forEach((text, index) => {
     const th = document.createElement('th');
     th.textContent = text;
@@ -205,7 +205,7 @@ function displayData(data, filteredData, tabId) {
       if (tabId === 'tab1') {
         sortConfigTab1 = { column: index, direction: newDirection };
       } else {
-        sortConfigTab3 = { column: index, direction: newDirection };
+        sortConfigTab2 = { column: index, direction: newDirection };
       }
       const sortedData = sortData(filteredData, index, newDirection);
       displayData(data, sortedData, tabId);
@@ -340,7 +340,7 @@ function filterData(data, filters) {
   });
 }
 
-function displayTab1() {
+function displayTab1() { // Jogos
   const filters = {
     campeonato: document.getElementById('campeonato-tab1').value,
     dataInicio: document.getElementById('dataInicio-tab1').value,
@@ -349,14 +349,14 @@ function displayTab1() {
   filteredDataTab1 = filterData(allData, filters);
   if (isPivotTab1) {
     pivotTable(allData, filteredDataTab1, 'tab1');
-    document.getElementById('pivotMode-tab1').textContent = 'Voltar ao modo Tabela';
+    document.getElementById('pivotMode-tab1').textContent = 'Tabela';
   } else {
     displayData(allData, filteredDataTab1, 'tab1');
-    document.getElementById('pivotMode-tab1').textContent = 'Alternar para PIVOT';
+    document.getElementById('pivotMode-tab1').textContent = 'Pivot';
   }
 }
 
-function displayTab2() {
+function displayTab2() { // Tabela
   const filters = {
     campeonato: document.getElementById('campeonato-tab2').value,
     dataInicio: document.getElementById('dataInicio-tab2').value,
@@ -372,36 +372,22 @@ function displayTab2() {
     empate: document.getElementById('empate-tab2').value
   };
   filteredDataTab2 = filterData(allData, filters);
-  updateBigNumbers(filteredDataTab2, 'tab2');
-}
-
-function displayTab3() {
-  const filters = {
-    campeonato: document.getElementById('campeonato-tab3').value,
-    dataInicio: document.getElementById('dataInicio-tab3').value,
-    dataFim: document.getElementById('dataFim-tab3').value,
-    ginasio: document.getElementById('ginasio-tab3').value,
-    time: document.getElementById('time-tab3').value,
-    local: document.getElementById('local-tab3').value,
-    rodada: document.getElementById('rodada-tab3').value,
-    diaSemana: document.getElementById('diaSemana-tab3').value,
-    gol: document.getElementById('gol-tab3').value,
-    assistencias: document.getElementById('assistencias-tab3').value,
-    vitoria: document.getElementById('vitoria-tab3').value,
-    empate: document.getElementById('empate-tab3').value
-  };
-  filteredDataTab3 = filterData(allData, filters);
-  if (isPivotTab3) {
-    pivotTable(allData, filteredDataTab3, 'tab3');
-    document.getElementById('pivotMode-tab3').textContent = 'Voltar ao modo Tabela';
+  if (isPivotTab2) {
+    pivotTable(allData, filteredDataTab2, 'tab2');
+    document.getElementById('pivotMode-tab2').textContent = 'Tabela';
   } else {
-    displayData(allData, filteredDataTab3, 'tab3');
-    document.getElementById('pivotMode-tab3').textContent = 'Alternar para PIVOT';
+    displayData(allData, filteredDataTab2, 'tab2');
+    document.getElementById('pivotMode-tab2').textContent = 'Pivot';
   }
 }
 
+function displayTab3() { // Resumo
+  filteredDataTab3 = allData.slice(1); // Sem filtros
+  updateBigNumbers(filteredDataTab3, 'tab3');
+}
+
 function clearFilters() {
-  const tabs = ['tab1', 'tab2', 'tab3'];
+  const tabs = ['tab1', 'tab2']; // Removido tab3 (Resumo), pois não tem filtros
   tabs.forEach(tab => {
     document.getElementById(`campeonato-${tab}`).value = '';
     document.getElementById(`dataInicio-${tab}`).value = '';
@@ -419,7 +405,7 @@ function clearFilters() {
     }
   });
   isPivotTab1 = false;
-  isPivotTab3 = false;
+  isPivotTab2 = false;
 }
 
 function showTab(tabId) {
@@ -440,6 +426,7 @@ function showTab(tabId) {
   else if (tabId === 'tab3') displayTab3();
 }
 
+// Aba 1: Jogos
 document.getElementById('aplicarFiltros-tab1').addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 1)');
   displayTab1();
@@ -455,11 +442,12 @@ document.getElementById('limparFiltros-tab1').addEventListener('click', () => {
 });
 
 document.getElementById('pivotMode-tab1').addEventListener('click', () => {
-  console.log('Botão PIVOT clicado (Tab 1)');
+  console.log('Botão Pivot clicado (Tab 1)');
   isPivotTab1 = !isPivotTab1;
   displayTab1();
 });
 
+// Aba 2: Tabela
 document.getElementById('aplicarFiltros-tab2').addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 2)');
   displayTab2();
@@ -479,36 +467,14 @@ document.getElementById('limparFiltros-tab2').addEventListener('click', () => {
   document.getElementById('assistencias-tab2').value = '';
   document.getElementById('vitoria-tab2').value = '';
   document.getElementById('empate-tab2').value = '';
+  isPivotTab2 = false;
   displayTab2();
 });
 
-document.getElementById('aplicarFiltros-tab3').addEventListener('click', () => {
-  console.log('Aplicando filtros (Tab 3)');
-  displayTab3();
-});
-
-document.getElementById('limparFiltros-tab3').addEventListener('click', () => {
-  console.log('Limpando filtros (Tab 3)');
-  document.getElementById('campeonato-tab3').value = '';
-  document.getElementById('dataInicio-tab3').value = '';
-  document.getElementById('dataFim-tab3').value = '';
-  document.getElementById('ginasio-tab3').value = '';
-  document.getElementById('time-tab3').value = '';
-  document.getElementById('local-tab3').value = '';
-  document.getElementById('rodada-tab3').value = '';
-  document.getElementById('diaSemana-tab3').value = '';
-  document.getElementById('gol-tab3').value = '';
-  document.getElementById('assistencias-tab3').value = '';
-  document.getElementById('vitoria-tab3').value = '';
-  document.getElementById('empate-tab3').value = '';
-  isPivotTab3 = false;
-  displayTab3();
-});
-
-document.getElementById('pivotMode-tab3').addEventListener('click', () => {
-  console.log('Botão PIVOT clicado (Tab 3)');
-  isPivotTab3 = !isPivotTab3;
-  displayTab3();
+document.getElementById('pivotMode-tab2').addEventListener('click', () => {
+  console.log('Botão Pivot clicado (Tab 2)');
+  isPivotTab2 = !isPivotTab2;
+  displayTab2();
 });
 
 async function init() {

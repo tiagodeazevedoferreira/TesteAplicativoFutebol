@@ -4,7 +4,7 @@ body {
 }
 
 .header {
-  background-color: #d91a2a;
+  background-color: #1e40af;
   color: white;
   text-align: center;
   padding: 1rem;
@@ -33,7 +33,7 @@ body {
 .tab-button.active-tab {
   background-color: #fff;
   font-weight: bold;
-  border-bottom: 2px solid #d91a2a;
+  border-bottom: 2px solid #1e40af;
 }
 
 .tab-content {
@@ -47,7 +47,7 @@ body {
 
 .footer {
   text-align: center;
-  background-color: #d91a2a;
+  background-color: #1e40af;
   color: white;
   padding: 1rem;
 }
