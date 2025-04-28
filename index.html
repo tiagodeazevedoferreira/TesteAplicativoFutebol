@@ -37,47 +37,7 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script><script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-</script>
-<!DOCTYPE html>
+        </script><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -98,179 +58,187 @@
     <h1>Jogos do JL</h1>
   </header>
 
-  <div class="player-info container mx-auto p-4">
-    <div class="flex items-center bg-white rounded-lg shadow-md p-4">
-      <img src="./Foto_Jogador.png" alt="Foto de João Lucas" class="w-24 h-24 rounded-full mr-4">
-      <div>
-        <h2 class="text-lg font-bold">João Lucas</h2>
-        <p><strong>Posição:</strong> Fixo/Pivô</p>
-        <p><strong>Times:</strong> Portuguesa, Opportunity</p>
-      </div>
-    </div>
-  </div>
-
-  <div id="notifications" class="container mx-auto p-4 hidden">
-    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded" role="alert">
-      <p id="notificationMessage"></p>
-    </div>
-  </div>
-
   <nav class="tab-navigation">
-    <button id="tab1-btn" class="tab-button active-tab" data-tab="tab1">Jogos</button>
-    <button id="tab2-btn" class="tab-button" data-tab="tab2">Tabela</button>
-    <button id="tab3-btn" class="tab-button" data-tab="tab3">Resumo</button>
+    <button id="tab1-btn" class="tab-button active-tab">Jogos</button>
+    <button id="tab2-btn" class="tab-button">Tabela</button>
+    <button id="tab3-btn" class="tab-button">Resumo</button>
   </nav>
 
   <main class="container mx-auto p-4">
+    <!-- Mensagem de Erro -->
     <div id="errorMessage" style="display: none;" class="bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
 
-    <!-- Card de detalhes do jogo -->
-    <div id="gameDetailsCard" class="game-details-card hidden">
-      <div class="card-content">
-        <h3 id="gameDetailsTitle" class="text-lg font-bold"></h3>
-        <p><strong>Campeonato:</strong> <span id="gameDetailsCampeonato"></span></p>
-        <p><strong>Data:</strong> <span id="gameDetailsData"></span></p>
-        <p><strong>Horário:</strong> <span id="gameDetailsHorario"></span></p>
-        <p><strong>Ginásio:</strong> <span id="gameDetailsGinasio"></span></p>
-        <p><strong>Jogo:</strong> <span id="gameDetailsMatch"></span></p>
-        <p><strong>Placar:</strong> <span id="gameDetailsPlacar"></span></p>
-        <p><strong>Local:</strong> <span id="gameDetailsLocal"></span></p>
-        <p><strong>Rodada:</strong> <span id="gameDetailsRodada"></span></p>
-        <p><strong>Dia da Semana:</strong> <span id="gameDetailsDiaSemana"></span></p>
-        <p><strong>Gols:</strong> <span id="gameDetailsGols"></span></p>
-        <p><strong>Assistências:</strong> <span id="gameDetailsAssistencias"></span></p>
-        <p><strong>Resultado:</strong> <span id="gameDetailsResultado"></span></p>
-        <button id="closeGameDetails" class="bg-gray-500 text-white p-2 rounded mt-4 hover:bg-gray-600">Fechar</button>
-      </div>
-    </div>
-
+    <!-- Aba 1: Jogos -->
     <section id="tab1" class="tab-content active">
+      <!-- Filtros (Apenas Campeonato, Data Início, Data Fim) -->
       <div class="filters mb-4">
         <h2 class="text-lg font-semibold">Filtros</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label for="campeonato-tab1" class="block text-sm font-medium">Campeonato:</label>
+            <label for="campeonato-tab1">Campeonato:</label>
             <select id="campeonato-tab1" class="w-full p-2 border rounded">
               <option value="">Todos</option>
             </select>
           </div>
           <div>
-            <label for="dataInicio-tab1" class="block text-sm font-medium">Data Início:</label>
+            <label for="dataInicio-tab1">Data Início:</label>
             <input type="date" id="dataInicio-tab1" class="w-full p-2 border rounded">
           </div>
           <div>
-            <label for="dataFim-tab1" class="block text-sm font-medium">Data Fim:</label>
+            <label for="dataFim-tab1">Data Fim:</label>
             <input type="date" id="dataFim-tab1" class="w-full p-2 border rounded">
           </div>
         </div>
         <div class="mt-4">
-          <button id="aplicarFiltros-tab1" class="bg-blue-500 text-white p-2 rounded mr-2 hover:bg-blue-600" data-action="aplicarFiltros" data-tab="tab1">
-            Aplicar Filtros
-          </button>
-          <button id="limparFiltros-tab1" class="bg-gray-500 text-white p-2 rounded mr-2 hover:bg-gray-600" data-action="limparFiltros" data-tab="tab1">
-            Limpar Filtros
-          </button>
-          <button id="pivotMode-tab1" class="bg-green-500 text-white p-2 rounded hover:bg-green-600" data-action="pivotMode" data-tab="tab1">
-            Pivot
-          </button>
+          <button id="aplicarFiltros-tab1" class="bg-blue-500 text-white p-2 rounded mr-2">Aplicar Filtros</button>
+          <button id="limparFiltros-tab1" class="bg-gray-500 text-white p-2 rounded mr-2">Limpar Filtros</button>
+          <button id="pivotMode-tab1" class="bg-green-500 text-white p-2 rounded">Pivot</button>
         </div>
       </div>
+      <!-- Tabela -->
       <div class="overflow-x-auto">
         <table id="jogosTable-tab1" class="w-full bg-white border">
-          <thead id="tableHead-tab1"></thead>
+          <thead id="tableHead-tab1">
+            <tr class="bg-gray-200">
+              <th class="p-2">Campeonato</th>
+              <th class="p-2">Data</th>
+              <th class="p-2">Horário</th>
+              <th class="p-2">Ginásio</th>
+              <th class="p-2">Mandante</th>
+              <th class="p-2"></th>
+              <th class="p-2"></th>
+              <th class="p-2">Visitante</th>
+              <th class="p-2">Local</th>
+              <th class="p-2">Rodada</th>
+              <th class="p-2">Dia da Semana</th>
+              <th class="p-2">Gol</th>
+              <th class="p-2">Assistências</th>
+              <th class="p-2">Vitória</th>
+              <th class="p-2">Derrota</th>
+              <th class="p-2">Empate</th>
+            </tr>
+          </thead>
           <tbody id="jogosBody-tab1"></tbody>
         </table>
       </div>
     </section>
 
+    <!-- Aba 2: Tabela -->
     <section id="tab2" class="tab-content">
+      <!-- Filtros (Todos) -->
       <div class="filters mb-4">
         <h2 class="text-lg font-semibold">Filtros</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label for="campeonato-tab2" class="block text-sm font-medium">Campeonato:</label>
+            <label for="campeonato-tab2">Campeonato:</label>
             <select id="campeonato-tab2" class="w-full p-2 border rounded">
               <option value="">Todos</option>
             </select>
           </div>
           <div>
-            <label for="dataInicio-tab2" class="block text-sm font-medium">Data Início:</label>
+            <label for="dataInicio-tab2">Data Início:</label>
             <input type="date" id="dataInicio-tab2" class="w-full p-2 border rounded">
           </div>
           <div>
-            <label for="dataFim-tab2" class="block text-sm font-medium">Data Fim:</label>
+            <label for="dataFim-tab2">Data Fim:</label>
             <input type="date" id="dataFim-tab2" class="w-full p-2 border rounded">
           </div>
           <div>
-            <label for="ginasio-tab2" class="block text-sm font-medium">Ginásio:</label>
+            <label for="ginasio-tab2">Ginásio:</label>
             <select id="ginasio-tab2" class="w-full p-2 border rounded">
               <option value="">Todos</option>
             </select>
           </div>
           <div>
-            <label for="time-tab2" class="block text-sm font-medium">Time:</label>
+            <label for="time-tab2">Time:</label>
             <select id="time-tab2" class="w-full p-2 border rounded">
               <option value="">Todos</option>
             </select>
           </div>
           <div>
-            <label for="local-tab2" class="block text-sm font-medium">Local:</label>
+            <label for="local-tab2">Local:</label>
             <select id="local-tab2" class="w-full p-2 border rounded">
               <option value="">Todos</option>
             </select>
           </div>
           <div>
-            <label for="rodada-tab2" class="block text-sm font-medium">Rodada:</label>
+            <label for="rodada-tab2">Rodada:</label>
             <select id="rodada-tab2" class="w-full p-2 border rounded">
-              <option value="">Todas</option>
+              <option value="">Todos</option>
             </select>
           </div>
           <div>
-            <label for="diaSemana-tab2" class="block text-sm font-medium">Dia da Semana:</label>
+            <label for="diaSemana-tab2">Dia da Semana:</label>
             <select id="diaSemana-tab2" class="w-full p-2 border rounded">
               <option value="">Todos</option>
             </select>
           </div>
           <div>
-            <label for="gol-tab2" class="block text-sm font-medium">Gol:</label>
+            <label for="gol-tab2">Gols:</label>
             <select id="gol-tab2" class="w-full p-2 border rounded">
               <option value="">Todos</option>
             </select>
           </div>
           <div>
-            <label for="assistencias-tab2" class="block text-sm font-medium">Assistências:</label>
+            <label for="assistencias-tab2">Assistências:</label>
             <select id="assistencias-tab2" class="w-full p-2 border rounded">
-              <option value="">Todas</option>
+              <option value="">Todos</option>
             </select>
           </div>
           <div>
-            <label for="resultado-tab2" class="block text-sm font-medium">Resultado:</label>
-            <select id="resultado-tab2" class="w-full p-2 border rounded">
+            <label for="vitoria-tab2">Vitória:</label>
+            <select id="vitoria-tab2" class="w-full p-2 border rounded">
               <option value="">Todos</option>
+              <option value="1">Sim</option>
+              <option value="0">Não</option>
+            </select>
+          </div>
+          <div>
+            <label for="empate-tab2">Empate:</label>
+            <select id="empate-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+              <option value="1">Sim</option>
+              <option value="0">Não</option>
             </select>
           </div>
         </div>
         <div class="mt-4">
-          <button id="aplicarFiltros-tab2" class="bg-blue-500 text-white p-2 rounded mr-2 hover:bg-blue-600" data-action="aplicarFiltros" data-tab="tab2">
-            Aplicar Filtros
-          </button>
-          <button id="limparFiltros-tab2" class="bg-gray-500 text-white p-2 rounded mr-2 hover:bg-gray-600" data-action="limparFiltros" data-tab="tab2">
-            Limpar Filtros
-          </button>
-          <button id="pivotMode-tab2" class="bg-green-500 text-white p-2 rounded hover:bg-green-600" data-action="pivotMode" data-tab="tab2">
-            Pivot
-          </button>
+          <button id="aplicarFiltros-tab2" class="bg-blue-500 text-white p-2 rounded mr-2">Aplicar Filtros</button>
+          <button id="limparFiltros-tab2" class="bg-gray-500 text-white p-2 rounded mr-2">Limpar Filtros</button>
+          <button id="pivotMode-tab2" class="bg-green-500 text-white p-2 rounded">Pivot</button>
         </div>
       </div>
+      <!-- Tabela -->
       <div class="overflow-x-auto">
         <table id="jogosTable-tab2" class="w-full bg-white border">
-          <thead id="tableHead-tab2"></thead>
+          <thead id="tableHead-tab2">
+            <tr class="bg-gray-200">
+              <th class="p-2">Campeonato</th>
+              <th class="p-2">Data</th>
+              <th class="p-2">Horário</th>
+              <th class="p-2">Ginásio</th>
+              <th class="p-2">Mandante</th>
+              <th class="p-2"></th>
+              <th class="p-2"></th>
+              <th class="p-2">Visitante</th>
+              <th class="p-2">Local</th>
+              <th class="p-2">Rodada</th>
+              <th class="p-2">Dia da Semana</th>
+              <th class="p-2">Gol</th>
+              <th class="p-2">Assistências</th>
+              <th class="p-2">Vitória</th>
+              <th class="p-2">Derrota</th>
+              <th class="p-2">Empate</th>
+            </tr>
+          </thead>
           <tbody id="jogosBody-tab2"></tbody>
         </table>
       </div>
     </section>
 
+    <!-- Aba 3: Resumo -->
     <section id="tab3" class="tab-content">
+      <!-- Big Numbers -->
       <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div class="bg-white p-2 rounded shadow text-center">
           <h3 class="text-sm font-semibold">Jogos</h3>
@@ -313,6 +281,7 @@
   </footer>
 
   <script>
+    // Desregistrar Service Workers antigos
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
         for (let registration of registrations) {
@@ -325,6 +294,7 @@
       });
     }
 
+    // Capturar erros de script
     window.onerror = function(message, source, lineno, colno, error) {
       console.error('Erro de script detectado:', {
         message: message,

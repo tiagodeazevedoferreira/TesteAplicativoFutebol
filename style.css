@@ -1,162 +1,154 @@
-/* Estilos para o header */
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f9f9f9 !important; /* Sobrescrever Tailwind bg-gray-100 */
+}
+
 .header {
   background-color: #1e40af;
   color: white;
-  padding: 1rem;
   text-align: center;
+  padding: 1rem;
 }
 
-.header h1 {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-/* Estilos para a navegação das abas */
 .tab-navigation {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
+  background-color: #f2f2f2;
+  padding: 0.5rem;
 }
 
 .tab-button {
-  background-color: #3b82f6;
-  color: white;
+  margin: 0 0.5rem;
   padding: 0.5rem 1rem;
+  background-color: #e0e0e0;
   border: none;
   cursor: pointer;
-  transition: background-color 0.3s;
+  border-radius: 5px;
 }
 
 .tab-button:hover {
-  background-color: #2563eb;
+  background-color: #cccccc;
 }
 
 .tab-button.active-tab {
-  background-color: #1d4ed8;
+  background-color: #fff;
+  font-weight: bold;
+  border-bottom: 2px solid #1e40af;
 }
 
-/* Estilos para a seção de informações do jogador */
-.player-info img {
-  object-fit: cover;
-}
-
-/* Estilos para as tabelas */
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-th, td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-th {
-  background-color: #f2f2f2;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-tr:hover {
-  background-color: #f5f5f5;
-}
-
-.fixed-column {
-  position: sticky;
-  left: 0;
-  background-color: white;
-  z-index: 5;
-}
-
-th.fixed-column {
-  z-index: 15;
-}
-
-.victory-row {
-  background-color: #d4edda;
-}
-
-.defeat-row {
-  background-color: #f8d7da;
-}
-
-.draw-row {
-  background-color: #fff3cd;
-}
-
-/* Estilos para as seções das abas */
 .tab-content {
   display: none;
+  padding: 1rem;
 }
 
 .tab-content.active {
   display: block;
 }
 
-/* Estilos para ordenação */
-.sortable {
+.footer {
+  text-align: center;
+  background-color: #1e40af;
+  color: white;
+  padding: 1rem;
+}
+
+/* Estilo da tabela */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 800px; /* Forçar rolagem horizontal em telas pequenas */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra na tabela */
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+  border: 1px solid #e2e8f0; /* Borda mais suave */
+}
+
+tr:nth-child(even) {
+  background-color: #e6f0ea; /* Tom claro de verde (Portuguesa) */
+}
+
+th {
+  white-space: nowrap; /* Evitar quebra de texto nos cabeçalhos */
+  background-color: #f5e6e8; /* Tom claro de vermelho (Portuguesa) */
+}
+
+td {
+  max-width: 200px; /* Limitar largura das células no modo PIVOT */
+}
+
+/* Destaque visual para linhas */
+.victory-row {
+  background-color: #d4edda !important; /* Verde claro para vitórias */
+}
+
+.defeat-row {
+  background-color: #e2e8f0 !important; /* Cinza claro para derrotas */
+}
+
+.draw-row {
+  background-color: #fff3cd !important; /* Amarelo claro para empates */
+}
+
+/* Estilo para ordenação */
+th.sortable {
   cursor: pointer;
   position: relative;
 }
 
-.sortable:hover {
-  background-color: #e5e7eb;
+th.sortable:hover {
+  text-decoration: underline;
 }
 
-.sort-asc::after {
-  content: ' ▲';
-  font-size: 0.75rem;
+th.sort-asc::after {
+  content: ' ↑';
+  font-size: 0.8rem;
 }
 
-.sort-desc::after {
-  content: ' ▼';
-  font-size: 0.75rem;
+th.sort-desc::after {
+  content: ' ↓';
+  font-size: 0.8rem;
 }
 
-/* Estilos para o footer */
-.footer {
-  background-color: #1e40af;
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  margin-top: 1rem;
+/* Sombras e bordas para Big Numbers */
+.bg-white {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
 }
 
-.footer p {
-  margin: 0;
+/* Sombras e bordas para botões */
+.bg-blue-500, .bg-gray-500, .bg-green-500 {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 6px !important;
+  transition: transform 0.1s ease;
 }
 
-/* Estilos para os filtros */
-.filters {
-  background-color: white;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.bg-blue-500:hover, .bg-gray-500:hover, .bg-green-500:hover {
+  transform: translateY(-1px);
 }
 
-/* Estilos para o card de detalhes do jogo */
-.game-details-card {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  max-width: 90%;
-  width: 400px;
+/* Mensagem de erro */
+.bg-red-100 {
+  background-color: #f5e6e8 !important; /* Tom claro de vermelho */
 }
 
-.game-details-card.hidden {
-  display: none;
+.text-red-700 {
+  color: #d91a2a !important; /* Vermelho da Portuguesa */
 }
 
-.game-details-card .card-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+@media (max-width: 768px) {
+  .filters {
+    font-size: 0.9rem;
+  }
+  
+  table {
+    font-size: 0.8rem;
+  }
+  
+  th, td {
+    padding: 4px;
+    max-width: 150px; /* Reduzir largura das células no PIVOT em telas pequenas */
+  }
 }
