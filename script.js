@@ -204,7 +204,15 @@ function displayData(data, filteredData, tabId) {
 
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
-  const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Resultado'];
+  // Definir cabeçalhos com base na aba
+  let headers;
+  if (tabId === 'tab1') {
+    // Aba 1: Excluir "Gol", "Assistências" e "Resultado"
+    headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana'];
+  } else {
+    // Outras abas: Manter todas as colunas
+    headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Resultado'];
+  }
   const sortConfig = tabId === 'tab1' ? sortConfigTab1 : sortConfigTab2;
   headers.forEach((text, index) => {
     const th = document.createElement('th');
@@ -250,29 +258,40 @@ function displayData(data, filteredData, tabId) {
     } else if (conditions === 1) {
       if (vitoria) {
         resultado = 'Vitória';
-        tr.classList.add('victory-row');
+        if (tabId !== 'tab1') tr.classList.add('victory-row'); // Aplicar destaque apenas fora da Aba 1
       } else if (derrota) {
         resultado = 'Derrota';
-        tr.classList.add('defeat-row');
+        if (tabId !== 'tab1') tr.classList.add('defeat-row');
       } else if (empate) {
         resultado = 'Empate';
-        tr.classList.add('draw-row');
+        if (tabId !== 'tab1') tr.classList.add('draw-row');
       }
     }
 
-    // Exibir colunas 0 a 12 + Resultado
-    row.slice(0, 13).forEach((cell, index) => {
-      const td = document.createElement('td');
-      td.textContent = cell || '';
-      td.className = 'p-2 border';
-      tr.appendChild(td);
-    });
+    // Exibir colunas com base na aba
+    if (tabId === 'tab1') {
+      // Aba 1: Exibir apenas até a coluna 10 (Dia da Semana)
+      row.slice(0, 11).forEach((cell, index) => {
+        const td = document.createElement('td');
+        td.textContent = cell || '';
+        td.className = 'p-2 border';
+        tr.appendChild(td);
+      });
+    } else {
+      // Outras abas: Exibir até a coluna 12 + Resultado
+      row.slice(0, 13).forEach((cell, index) => {
+        const td = document.createElement('td');
+        td.textContent = cell || '';
+        td.className = 'p-2 border';
+        tr.appendChild(td);
+      });
 
-    // Adicionar a coluna Resultado
-    const tdResultado = document.createElement('td');
-    tdResultado.textContent = resultado;
-    tdResultado.className = 'p-2 border';
-    tr.appendChild(tdResultado);
+      // Adicionar a coluna Resultado
+      const tdResultado = document.createElement('td');
+      tdResultado.textContent = resultado;
+      tdResultado.className = 'p-2 border';
+      tr.appendChild(tdResultado);
+    }
 
     tbody.appendChild(tr);
   });
@@ -305,7 +324,15 @@ function pivotTable(data, filteredData, tabId) {
   });
   thead.appendChild(trHead);
 
-  const headers = data[0].slice(0, 13).concat(['Resultado']);
+  // Definir cabeçalhos com base na aba
+  let headers;
+  if (tabId === 'tab1') {
+    // Aba 1: Excluir "Gol", "Assistências" e "Resultado"
+    headers = data[0].slice(0, 11); // Até "Dia da Semana"
+  } else {
+    // Outras abas: Incluir até "Resultado"
+    headers = data[0].slice(0, 13).concat(['Resultado']);
+  }
   console.log(`Cabeçalho para PIVOT (${tabId}):`, headers);
 
   headers.forEach((header, colIndex) => {
@@ -317,7 +344,7 @@ function pivotTable(data, filteredData, tabId) {
 
     filteredData.forEach(row => {
       const td = document.createElement('td');
-      if (colIndex === 13) { // Coluna Resultado
+      if (tabId !== 'tab1' && colIndex === 13) { // Coluna Resultado, apenas fora da Aba 1
         const vitoria = row[13] === '1';
         const derrota = row[14] === '1';
         const empate = row[15] === '1';
