@@ -117,9 +117,7 @@ function populateFilters(data, tabId) {
   const columns = [
     { id: 'campeonato', index: 0 },
     { id: 'ginasio', index: 3, tab: 'tab2' },
-    { id: ' 🙂
-
-time', index: [4, 7], tab: 'tab2' },
+    { id: 'time', index: [4, 7], tab: 'tab2' },
     { id: 'local', index: 8, tab: 'tab2' },
     { id: 'rodada', index: 9, tab: 'tab2' },
     { id: 'diaSemana', index: 10, tab: 'tab2' },
@@ -479,6 +477,15 @@ function checkForUpcomingGames(data) {
   console.log('[checkForUpcomingGames] Verificação de jogos futuros concluída');
 }
 
+function updatePivotButtonContent(button, isPivot) {
+  button.innerHTML = ''; // Limpa o conteúdo atual
+  const icon = document.createElement('i');
+  icon.className = 'fa-solid fa-table mr-2';
+  button.appendChild(icon);
+  const text = document.createTextNode(isPivot ? 'Normal' : 'Pivot');
+  button.appendChild(text);
+}
+
 async function init() {
   console.log('[init] Inicializando app, estado inicial de isPivotMode:', isPivotMode);
   allData = await fetchSheetData();
@@ -519,11 +526,7 @@ async function init() {
       return;
     }
 
-    if (isPivotMode[tabId]) {
-      pivotButton.innerHTML = '<i class="fas fa-table mr-2"></i>Normal';
-    } else {
-      pivotButton.innerHTML = '<i class="fas fa-table mr-2"></i>Pivot';
-    }
+    updatePivotButtonContent(pivotButton, isPivotMode[tabId]);
 
     document.getElementById(`aplicarFiltros-${tabId}`).addEventListener('click', () => {
       console.log(`[init] Botão Aplicar Filtros clicado para tabId ${tabId}`);
@@ -542,9 +545,7 @@ async function init() {
       console.log(`[init] Botão Pivot clicado para tabId ${tabId}, estado atual de isPivotMode: ${isPivotMode[tabId]}`);
       isPivotMode[tabId] = !isPivotMode[tabId];
       console.log(`[init] Novo estado de isPivotMode[${tabId}]: ${isPivotMode[tabId]}`);
-      pivotButton.innerHTML = isPivotMode[tabId]
-        ? '<i class="fas fa-table mr-2"></i>Normal'
-        : '<i class="fas fa-table mr-2"></i>Pivot';
+      updatePivotButtonContent(pivotButton, isPivotMode[tabId]);
       if (isPivotMode[tabId]) {
         pivotTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, tabId);
       } else {
