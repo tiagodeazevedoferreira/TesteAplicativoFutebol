@@ -342,8 +342,8 @@ function pivotTable(data, filteredData, tabId) {
   console.log(`Tabela transformada para formato PIVOT (${tabId})`);
 }
 
-function filterData(data, filters) {
-  console.log('Aplicando filtros:', filters);
+function filterData(data, filters, tabId) {
+  console.log('Aplicando filtros:', filters, 'para aba:', tabId);
 
   return data.slice(1).filter((row, index) => {
     if (!row || row.length < 17) {
@@ -356,7 +356,10 @@ function filterData(data, filters) {
     ] = row;
 
     const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim() : '';
-    const isValidConsiderar = considerarValue !== '0';
+    // Para a Aba 1, apenas linhas onde o campo Q (considerar) seja "x" (case-insensitive)
+    const isValidConsiderar = tabId === 'tab1'
+      ? considerarValue.toLowerCase() === 'x'
+      : considerarValue !== '0';
     console.log(`Linha ${index + 2}: Placar1=${placar1 || 'vazio'}, Considerar=${considerarValue || 'vazio'}, isValidConsiderar=${isValidConsiderar}, Incluída=${isValidConsiderar}`);
 
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
@@ -391,7 +394,7 @@ function displayTab1() { // Jogos
     dataInicio: document.getElementById('dataInicio-tab1').value,
     dataFim: document.getElementById('dataFim-tab1').value
   };
-  filteredDataTab1 = filterData(allData, filters);
+  filteredDataTab1 = filterData(allData, filters, 'tab1');
   if (isPivotTab1) {
     pivotTable(allData, filteredDataTab1, 'tab1');
     document.getElementById('pivotMode-tab1').textContent = 'Tabela';
@@ -415,7 +418,7 @@ function displayTab2() { // Tabela
     assistencias: document.getElementById('assistencias-tab2').value,
     resultado: document.getElementById('resultado-tab2').value
   };
-  filteredDataTab2 = filterData(allData, filters);
+  filteredDataTab2 = filterData(allData, filters, 'tab2');
   if (isPivotTab2) {
     pivotTable(allData, filteredDataTab2, 'tab2');
     document.getElementById('pivotMode-tab2').textContent = 'Tabela';
