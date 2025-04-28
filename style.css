@@ -16,6 +16,42 @@ body {
   margin: 0;
 }
 
+/* Estilo para o Card do Jogador */
+.player-info img {
+  object-fit: cover;
+}
+
+/* Estilo para Notificações */
+#notifications.hidden {
+  display: none;
+}
+
+/* Estilo para o Modal */
+#gameModal.hidden {
+  display: none;
+}
+
+#gameModal .bg-white {
+  max-width: 90%;
+}
+
+/* Estilo para Animações */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 800px;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .tab-navigation {
   display: flex;
   justify-content: center;
@@ -28,13 +64,14 @@ body {
   padding: 0.5rem 1rem;
   border: none;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.1s;
   border-radius: 5px;
   margin: 0 0.25rem;
 }
 
 .tab-button:hover {
   background-color: #2563eb;
+  transform: scale(1.05);
 }
 
 .tab-button.active-tab {
@@ -49,27 +86,7 @@ body {
   display: block;
 }
 
-.filters label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
 /* Estilo da tabela */
-table {
-  border-collapse: collapse;
-  width: 100%;
-  min-width: 800px; /* Forçar rolagem horizontal em telas pequenas */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra na tabela */
-}
-
-th, td {
-  text-align: left;
-  padding: 8px;
-  border: 1px solid #e2e8f0; /* Borda mais suave */
-}
-
 thead {
   position: sticky;
   top: 0;
@@ -81,15 +98,19 @@ thead tr {
 }
 
 tr:nth-child(even) {
-  background-color: #e6f0ea; /* Tom claro de verde (Portuguesa) */
+  background-color: #f0f9f0; /* Tom mais suave de verde para melhor contraste */
+}
+
+th, td {
+  text-align: left;
 }
 
 th {
-  white-space: nowrap; /* Evitar quebra de texto nos cabeçalhos */
+  white-space: nowrap;
 }
 
 td {
-  max-width: 200px; /* Limitar largura das células no modo PIVOT */
+  max-width: 200px;
 }
 
 .sortable {
@@ -118,48 +139,36 @@ td {
 }
 
 .defeat-row {
-  background-color: #fff3cd !important; /* Amarelo claro para derrotas (trocado com empate) */
+  background-color: #fff3cd !important; /* Amarelo claro para derrotas */
 }
 
 .draw-row {
-  background-color: #e2e8f0 !important; /* Cinza claro para empates (trocado com derrota) */
+  background-color: #e2e8f0 !important; /* Cinza claro para empates */
 }
 
 /* Estilo para fixar a primeira coluna no modo PIVOT */
 .fixed-column {
   position: sticky;
   left: 0;
-  background-color: #f5e6e8; /* Mesma cor do cabeçalho para consistência */
-  z-index: 5; /* Garantir que a coluna fixa fique acima das outras células */
+  background-color: #f5e6e8;
+  z-index: 5;
 }
 
-/* Ajustar o fundo da primeira coluna no corpo da tabela no modo PIVOT */
 tbody tr .fixed-column {
-  background-color: #ffffff; /* Fundo branco para as células do corpo */
-  border-right: 2px solid #e2e8f0; /* Borda mais visível para separar a coluna fixa */
+  background-color: #ffffff;
+  border-right: 2px solid #e2e8f0;
 }
 
-/* Garantir que as linhas alternadas no modo PIVOT respeitem a cor da coluna fixa */
 tbody tr:nth-child(even) .fixed-column {
-  background-color: #ffffff; /* Sobrescrever a cor alternada para a coluna fixa */
+  background-color: #ffffff;
 }
 
 /* Estilo para botões */
-.bg-blue-500, .bg-gray-500, .bg-green-500 {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.1s ease;
-}
-
 .bg-blue-500:hover, .bg-gray-500:hover, .bg-green-500:hover {
-  transform: translateY(-1px);
+  transform: scale(1.05);
 }
 
-/* Estilo para Big Numbers */
-.bg-white {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-}
-
+/* Estilo para o footer */
 .footer {
   background-color: #1e40af;
   color: #ffffff;
@@ -174,21 +183,16 @@ tbody tr:nth-child(even) .fixed-column {
 }
 
 @media (max-width: 768px) {
-  .filters {
-    font-size: 0.9rem;
-  }
-  
   table {
     font-size: 0.8rem;
   }
   
   th, td {
     padding: 4px;
-    max-width: 150px; /* Reduzir largura das células no PIVOT em telas pequenas */
+    max-width: 150px;
   }
 
-  /* Ajustar a coluna fixa em telas pequenas */
   .fixed-column {
-    min-width: 100px; /* Garantir que a coluna fixa tenha uma largura mínima */
+    min-width: 100px;
   }
 }
