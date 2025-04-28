@@ -4,7 +4,7 @@ body {
 }
 
 .header {
-  background-color: #1e40af; /* Azul escuro, correspondente ao theme-color */
+  background-color: #1e40af;
   color: #ffffff;
   padding: 1rem;
   text-align: center;
@@ -17,6 +17,10 @@ body {
 }
 
 /* Estilo para o Card do Jogador */
+.player-info {
+  z-index: 10; /* Aumentado para ficar acima da coluna fixa */
+}
+
 .player-info img {
   object-fit: cover;
 }
@@ -94,11 +98,11 @@ thead {
 }
 
 thead tr {
-  background-color: #f5e6e8; /* Tom claro de vermelho (Portuguesa) */
+  background-color: #f5e6e8;
 }
 
 tr:nth-child(even) {
-  background-color: #f0f9f0; /* Tom mais suave de verde para melhor contraste */
+  background-color: #f0f9f0;
 }
 
 th, td {
@@ -135,15 +139,15 @@ td {
 }
 
 .victory-row {
-  background-color: #d4edda !important; /* Verde claro para vitórias */
+  background-color: #d4edda !important;
 }
 
 .defeat-row {
-  background-color: #fff3cd !important; /* Amarelo claro para derrotas */
+  background-color: #fff3cd !important;
 }
 
 .draw-row {
-  background-color: #e2e8f0 !important; /* Cinza claro para empates */
+  background-color: #e2e8f0 !important;
 }
 
 /* Estilo para fixar a primeira coluna no modo PIVOT */
@@ -151,7 +155,7 @@ td {
   position: sticky;
   left: 0;
   background-color: #f5e6e8;
-  z-index: 5;
+  z-index: 5; /* Reduzido para não sobrepor o card */
 }
 
 tbody tr .fixed-column {
