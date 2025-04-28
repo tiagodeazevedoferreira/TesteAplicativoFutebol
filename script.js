@@ -478,10 +478,17 @@ function checkForUpcomingGames(data) {
 }
 
 function updatePivotButtonContent(button, isPivot) {
-  button.innerHTML = ''; // Limpa o conteúdo atual
+  // Remove apenas os filhos (ícone e texto), mantendo o elemento button intacto
+  while (button.firstChild) {
+    button.removeChild(button.firstChild);
+  }
+
+  // Adiciona o ícone
   const icon = document.createElement('i');
   icon.className = 'fa-solid fa-table mr-2';
   button.appendChild(icon);
+
+  // Adiciona o texto
   const text = document.createTextNode(isPivot ? 'Normal' : 'Pivot');
   button.appendChild(text);
 }
@@ -506,20 +513,41 @@ async function init() {
     Notification.requestPermission();
   }
 
-  document.getElementById('tab1-btn').addEventListener('click', () => {
-    console.log('[init] Clique no botão tab1-btn');
-    showTab('tab1');
-  });
-  document.getElementById('tab2-btn').addEventListener('click', () => {
-    console.log('[init] Clique no botão tab2-btn');
-    showTab('tab2');
-  });
-  document.getElementById('tab3-btn').addEventListener('click', () => {
-    console.log('[init] Clique no botão tab3-btn');
-    showTab('tab3');
-  });
+  // Eventos das abas
+  const tab1Btn = document.getElementById('tab1-btn');
+  const tab2Btn = document.getElementById('tab2-btn');
+  const tab3Btn = document.getElementById('tab3-btn');
 
+  if (tab1Btn) {
+    tab1Btn.addEventListener('click', () => {
+      console.log('[init] Clique no botão tab1-btn');
+      showTab('tab1');
+    });
+  } else {
+    console.error('[init] Botão tab1-btn não encontrado');
+  }
+
+  if (tab2Btn) {
+    tab2Btn.addEventListener('click', () => {
+      console.log('[init] Clique no botão tab2-btn');
+      showTab('tab2');
+    });
+  } else {
+    console.error('[init] Botão tab2-btn não encontrado');
+  }
+
+  if (tab3Btn) {
+    tab3Btn.addEventListener('click', () => {
+      console.log('[init] Clique no botão tab3-btn');
+      showTab('tab3');
+    });
+  } else {
+    console.error('[init] Botão tab3-btn não encontrado');
+  }
+
+  // Eventos dos botões de filtros e Pivot
   ['tab1', 'tab2'].forEach(tabId => {
+    // Botão Pivot
     const pivotButton = document.getElementById(`pivotMode-${tabId}`);
     if (!pivotButton) {
       console.error(`[init] Botão pivotMode-${tabId} não encontrado`);
@@ -527,31 +555,49 @@ async function init() {
     }
 
     updatePivotButtonContent(pivotButton, isPivotMode[tabId]);
+    console.log(`[init] Botão pivotMode-${tabId} inicializado com texto: ${pivotButton.textContent}`);
 
-    document.getElementById(`aplicarFiltros-${tabId}`).addEventListener('click', () => {
-      console.log(`[init] Botão Aplicar Filtros clicado para tabId ${tabId}`);
-      if (tabId === 'tab1') displayTab1();
-      else displayTab2();
-    });
+    // Botão Aplicar Filtros
+    const aplicarFiltrosBtn = document.getElementById(`aplicarFiltros-${tabId}`);
+    if (aplicarFiltrosBtn) {
+      aplicarFiltrosBtn.addEventListener('click', () => {
+        console.log(`[init] Botão Aplicar Filtros clicado para tabId ${tabId}`);
+        if (tabId === 'tab1') displayTab1();
+        else displayTab2();
+      });
+      console.log(`[init] Evento de clique adicionado ao botão aplicarFiltros-${tabId}`);
+    } else {
+      console.error(`[init] Botão aplicarFiltros-${tabId} não encontrado`);
+    }
 
-    document.getElementById(`limparFiltros-${tabId}`).addEventListener('click', () => {
-      console.log(`[init] Botão Limpar Filtros clicado para tabId ${tabId}`);
-      clearFilters();
-      if (tabId === 'tab1') displayTab1();
-      else displayTab2();
-    });
+    // Botão Limpar Filtros
+    const limparFiltrosBtn = document.getElementById(`limparFiltros-${tabId}`);
+    if (limparFiltrosBtn) {
+      limparFiltrosBtn.addEventListener('click', () => {
+        console.log(`[init] Botão Limpar Filtros clicado para tabId ${tabId}`);
+        clearFilters();
+        if (tabId === 'tab1') displayTab1();
+        else displayTab2();
+      });
+      console.log(`[init] Evento de clique adicionado ao botão limparFiltros-${tabId}`);
+    } else {
+      console.error(`[init] Botão limparFiltros-${tabId} não encontrado`);
+    }
 
+    // Evento do botão Pivot
     pivotButton.addEventListener('click', () => {
       console.log(`[init] Botão Pivot clicado para tabId ${tabId}, estado atual de isPivotMode: ${isPivotMode[tabId]}`);
       isPivotMode[tabId] = !isPivotMode[tabId];
       console.log(`[init] Novo estado de isPivotMode[${tabId}]: ${isPivotMode[tabId]}`);
       updatePivotButtonContent(pivotButton, isPivotMode[tabId]);
+      console.log(`[init] Botão pivotMode-${tabId} atualizado com texto: ${pivotButton.textContent}`);
       if (isPivotMode[tabId]) {
         pivotTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, tabId);
       } else {
         populateTable(tabId === 'tab1' ? filteredDataTab1 : filteredDataTab2, `jogosBody-${tabId}`, `tableHead-${tabId}`, tabId);
       }
     });
+    console.log(`[init] Evento de clique adicionado ao botão pivotMode-${tabId}`);
   });
 
   console.log('[init] Inicialização concluída');
