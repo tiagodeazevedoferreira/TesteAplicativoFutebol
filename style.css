@@ -135,3 +135,28 @@ th.fixed-column {
   border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* Estilos para o card de detalhes do jogo */
+.game-details-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  max-width: 90%;
+  width: 400px;
+}
+
+.game-details-card.hidden {
+  display: none;
+}
+
+.game-details-card .card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

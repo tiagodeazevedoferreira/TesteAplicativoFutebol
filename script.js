@@ -195,20 +195,32 @@ function pivotTable(data, tabId) {
   console.log(`[pivotTable] Gerando tabela PIVOT para tabId ${tabId}`);
   console.log(`[pivotTable] Dados recebidos:`, data);
 
+  // Filtrar apenas linhas onde considerar !== '0'
+  const filteredData = data.filter(row => {
+    const considerar = row[16];
+    const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim() : '';
+    return considerarValue !== '0';
+  });
+
+  if (filteredData.length === 0) {
+    console.warn(`[pivotTable] Nenhum dado válido para renderizar (após filtro considerar !== '0') em tabId ${tabId}`);
+    return;
+  }
+
   const rowValues = new Set();
   if (Array.isArray(rowHeaderIndex)) {
     rowHeaderIndex.forEach(index => {
-      data.forEach(row => {
+      filteredData.forEach(row => {
         if (row[index]) rowValues.add(row[index]);
       });
     });
   } else {
-    data.forEach(row => {
+    filteredData.forEach(row => {
       if (row[rowHeaderIndex]) rowValues.add(row[rowHeaderIndex]);
     });
   }
 
-  const columnValues = new Set(data.map(row => row[columnHeaderIndex]));
+  const columnValues = new Set(filteredData.map(row => row[columnHeaderIndex]));
   const sortedRowValues = [...rowValues].sort();
   const sortedColumnValues = [...columnValues].sort();
 
@@ -222,7 +234,7 @@ function pivotTable(data, tabId) {
   headerRow.appendChild(firstTh);
   sortedColumnValues.forEach(col => {
     const th = document.createElement('th');
-    th.textContent = col;
+    th.textContent = col || 'N/A';
     headerRow.appendChild(th);
   });
   thead.appendChild(headerRow);
@@ -230,13 +242,13 @@ function pivotTable(data, tabId) {
   sortedRowValues.forEach(rowValue => {
     const tr = document.createElement('tr');
     const firstTd = document.createElement('td');
-    firstTd.textContent = rowValue;
+    firstTd.textContent = rowValue || 'N/A';
     firstTd.classList.add('fixed-column');
     tr.appendChild(firstTd);
 
     sortedColumnValues.forEach(colValue => {
       const td = document.createElement('td');
-      const matchingRows = data.filter(row => {
+      const matchingRows = filteredData.filter(row => {
         const rowMatch = Array.isArray(rowHeaderIndex)
           ? row[rowHeaderIndex[0]] === rowValue || row[rowHeaderIndex[1]] === rowValue
           : row[rowHeaderIndex] === rowValue;
@@ -258,6 +270,32 @@ function pivotTable(data, tabId) {
   });
 
   console.log(`[pivotTable] Tabela PIVOT renderizada para tabId ${tabId}`);
+}
+
+function showGameDetails(row) {
+  console.log('[showGameDetails] Exibindo detalhes do jogo:', row);
+
+  const gameDetailsCard = document.getElementById('gameDetailsCard');
+  if (!gameDetailsCard) {
+    console.error('[showGameDetails] Card de detalhes não encontrado');
+    return;
+  }
+
+  document.getElementById('gameDetailsTitle').textContent = `${row[4]} vs ${row[7]}`;
+  document.getElementById('gameDetailsCampeonato').textContent = row[0] || 'N/A';
+  document.getElementById('gameDetailsData').textContent = row[1] || 'N/A';
+  document.getElementById('gameDetailsHorario').textContent = formatTime(row[2]) || 'N/A';
+  document.getElementById('gameDetailsGinasio').textContent = row[3] || 'N/A';
+  document.getElementById('gameDetailsMatch').textContent = `${row[4]} vs ${row[7]}`;
+  document.getElementById('gameDetailsPlacar').textContent = `${row[5]} - ${row[6]}`;
+  document.getElementById('gameDetailsLocal').textContent = row[8] || 'N/A';
+  document.getElementById('gameDetailsRodada').textContent = row[9] || 'N/A';
+  document.getElementById('gameDetailsDiaSemana').textContent = row[10] || 'N/A';
+  document.getElementById('gameDetailsGols').textContent = row[11] || '0';
+  document.getElementById('gameDetailsAssistencias').textContent = row[12] || '0';
+  document.getElementById('gameDetailsResultado').textContent = row[13] === '1' ? 'Vitória' : (row[14] === '1' ? 'Derrota' : (row[15] === '1' ? 'Empate' : 'N/A'));
+
+  gameDetailsCard.classList.remove('hidden');
 }
 
 function populateTable(data, tableBodyId, tableHeadId, tabId) {
@@ -318,6 +356,12 @@ function populateTable(data, tableBodyId, tableHeadId, tabId) {
     else if (empate) resultadoTd.textContent = 'Empate';
     tr.appendChild(resultadoTd);
 
+    // Adicionar evento de clique na linha
+    tr.addEventListener('click', () => {
+      console.log(`[populateTable] Linha clicada em tabId ${tabId}:`, row);
+      showGameDetails(row);
+    });
+
     tbody.appendChild(tr);
   });
 
@@ -368,11 +412,15 @@ function addSortListeners(tabId) {
 
 function updateBigNumbers(data, tabId) {
   let jogos = 0, gols = 0, assistencias = 0, vitorias = 0, empates = 0, derrotas = 0;
-  data.forEach(row => {
+
+  // Filtrar apenas linhas onde considerar !== '0'
+  const filteredData = data.filter(row => {
     const considerar = row[16];
     const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim() : '';
-    if (considerarValue === '0') return;
+    return considerarValue !== '0';
+  });
 
+  filteredData.forEach(row => {
     jogos++;
     gols += parseInt(row[11] || 0);
     assistencias += parseInt(row[12] || 0);
@@ -569,6 +617,18 @@ function attachEventListeners() {
       }
     }
   });
+
+  // Evento para o botão "Fechar" do card de detalhes
+  const closeButton = document.getElementById('closeGameDetails');
+  if (closeButton) {
+    closeButton.addEventListener('click', () => {
+      const gameDetailsCard = document.getElementById('gameDetailsCard');
+      if (gameDetailsCard) {
+        gameDetailsCard.classList.add('hidden');
+        console.log('[attachEventListeners] Card de detalhes fechado');
+      }
+    });
+  }
 
   console.log('[attachEventListeners] Eventos associados com sucesso');
 }
