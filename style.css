@@ -18,22 +18,20 @@ body {
 }
 
 .tab-button {
-  margin: 0 0.5rem;
+  background-color: #3b82f6;
+  color: white;
   padding: 0.5rem 1rem;
-  background-color: #e0e0e0;
   border: none;
   cursor: pointer;
-  border-radius: 5px;
+  transition: background-color 0.3s;
 }
 
 .tab-button:hover {
-  background-color: #cccccc;
+  background-color: #2563eb;
 }
 
 .tab-button.active-tab {
-  background-color: #fff;
-  font-weight: bold;
-  border-bottom: 2px solid #1e40af;
+  background-color: #1d4ed8;
 }
 
 .tab-content {
@@ -136,6 +134,11 @@ th.sort-desc::after {
 
 .text-red-700 {
   color: #d91a2a !important; /* Vermelho da Portuguesa */
+}
+
+/* Estilo para a seção de informações do jogador */
+.player-info img {
+  object-fit: cover;
 }
 
 @media (max-width: 768px) {
