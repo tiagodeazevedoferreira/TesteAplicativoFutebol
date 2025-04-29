@@ -154,7 +154,7 @@ function sortData(data, columnIndex, direction) {
   const sortedData = [...data];
   sortedData.sort((a, b) => {
     let valueA = a[columnIndex] || '';
-    let valueB = b[columnIndex] || '';
+    let valueB = a[columnIndex] || '';
 
     if (columnIndex === 1) {
       valueA = valueA ? new Date(valueA.split('/').reverse().join('-')) : new Date(0);
@@ -277,11 +277,18 @@ function pivotTable(data, filteredData, tabId) {
   tbody.innerHTML = '';
   thead.innerHTML = '';
 
+  // Criar cabeçalho
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
-  ['', ''].forEach((_, index) => {
+  const firstTh = document.createElement('th');
+  firstTh.textContent = 'Coluna';
+  firstTh.className = 'p-2';
+  trHead.appendChild(firstTh);
+
+  // Adicionar colunas numeradas como "Jogo 1", "Jogo 2", etc.
+  filteredData.forEach((_, index) => {
     const th = document.createElement('th');
-    th.textContent = index === 0 ? 'Coluna' : 'Valores';
+    th.textContent = `Jogo ${index + 1}`;
     th.className = 'p-2';
     trHead.appendChild(th);
   });
