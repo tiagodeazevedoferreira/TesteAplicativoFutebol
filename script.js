@@ -10,9 +10,24 @@ let filteredDataTab3 = []; // Resumo
 let isPivotTab1 = false; // Estado do PIVOT para Aba 1 (Jogos)
 let isPivotTab2 = false; // Estado do PIVOT para Aba 2 (Tabela)
 
+// Variáveis para paginação
+let currentPageTab1 = 1;
+let currentPageTab2 = 1;
+const rowsPerPage = 10; // Número de linhas por página
+
+// Função para mostrar/esconder o spinner
+function toggleLoadingSpinner(show) {
+  const spinner = document.getElementById('loadingSpinner');
+  if (spinner) {
+    spinner.style.display = show ? 'flex' : 'none';
+    console.log(show ? 'Exibindo spinner de carregamento' : 'Escondendo spinner de carregamento');
+  }
+}
+
 async function fetchSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
   console.log('Iniciando requisição à API:', url);
+  toggleLoadingSpinner(true); // Mostrar spinner
   try {
     const response = await fetch(url, { mode: 'cors' });
     console.log('Resposta recebida:', response.status, response.statusText);
@@ -40,6 +55,8 @@ async function fetchSheetData() {
     console.error('Erro ao buscar dados:', error.message);
     showError(`Erro ao carregar dados: ${error.message}`);
     return [];
+  } finally {
+    toggleLoadingSpinner(false); // Esconder spinner
   }
 }
 
@@ -154,7 +171,7 @@ function sortData(data, columnIndex, direction) {
   const sortedData = [...data];
   sortedData.sort((a, b) => {
     let valueA = a[columnIndex] || '';
-    let valueB = a[columnIndex] || '';
+    let valueB = b[columnIndex] || '';
 
     if (columnIndex === 1) {
       valueA = valueA ? new Date(valueA.split('/').reverse().join('-')) : new Date(0);
@@ -204,8 +221,10 @@ function displayData(data, filteredData, tabId) {
       const newDirection = sortConfig.column === index && sortConfig.direction === 'asc' ? 'desc' : 'asc';
       if (tabId === 'tab1') {
         sortConfigTab1 = { column: index, direction: newDirection };
+        currentPageTab1 = 1; // Resetar para a primeira página ao ordenar
       } else {
         sortConfigTab2 = { column: index, direction: newDirection };
+        currentPageTab2 = 1; // Resetar para a primeira página ao ordenar
       }
       const sortedData = sortData(filteredData, index, newDirection);
       displayData(data, sortedData, tabId);
@@ -220,21 +239,55 @@ function displayData(data, filteredData, tabId) {
     showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
   }
 
+  // Calcular página atual e número total de páginas
+  const currentPage = tabId === 'tab1' ? currentPageTab1 : currentPageTab2;
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  // Atualizar informações de paginação
+  const pageInfo = document.getElementById(`pageInfo-${tabId}`);
+  const prevButton = document.getElementById(`prevPage-${tabId}`);
+  const nextButton = document.getElementById(`nextPage-${tabId}`);
+  if (pageInfo) {
+    pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+  }
+  if (prevButton) {
+    prevButton.disabled = currentPage === 1;
+    prevButton.onclick = () => {
+      if (tabId === 'tab1') {
+        currentPageTab1--;
+      } else {
+        currentPageTab2--;
+      }
+      displayData(data, filteredData, tabId);
+    };
+  }
+  if (nextButton) {
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.onclick = () => {
+      if (tabId === 'tab1') {
+        currentPageTab1++;
+      } else {
+        currentPageTab2++;
+      }
+      displayData(data, filteredData, tabId);
+    };
+  }
+
   let hasInconsistency = false;
-  filteredData.forEach((row, rowIndex) => {
+  paginatedData.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
     const vitoria = row[13] === '1';
     const derrota = row[14] === '1';
     const empate = row[15] === '1';
     const conditions = [vitoria, derrota, empate].filter(Boolean).length;
 
-    // Validar se há exatamente um '1' entre vitória, derrota e empate
     if (conditions > 1) {
       console.warn(`Inconsistência nos dados da linha ${rowIndex + 2}: Vitória=${row[13]}, Derrota=${row[14]}, Empate=${row[15]}`);
       hasInconsistency = true;
-      // Não aplica destaque para evitar comportamento visual incorreto
     } else if (conditions === 1) {
-      // Aplica o destaque correspondente se houver exatamente um '1'
       if (vitoria) {
         tr.classList.add('victory-row');
       } else if (derrota) {
@@ -243,7 +296,6 @@ function displayData(data, filteredData, tabId) {
         tr.classList.add('draw-row');
       }
     }
-    // Se conditions === 0, não aplica destaque (todos são '0' ou vazios)
 
     row.slice(0, 16).forEach((cell, index) => {
       const td = document.createElement('td');
@@ -258,7 +310,6 @@ function displayData(data, filteredData, tabId) {
     tbody.appendChild(tr);
   });
 
-  // Exibir erro na interface se houver inconsistências
   if (hasInconsistency) {
     showError('Inconsistência nos dados: Algumas linhas possuem mais de um resultado (Vitória, Derrota, Empate). Corrija a planilha.');
   }
@@ -277,7 +328,6 @@ function pivotTable(data, filteredData, tabId) {
   tbody.innerHTML = '';
   thead.innerHTML = '';
 
-  // Criar cabeçalho
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
   const firstTh = document.createElement('th');
@@ -285,7 +335,6 @@ function pivotTable(data, filteredData, tabId) {
   firstTh.className = 'p-2';
   trHead.appendChild(firstTh);
 
-  // Adicionar colunas numeradas como "Jogo 1", "Jogo 2", etc.
   filteredData.forEach((_, index) => {
     const th = document.createElement('th');
     th.textContent = `Jogo ${index + 1}`;
@@ -316,6 +365,49 @@ function pivotTable(data, filteredData, tabId) {
   });
 
   console.log(`Tabela transformada para formato PIVOT (${tabId})`);
+}
+
+// Função para exportar dados para CSV
+function exportToCsv(data, headers, filename) {
+  const csvRows = [];
+  csvRows.push(headers.join(','));
+
+  data.forEach(row => {
+    const rowData = row.slice(0, 16).map(cell => {
+      if (cell === undefined || cell === null) return '';
+      return `"${cell.toString().replace(/"/g, '""')}"`;
+    });
+    csvRows.push(rowData.join(','));
+  });
+
+  const csvString = csvRows.join('\n');
+  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function exportNormalTable(filteredData, tabId) {
+  const headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', 'Placar1', 'Placar2', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
+  exportToCsv(filteredData, headers, `jogos_${tabId}_${new Date().toISOString().split('T')[0]}.csv`);
+}
+
+function exportPivotTable(data, filteredData, tabId) {
+  const headers = ['Coluna', ...filteredData.map((_, index) => `Jogo ${index + 1}`)];
+  const csvData = [];
+  const columnHeaders = data[0].slice(0, 16);
+  columnHeaders.forEach((header, colIndex) => {
+    const row = [header];
+    filteredData.forEach(rowData => {
+      const cellValue = colIndex === 13 || colIndex === 14 || colIndex === 15 ? (rowData[colIndex] === '1' ? 'Sim' : '') : (rowData[colIndex] || '');
+      row.push(cellValue);
+    });
+    csvData.push(row);
+  });
+  exportToCsv(csvData, headers, `jogos_pivot_${tabId}_${new Date().toISOString().split('T')[0]}.csv`);
 }
 
 function filterData(data, filters) {
@@ -358,6 +450,7 @@ function filterData(data, filters) {
 }
 
 function displayTab1() { // Jogos
+  currentPageTab1 = 1; // Resetar página ao aplicar filtros
   const filters = {
     campeonato: document.getElementById('campeonato-tab1').value,
     dataInicio: document.getElementById('dataInicio-tab1').value,
@@ -374,6 +467,7 @@ function displayTab1() { // Jogos
 }
 
 function displayTab2() { // Tabela
+  currentPageTab2 = 1; // Resetar página ao aplicar filtros
   const filters = {
     campeonato: document.getElementById('campeonato-tab2').value,
     dataInicio: document.getElementById('dataInicio-tab2').value,
@@ -423,6 +517,8 @@ function clearFilters() {
   });
   isPivotTab1 = false;
   isPivotTab2 = false;
+  currentPageTab1 = 1;
+  currentPageTab2 = 1;
 }
 
 function showTab(tabId) {
@@ -455,6 +551,7 @@ document.getElementById('limparFiltros-tab1').addEventListener('click', () => {
   document.getElementById('dataInicio-tab1').value = '';
   document.getElementById('dataFim-tab1').value = '';
   isPivotTab1 = false;
+  currentPageTab1 = 1;
   displayTab1();
 });
 
@@ -462,6 +559,14 @@ document.getElementById('pivotMode-tab1').addEventListener('click', () => {
   console.log('Botão Pivot clicado (Tab 1)');
   isPivotTab1 = !isPivotTab1;
   displayTab1();
+});
+
+document.getElementById('exportCsv-tab1').addEventListener('click', () => {
+  if (isPivotTab1) {
+    exportPivotTable(allData, filteredDataTab1, 'tab1');
+  } else {
+    exportNormalTable(filteredDataTab1, 'tab1');
+  }
 });
 
 // Aba 2: Tabela
@@ -485,6 +590,7 @@ document.getElementById('limparFiltros-tab2').addEventListener('click', () => {
   document.getElementById('vitoria-tab2').value = '';
   document.getElementById('empate-tab2').value = '';
   isPivotTab2 = false;
+  currentPageTab2 = 1;
   displayTab2();
 });
 
@@ -492,6 +598,14 @@ document.getElementById('pivotMode-tab2').addEventListener('click', () => {
   console.log('Botão Pivot clicado (Tab 2)');
   isPivotTab2 = !isPivotTab2;
   displayTab2();
+});
+
+document.getElementById('exportCsv-tab2').addEventListener('click', () => {
+  if (isPivotTab2) {
+    exportPivotTable(allData, filteredDataTab2, 'tab2');
+  } else {
+    exportNormalTable(filteredDataTab2, 'tab2');
+  }
 });
 
 async function init() {
