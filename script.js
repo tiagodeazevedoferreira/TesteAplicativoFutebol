@@ -519,13 +519,26 @@ function displayTab4() { // Convocações
     }
   });
 
-  // Obter lista única de datas e jogadores
+  // Obter lista única de datas
   const datas = [...new Set(filteredDataTab4.map(row => row[1]).filter(Boolean))].sort((a, b) => {
     const dateA = new Date(a.split('/').reverse().join('-'));
     const dateB = new Date(b.split('/').reverse().join('-'));
     return dateA - dateB;
   });
-  const jogadores = [...new Set(filteredDataTab4.map(row => row[0]).filter(Boolean))].sort();
+
+  // Obter lista única de jogadores e calcular o total de convocações
+  const jogadoresMap = {};
+  filteredDataTab4.forEach(row => {
+    const jogador = row[0];
+    if (jogador) {
+      jogadoresMap[jogador] = (jogadoresMap[jogador] || 0) + 1;
+    }
+  });
+
+  // Ordenar jogadores pelo total de convocações (do maior para o menor)
+  const jogadores = Object.keys(jogadoresMap).sort((a, b) => {
+    return jogadoresMap[b] - jogadoresMap[a];
+  });
 
   // Criar datasets para o gráfico
   const datasets = jogadores.map(jogador => {
@@ -562,6 +575,10 @@ function displayTab4() { // Convocações
   }
 
   ctx.style.display = 'block';
+
+  // Registrar o plugin datalabels
+  Chart.register(ChartDataLabels);
+
   convocacoesChart = new Chart(ctx.getContext('2d'), {
     type: 'bar',
     data: {
@@ -586,8 +603,10 @@ function displayTab4() { // Convocações
         },
         y: {
           title: {
-            display: true,
-            text: 'Quantidade' // Único rótulo mantido
+            display: false // Remover rótulo do eixo Y
+          },
+          ticks: {
+            display: false // Remover os nomes dos jogadores do eixo Y
           },
           grid: {
             display: false // Remover linhas de grade no eixo Y
@@ -600,6 +619,22 @@ function displayTab4() { // Convocações
         },
         tooltip: {
           enabled: false // Desabilitar tooltips
+        },
+        datalabels: {
+          anchor: 'center', // Posicionar o texto no centro da barra
+          align: 'center', // Alinhar o texto no centro
+          color: 'white', // Cor do texto
+          font: {
+            weight: 'bold',
+            size: 12
+          },
+          formatter: (value, context) => {
+            return context.dataset.label; // Exibir o nome do jogador
+          },
+          display: (context) => {
+            // Exibir o rótulo apenas na última barra de cada jogador
+            return context.dataIndex === context.dataset.data.length - 1;
+          }
         }
       }
     }
