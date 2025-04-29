@@ -525,8 +525,8 @@ function displayTab4() { // Convocações
       datasets: [{
         label: '',
         data: contagens,
-        backgroundColor: 'rgba(217, 26, 42, 0.6)', // Vermelho da Portuguesa com opacidade
-        borderColor: '#d91a2a',
+        backgroundColor: 'rgba(59, 130, 246, 0.6)', // Azul dos botões (#3b82f6) com opacidade
+        borderColor: '#1d4ed8', // Azul escuro dos botões ativos
         borderWidth: 1
       }]
     },
@@ -539,10 +539,11 @@ function displayTab4() { // Convocações
         },
         datalabels: {
           anchor: 'center',
-          align: 'center',
+          align: 'start', // Alinhar o nome à esquerda dentro da barra
           color: '#fff',
           font: {
-            weight: 'bold'
+            weight: 'bold',
+            size: 8 // Diminuir ainda mais o tamanho da fonte
           },
           formatter: (value, context) => {
             return context.chart.data.labels[context.dataIndex]; // Mostrar o nome do jogador dentro da barra
@@ -563,6 +564,9 @@ function displayTab4() { // Convocações
           display: true,
           title: {
             display: false // Remover título do eixo Y
+          },
+          ticks: {
+            display: false // Ocultar os rótulos (nomes dos jogadores) no eixo Y
           }
         }
       }
