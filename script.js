@@ -251,7 +251,7 @@ function sortData(data, columnIndex, direction) {
 }
 
 function displayData(data, filteredData, tabId) {
-  console.log(`Exibindo dados (modo tabela normal) para ${tabId}`);
+  console.log(`Iniciando displayData para ${tabId} com ${filteredData.length} linhas filtradas`);
   clearError();
   const tbody = document.getElementById(`jogosBody-${tabId}`);
   const thead = document.getElementById(`tableHead-${tabId}`);
@@ -295,6 +295,7 @@ function displayData(data, filteredData, tabId) {
   console.log(`Total de linhas filtradas (tabela normal) para ${tabId}:`, filteredData.length);
   if (filteredData.length === 0) {
     showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
+    return; // Adicionado return para evitar renderização desnecessária
   }
 
   let hasInconsistency = false;
@@ -339,10 +340,11 @@ function displayData(data, filteredData, tabId) {
   if (hasInconsistency && tabId !== 'tab1') {
     showError('Inconsistência nos dados: Algumas linhas possuem mais de um resultado (Vitória, Derrota, Empate). Corrija a planilha.');
   }
+  console.log(`Tabela renderizada com sucesso para ${tabId}`);
 }
 
 function pivotTable(data, filteredData, tabId) {
-  console.log(`Transformando tabela para formato Transpor para ${tabId}`);
+  console.log(`Iniciando pivotTable para ${tabId} com ${filteredData.length} linhas filtradas`);
   clearError();
   const tbody = document.getElementById(`jogosBody-${tabId}`);
   const thead = document.getElementById(`tableHead-${tabId}`);
@@ -358,6 +360,11 @@ function pivotTable(data, filteredData, tabId) {
     ? data[0].slice(0, 11)
     : data[0].slice(0, 16);
   console.log(`Cabeçalho para Transpor (${tabId}):`, headers);
+
+  if (filteredData.length === 0) {
+    showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
+    return; // Adicionado return para evitar renderização desnecessária
+  }
 
   headers.forEach((header, colIndex) => {
     const tr = document.createElement('tr');
@@ -384,13 +391,13 @@ function pivotTable(data, filteredData, tabId) {
     tbody.appendChild(tr);
   });
 
-  console.log(`Tabela transformada para formato Transpor (${tabId})`);
+  console.log(`Tabela transformada para formato Transpor (${tabId}) com sucesso`);
 }
 
 function filterDataSheet1(data, filters) {
-  console.log('Aplicando filtros (Sheet1):', filters);
+  console.log('Iniciando filterDataSheet1 com', data.length, 'linhas e filtros:', filters);
 
-  return data.slice(1).filter((row, index) => {
+  const filtered = data.slice(1).filter((row, index) => {
     if (!row || row.length < 17) {
       console.log(`Linha ${index + 2} inválida:`, row);
       return false;
@@ -408,7 +415,7 @@ function filterDataSheet1(data, filters) {
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
     const dataJogo = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
 
-    return (
+    const matches = (
       isValidConsiderar &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
       (!dataInicio || (dataJogo && dataJogo >= dataInicio)) &&
@@ -423,13 +430,18 @@ function filterDataSheet1(data, filters) {
       (!filters.empate || empate === filters.empate) &&
       (!filters.derrota || derrota === filters.derrota)
     );
+    console.log(`Linha ${index + 2} corresponde aos filtros: ${matches}`);
+    return matches;
   });
+
+  console.log(`Filtragem concluída. Linhas filtradas: ${filtered.length}`);
+  return filtered;
 }
 
 function filterDataSheet2(data, filters) {
-  console.log('Aplicando filtros (Sheet2):', filters);
+  console.log('Iniciando filterDataSheet2 com', data.length, 'linhas e filtros:', filters);
 
-  return data.slice(1).filter((row, index) => {
+  const filtered = data.slice(1).filter((row, index) => {
     if (!row || row.length < 4) {
       console.log(`Linha ${index + 2} inválida na Sheet2:`, row);
       return false;
@@ -441,24 +453,32 @@ function filterDataSheet2(data, filters) {
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
     const dataJogo = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
 
-    return (
+    const matches = (
       (!filters.jogador || jogador === filters.jogador) &&
       (!filters.timeContra || timeContra === filters.timeContra) &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
       (!dataInicio || (dataJogo && dataJogo >= dataInicio)) &&
       (!dataFim || (dataJogo && dataJogo <= dataFim))
     );
+    console.log(`Linha ${index + 2} corresponde aos filtros: ${matches}`);
+    return matches;
   });
+
+  console.log(`Filtragem concluída (Sheet2). Linhas filtradas: ${filtered.length}`);
+  return filtered;
 }
 
 function displayTab1() { // Jogos
+  console.log('Iniciando displayTab1');
   const filters = {
     campeonato: document.getElementById('campeonato-tab1').value,
     dataInicio: document.getElementById('dataInicio-tab1').value,
     dataFim: document.getElementById('dataFim-tab1').value,
     considerar: true
   };
+  console.log('Filtros aplicados (Tab1):', filters);
   filteredDataTab1 = filterDataSheet1(allDataSheet1, filters);
+  console.log('Dados filtrados (Tab1):', filteredDataTab1);
   if (isPivotTab1) {
     pivotTable(allDataSheet1, filteredDataTab1, 'tab1');
     document.getElementById('pivotMode-tab1').textContent = 'Tabela';
@@ -466,9 +486,11 @@ function displayTab1() { // Jogos
     displayData(allDataSheet1, filteredDataTab1, 'tab1');
     document.getElementById('pivotMode-tab1').textContent = 'Transpor';
   }
+  console.log('displayTab1 concluído');
 }
 
 function displayTab2() { // Tabela
+  console.log('Iniciando displayTab2');
   const filters = {
     campeonato: document.getElementById('campeonato-tab2').value,
     dataInicio: document.getElementById('dataInicio-tab2').value,
@@ -483,7 +505,9 @@ function displayTab2() { // Tabela
     empate: document.getElementById('empate-tab2').value,
     derrota: document.getElementById('derrota-tab2').value
   };
+  console.log('Filtros aplicados (Tab2):', filters);
   filteredDataTab2 = filterDataSheet1(allDataSheet1, filters);
+  console.log('Dados filtrados (Tab2):', filteredDataTab2);
   if (isPivotTab2) {
     pivotTable(allDataSheet1, filteredDataTab2, 'tab2');
     document.getElementById('pivotMode-tab2').textContent = 'Tabela';
@@ -491,14 +515,19 @@ function displayTab2() { // Tabela
     displayData(allDataSheet1, filteredDataTab2, 'tab2');
     document.getElementById('pivotMode-tab2').textContent = 'Transpor';
   }
+  console.log('displayTab2 concluído');
 }
 
 function displayTab3() { // Resumo
+  console.log('Iniciando displayTab3');
   filteredDataTab3 = allDataSheet1.slice(1);
+  console.log('Dados para Resumo (Tab3):', filteredDataTab3.length, 'linhas');
   updateBigNumbers(filteredDataTab3, 'tab3');
+  console.log('displayTab3 concluído');
 }
 
 function displayTab4() { // Convocações
+  console.log('Iniciando displayTab4');
   const filters = {
     jogador: document.getElementById('jogador-tab4').value,
     timeContra: document.getElementById('timeContra-tab4').value,
@@ -506,7 +535,9 @@ function displayTab4() { // Convocações
     dataInicio: document.getElementById('dataInicio-tab4').value,
     dataFim: document.getElementById('dataFim-tab4').value
   };
+  console.log('Filtros aplicados (Tab4):', filters);
   filteredDataTab4 = filterDataSheet2(allDataSheet2, filters);
+  console.log('Dados filtrados (Tab4):', filteredDataTab4.length, 'linhas');
 
   // Agrupar convocações por jogador e data
   const convocacoesPorJogadorEData = {};
@@ -641,9 +672,11 @@ function displayTab4() { // Convocações
   });
 
   clearError();
+  console.log('displayTab4 concluído');
 }
 
 function clearFilters() {
+  console.log('Limpando filtros de todas as abas');
   const tabs = ['tab1', 'tab2', 'tab4'];
   tabs.forEach(tab => {
     document.getElementById(`campeonato-${tab}`).value = '';
@@ -666,6 +699,7 @@ function clearFilters() {
   });
   isPivotTab1 = false;
   isPivotTab2 = false;
+  console.log('Filtros limpos');
 }
 
 function showTab(tabId) {
@@ -685,6 +719,7 @@ function showTab(tabId) {
   else if (tabId === 'tab2') displayTab2();
   else if (tabId === 'tab3') displayTab3();
   else if (tabId === 'tab4') displayTab4();
+  console.log(`Aba ${tabId} exibida`);
 }
 
 // Aba 1: Jogos
@@ -761,14 +796,17 @@ async function init() {
     console.log('Carregando dados da Sheet1...');
     allDataSheet1 = await fetchSheetData('Sheet1');
     console.log('Dados da Sheet1 carregados:', allDataSheet1.length, 'linhas');
+    console.log('Dados brutos Sheet1:', allDataSheet1);
 
     console.log('Carregando dados da Sheet2...');
     allDataSheet2 = await fetchSheetData('Sheet2');
     console.log('Dados da Sheet2 carregados:', allDataSheet2.length, 'linhas');
+    console.log('Dados brutos Sheet2:', allDataSheet2);
 
     // Não interromper a inicialização, apenas logar avisos
     if (allDataSheet1.length <= 1) {
       console.warn('Nenhum dado disponível na Sheet1. Algumas abas podem não funcionar corretamente.');
+      showError('Nenhum dado disponível na Sheet1. Verifique a planilha.');
     }
     if (allDataSheet2.length <= 1) {
       console.warn('Nenhum dado disponível na Sheet2. A aba Convocações pode não funcionar corretamente.');
@@ -811,6 +849,7 @@ async function init() {
     console.error('Erro na inicialização:', error.message);
     showError(`Erro na inicialização: ${error.message}`);
   }
+  console.log('Inicialização concluída');
 }
 
 init();
