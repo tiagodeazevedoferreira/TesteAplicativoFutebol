@@ -116,9 +116,9 @@ function populateFiltersSheet1(data) {
 function populateFiltersSheet2(data) {
   console.log('Populando filtros da Sheet2 com', data.length, 'linhas');
   const filters = [
-    { id: 'jogador', index: 3 }, // Nome do Jogador
-    { id: 'timeContra', index: 2 }, // Time Contra
-    { id: 'campeonato', index: 0 } // Campeonato
+    { id: 'jogador', index: 0 }, // Nome do Jogador (invertido, antes era índice 3)
+    { id: 'timeContra', index: 2 }, // Adversário
+    { id: 'campeonato', index: 3 } // Campeonato (invertido, antes era índice 0)
   ];
 
   const tab = 'tab4';
@@ -422,7 +422,7 @@ function filterDataSheet2(data, filters) {
       return false;
     }
 
-    const [campeonato, dataStr, timeContra, jogador] = row;
+    const [jogador, dataStr, timeContra, campeonato] = row;
 
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
@@ -495,68 +495,91 @@ function displayTab4() { // Convocações
   };
   filteredDataTab4 = filterDataSheet2(allDataSheet2, filters);
 
-  // Contar convocações por jogador
-  const convocacoesPorJogador = {};
+  // Agrupar convocações por jogador e data
+  const convocacoesPorJogadorEData = {};
   filteredDataTab4.forEach(row => {
-    const jogador = row[3]; // Nome do Jogador
-    if (jogador) {
-      convocacoesPorJogador[jogador] = (convocacoesPorJogador[jogador] || 0) + 1;
+    const jogador = row[0]; // Nome do Jogador (índice ajustado)
+    const data = row[1]; // Data
+    if (jogador && data) {
+      const key = `${jogador}|${data}`;
+      convocacoesPorJogadorEData[key] = (convocacoesPorJogadorEData[key] || 0) + 1;
     }
   });
 
-  const jogadores = Object.keys(convocacoesPorJogador).sort();
-  const contagens = jogadores.map(jogador => convocacoesPorJogador[jogador]);
+  // Obter lista única de datas e jogadores
+  const datas = [...new Set(filteredDataTab4.map(row => row[1]).filter(Boolean))].sort((a, b) => {
+    const dateA = new Date(a.split('/').reverse().join('-'));
+    const dateB = new Date(b.split('/').reverse().join('-'));
+    return dateA - dateB;
+  });
+  const jogadores = [...new Set(filteredDataTab4.map(row => row[0]).filter(Boolean))].sort();
+
+  // Criar datasets para o gráfico
+  const datasets = jogadores.map(jogador => {
+    const data = datas.map(data => {
+      const key = `${jogador}|${data}`;
+      return convocacoesPorJogadorEData[key] || 0;
+    });
+    return {
+      label: jogador,
+      data: data,
+      backgroundColor: '#d91a2a', // Vermelho da Portuguesa
+      borderColor: '#d91a2a',
+      borderWidth: 1
+    };
+  });
 
   // Destruir o gráfico anterior, se existir
   if (convocacoesChart) {
     convocacoesChart.destroy();
   }
 
-  // Renderizar o gráfico
+  // Renderizar o gráfico de barras
   const ctx = document.getElementById('convocacoesChart').getContext('2d');
   convocacoesChart = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: jogadores,
-      datasets: [{
-        label: 'Número de Convocações',
-        data: contagens,
-        borderColor: '#d91a2a', // Vermelho da Portuguesa
-        backgroundColor: 'rgba(217, 26, 42, 0.2)',
-        fill: true,
-        tension: 0.4
-      }]
+      labels: datas,
+      datasets: datasets
     },
     options: {
+      indexAxis: 'y', // Gráfico horizontal
       responsive: true,
       scales: {
-        y: {
+        x: {
           beginAtZero: true,
-          title: {
-            display: true,
-            text: 'Número de Convocações'
-          },
           ticks: {
             stepSize: 1
+          },
+          title: {
+            display: false // Remover título do eixo X
+          },
+          grid: {
+            display: false // Remover linhas de grade no eixo X
           }
         },
-        x: {
+        y: {
           title: {
             display: true,
-            text: 'Nome do Jogador'
+            text: 'Quantidade' // Único rótulo mantido
+          },
+          grid: {
+            display: false // Remover linhas de grade no eixo Y
           }
         }
       },
       plugins: {
         legend: {
-          display: true,
-          position: 'top'
+          display: false // Remover legenda
+        },
+        tooltip: {
+          enabled: false // Desabilitar tooltips
         }
       }
     }
   });
 
-  if (jogadores.length === 0) {
+  if (datas.length === 0 || jogadores.length === 0) {
     showError('Nenhum dado encontrado com os filtros aplicados.');
   } else {
     clearError();
@@ -659,7 +682,7 @@ document.getElementById('pivotMode-tab2').addEventListener('click', () => {
 });
 
 // Aba 4: Convocações
-document.getElementById('aplicarFiltros-tab4').addEventListener('click', () => {
+document Fakült: getElementById('aplicarFiltros-tab4').addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 4)');
   displayTab4();
 });
