@@ -35,14 +35,15 @@ async function fetchSheetData(sheetName) {
     const data = await response.json();
     console.log(`Dados brutos (${sheetName}):`, data);
     if (!data.values || data.values.length === 0) {
-      throw new Error(`Nenhum dado retornado. A aba ${sheetName} está vazia ou não existe.`);
+      console.warn(`A aba ${sheetName} está vazia ou não contém dados válidos.`);
+      return [[]]; // Retornar um array vazio para evitar falhas
     }
     console.log(`Linhas recebidas (${sheetName}):`, data.values.length);
     return data.values;
   } catch (error) {
     console.error(`Erro ao buscar dados da ${sheetName}:`, error.message);
     showError(`Erro ao carregar dados da ${sheetName}: ${error.message}`);
-    return [];
+    return [[]]; // Retornar um array vazio para evitar falhas
   }
 }
 
@@ -74,6 +75,10 @@ function formatTime(timeStr) {
 
 function populateFiltersSheet1(data) {
   console.log('Populando filtros da Sheet1 com', data.length, 'linhas');
+  if (data.length <= 1) {
+    console.warn('Nenhum dado para popular filtros na Sheet1');
+    return;
+  }
   const filters = [
     { id: 'campeonato', index: 0 },
     { id: 'local', index: 8 },
@@ -115,10 +120,14 @@ function populateFiltersSheet1(data) {
 
 function populateFiltersSheet2(data) {
   console.log('Populando filtros da Sheet2 com', data.length, 'linhas');
+  if (data.length <= 1) {
+    console.warn('Nenhum dado para popular filtros na Sheet2');
+    return;
+  }
   const filters = [
-    { id: 'jogador', index: 0 }, // Nome do Jogador (invertido, antes era índice 3)
+    { id: 'jogador', index: 0 }, // Nome do Jogador
     { id: 'timeContra', index: 2 }, // Adversário
-    { id: 'campeonato', index: 3 } // Campeonato (invertido, antes era índice 0)
+    { id: 'campeonato', index: 3 } // Campeonato
   ];
 
   const tab = 'tab4';
@@ -194,6 +203,10 @@ function showUpcomingGames(data) {
 
   const upcomingGamesList = document.getElementById('upcomingGamesList');
   const upcomingGamesDiv = document.getElementById('upcomingGames');
+  if (!upcomingGamesList || !upcomingGamesDiv) {
+    console.error('Elementos de notificação não encontrados');
+    return;
+  }
   upcomingGamesList.innerHTML = '';
 
   if (upcomingGames.length > 0) {
@@ -498,7 +511,7 @@ function displayTab4() { // Convocações
   // Agrupar convocações por jogador e data
   const convocacoesPorJogadorEData = {};
   filteredDataTab4.forEach(row => {
-    const jogador = row[0]; // Nome do Jogador (índice ajustado)
+    const jogador = row[0]; // Nome do Jogador
     const data = row[1]; // Data
     if (jogador && data) {
       const key = `${jogador}|${data}`;
@@ -534,9 +547,22 @@ function displayTab4() { // Convocações
     convocacoesChart.destroy();
   }
 
-  // Renderizar o gráfico de barras
-  const ctx = document.getElementById('convocacoesChart').getContext('2d');
-  convocacoesChart = new Chart(ctx, {
+  // Renderizar o gráfico de barras apenas se houver dados
+  const ctx = document.getElementById('convocacoesChart');
+  if (!ctx) {
+    console.error('Elemento #convocacoesChart não encontrado');
+    showError('Erro interno: elemento do gráfico não encontrado.');
+    return;
+  }
+
+  if (datas.length === 0 || jogadores.length === 0) {
+    showError('Nenhum dado encontrado com os filtros aplicados.');
+    ctx.style.display = 'none';
+    return;
+  }
+
+  ctx.style.display = 'block';
+  convocacoesChart = new Chart(ctx.getContext('2d'), {
     type: 'bar',
     data: {
       labels: datas,
@@ -579,11 +605,7 @@ function displayTab4() { // Convocações
     }
   });
 
-  if (datas.length === 0 || jogadores.length === 0) {
-    showError('Nenhum dado encontrado com os filtros aplicados.');
-  } else {
-    clearError();
-  }
+  clearError();
 }
 
 function clearFilters() {
@@ -682,7 +704,7 @@ document.getElementById('pivotMode-tab2').addEventListener('click', () => {
 });
 
 // Aba 4: Convocações
-document Fakült: getElementById('aplicarFiltros-tab4').addEventListener('click', () => {
+document.getElementById('aplicarFiltros-tab4').addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 4)');
   displayTab4();
 });
@@ -701,18 +723,20 @@ async function init() {
   console.log('Inicializando aplicação');
   try {
     // Carregar dados das duas abas
+    console.log('Carregando dados da Sheet1...');
     allDataSheet1 = await fetchSheetData('Sheet1');
-    allDataSheet2 = await fetchSheetData('Sheet2');
+    console.log('Dados da Sheet1 carregados:', allDataSheet1.length, 'linhas');
 
-    if (allDataSheet1.length === 0) {
-      console.error('Nenhum dado retornado da Sheet1');
-      showError('Nenhum dado disponível na Sheet1. Verifique a conexão, chave API ou planilha.');
-      return;
+    console.log('Carregando dados da Sheet2...');
+    allDataSheet2 = await fetchSheetData('Sheet2');
+    console.log('Dados da Sheet2 carregados:', allDataSheet2.length, 'linhas');
+
+    // Não interromper a inicialização, apenas logar avisos
+    if (allDataSheet1.length <= 1) {
+      console.warn('Nenhum dado disponível na Sheet1. Algumas abas podem não funcionar corretamente.');
     }
-    if (allDataSheet2.length === 0) {
-      console.error('Nenhum dado retornado da Sheet2');
-      showError('Nenhum dado disponível na Sheet2. Verifique a conexão, chave API ou planilha.');
-      return;
+    if (allDataSheet2.length <= 1) {
+      console.warn('Nenhum dado disponível na Sheet2. A aba Convocações pode não funcionar corretamente.');
     }
 
     populateFiltersSheet1(allDataSheet1);
