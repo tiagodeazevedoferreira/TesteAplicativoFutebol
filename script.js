@@ -117,7 +117,7 @@ function populateFiltersSheet2(data) {
   console.log('Populando filtros da Sheet2 com', data.length, 'linhas');
   const filters = [
     { id: 'jogador', index: 3 }, // Nome do Jogador
-    { id: 'timeContra', index: 2 }, // Time Contra
+    { id: 'adversario', index: 2 }, // Adversário (antigo Time Contra)
     { id: 'campeonato', index: 0 } // Campeonato
   ];
 
@@ -422,7 +422,7 @@ function filterDataSheet2(data, filters) {
       return false;
     }
 
-    const [campeonato, dataStr, timeContra, jogador] = row;
+    const [campeonato, dataStr, adversario, jogador] = row;
 
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
@@ -430,7 +430,7 @@ function filterDataSheet2(data, filters) {
 
     return (
       (!filters.jogador || jogador === filters.jogador) &&
-      (!filters.timeContra || timeContra === filters.timeContra) &&
+      (!filters.adversario || adversario === filters.adversario) &&
       (!filters.campeonato || campeonato === filters.campeonato) &&
       (!dataInicio || (dataJogo && dataJogo >= dataInicio)) &&
       (!dataFim || (dataJogo && dataJogo <= dataFim))
@@ -488,24 +488,59 @@ function displayTab3() { // Resumo
 function displayTab4() { // Convocações
   const filters = {
     jogador: document.getElementById('jogador-tab4').value,
-    timeContra: document.getElementById('timeContra-tab4').value,
+    adversario: document.getElementById('adversario-tab4').value,
     campeonato: document.getElementById('campeonato-tab4').value,
     dataInicio: document.getElementById('dataInicio-tab4').value,
     dataFim: document.getElementById('dataFim-tab4').value
   };
   filteredDataTab4 = filterDataSheet2(allDataSheet2, filters);
 
-  // Contar convocações por jogador
+  // Agrupar convocações por jogador e data
+  const convocacoesPorDataEJogador = {};
+  filteredDataTab4.forEach(row => {
+    const data = row[1]; // Data
+    const jogador = row[3]; // Nome do Jogador
+    if (data && jogador) {
+      const key = `${jogador}|${data}`;
+      convocacoesPorDataEJogador[key] = (convocacoesPorDataEJogador[key] || 0) + 1;
+    }
+  });
+
+  // Agrupar por jogador para contar o total de convocações
   const convocacoesPorJogador = {};
   filteredDataTab4.forEach(row => {
-    const jogador = row[3]; // Nome do Jogador
+    const jogador = row[3];
     if (jogador) {
       convocacoesPorJogador[jogador] = (convocacoesPorJogador[jogador] || 0) + 1;
     }
   });
 
-  const jogadores = Object.keys(convocacoesPorJogador).sort();
-  const contagens = jogadores.map(jogador => convocacoesPorJogador[jogador]);
+  // Ordenar jogadores pelo número total de convocações (decrescente)
+  const jogadoresOrdenados = Object.keys(convocacoesPorJogador).sort((a, b) => {
+    return convocacoesPorJogador[b] - convocacoesPorJogador[a];
+  });
+
+  // Obter todas as datas únicas
+  const datas = [...new Set(filteredDataTab4.map(row => row[1]).filter(Boolean))].sort((a, b) => {
+    const dateA = new Date(a.split('/').reverse().join('-'));
+    const dateB = new Date(b.split('/').reverse().join('-'));
+    return dateA - dateB;
+  });
+
+  // Preparar os dados para o gráfico
+  const datasets = jogadoresOrdenados.map(jogador => {
+    const data = datas.map(data => {
+      const key = `${jogador}|${data}`;
+      return convocacoesPorDataEJogador[key] || 0;
+    });
+    return {
+      label: jogador,
+      data: data,
+      backgroundColor: 'rgba(217, 26, 42, 0.6)', // Vermelho da Portuguesa com opacidade
+      borderColor: '#d91a2a',
+      borderWidth: 1
+    };
+  });
 
   // Destruir o gráfico anterior, se existir
   if (convocacoesChart) {
@@ -515,48 +550,54 @@ function displayTab4() { // Convocações
   // Renderizar o gráfico
   const ctx = document.getElementById('convocacoesChart').getContext('2d');
   convocacoesChart = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: jogadores,
-      datasets: [{
-        label: 'Número de Convocações',
-        data: contagens,
-        borderColor: '#d91a2a', // Vermelho da Portuguesa
-        backgroundColor: 'rgba(217, 26, 42, 0.2)',
-        fill: true,
-        tension: 0.4
-      }]
+      labels: datas,
+      datasets: datasets
     },
     options: {
+      indexAxis: 'y', // Gráfico horizontal
       responsive: true,
+      plugins: {
+        legend: {
+          display: false // Remover legenda
+        },
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+          color: '#fff',
+          font: {
+            weight: 'bold'
+          },
+          formatter: (value, context) => {
+            if (value === 0) return '';
+            return context.dataset.label; // Mostrar o nome do jogador dentro da barra
+          }
+        }
+      },
       scales: {
-        y: {
-          beginAtZero: true,
+        x: {
+          display: true,
           title: {
-            display: true,
-            text: 'Número de Convocações'
+            display: false // Remover título do eixo X
           },
           ticks: {
             stepSize: 1
           }
         },
-        x: {
-          title: {
-            display: true,
-            text: 'Nome do Jogador'
-          }
-        }
-      },
-      plugins: {
-        legend: {
+        y: {
           display: true,
-          position: 'top'
+          title: {
+            display: false // Remover título do eixo Y
+          },
+          stacked: true // Empilhar barras
         }
       }
-    }
+    },
+    plugins: [ChartDataLabels]
   });
 
-  if (jogadores.length === 0) {
+  if (jogadoresOrdenados.length === 0 || datas.length === 0) {
     showError('Nenhum dado encontrado com os filtros aplicados.');
   } else {
     clearError();
@@ -581,7 +622,7 @@ function clearFilters() {
       document.getElementById(`derrota-${tab}`).value = '';
     } else if (tab === 'tab4') {
       document.getElementById(`jogador-${tab}`).value = '';
-      document.getElementById(`timeContra-${tab}`).value = '';
+      document.getElementById(`adversario-${tab}`).value = '';
     }
   });
   isPivotTab1 = false;
@@ -667,7 +708,7 @@ document.getElementById('aplicarFiltros-tab4').addEventListener('click', () => {
 document.getElementById('limparFiltros-tab4').addEventListener('click', () => {
   console.log('Limpando filtros (Tab 4)');
   document.getElementById('jogador-tab4').value = '';
-  document.getElementById('timeContra-tab4').value = '';
+  document.getElementById('adversario-tab4').value = '';
   document.getElementById('campeonato-tab4').value = '';
   document.getElementById('dataInicio-tab4').value = '';
   document.getElementById('dataFim-tab4').value = '';
