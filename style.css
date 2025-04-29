@@ -1,253 +1,176 @@
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f4;
+  font-family: 'Roboto', sans-serif;
+  background-color: #f9f9f9 !important; /* Sobrescrever Tailwind bg-gray-100 */
 }
 
-.container {
-  width: 90%;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-h1 {
+.header {
+  background-color: #1e40af;
+  color: white;
   text-align: center;
-  color: #333;
+  padding: 1rem;
 }
 
-.tab-buttons {
+.tab-navigation {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  background-color: #f2f2f2;
+  padding: 0.5rem;
 }
 
 .tab-button {
-  padding: 10px 20px;
-  margin: 0 5px;
-  background-color: #ddd;
+  background-color: #3b82f6;
+  color: white;
+  padding: 0.5rem 1rem;
   border: none;
   cursor: pointer;
-  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.tab-button:hover {
+  background-color: #2563eb;
 }
 
 .tab-button.active-tab {
-  background-color: #3b82f6;
-  color: white;
+  background-color: #1d4ed8;
 }
 
 .tab-content {
   display: none;
+  padding: 1rem;
 }
 
 .tab-content.active {
   display: block;
 }
 
-.filters {
-  margin-bottom: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.filters label {
-  margin-right: 5px;
-}
-
-.filters select,
-.filters input {
-  padding: 5px;
-  margin-right: 10px;
-}
-
-.filters button {
-  padding: 5px 10px;
-  background-color: #3b82f6;
+.footer {
+  text-align: center;
+  background-color: #1e40af;
   color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
+  padding: 1rem;
 }
 
-.filters button:hover {
-  background-color: #2563eb;
-}
-
+/* Estilo da tabela */
 table {
-  width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
-}
-
-table, th, td {
-  border: 1px solid #ddd;
+  width: 100%;
+  min-width: 800px; /* Forçar rolagem horizontal em telas pequenas */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra na tabela */
 }
 
 th, td {
-  padding: 8px;
   text-align: left;
-}
-
-th {
-  background-color: #f2f2f2;
+  padding: 8px;
+  border: 1px solid #e2e8f0; /* Borda mais suave */
 }
 
 tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: #e6f0ea; /* Tom claro de verde (Portuguesa) */
 }
 
-tr:hover {
-  background-color: #f1f1f1;
+th {
+  white-space: nowrap; /* Evitar quebra de texto nos cabeçalhos */
+  background-color: #f5e6e8; /* Tom claro de vermelho (Portuguesa) */
 }
 
-#upcomingGames {
-  margin-top: 20px;
-  padding: 10px;
-  background-color: #e0f7fa;
-  border-radius: 5px;
-  display: none;
+td {
+  max-width: 200px; /* Limitar largura das células no modo PIVOT */
 }
 
-#upcomingGames h3 {
-  margin-top: 0;
-}
-
-#upcomingGames ul {
-  list-style: none;
-  padding: 0;
-}
-
-#upcomingGames li {
-  margin-bottom: 5px;
-}
-
-#pivotMode-tab1,
-#pivotMode-tab2 {
-  padding: 5px 10px;
-  background-color: #10b981;
-  color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  margin-left: 10px;
-}
-
-#pivotMode-tab1:hover,
-#pivotMode-tab2:hover {
-  background-color: #059669;
-}
-
-#tab3 {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-}
-
-.big-number {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  flex: 1 1 200px;
-}
-
-.big-number h3 {
-  margin: 0;
-  font-size: 1.2em;
-  color: #555;
-}
-
-.big-number p {
-  margin: 5px 0 0;
-  font-size: 2em;
-  color: #333;
-}
-
+/* Destaque visual para linhas */
 .victory-row {
-  background-color: #e0f7fa !important;
+  background-color: #d4edda !important; /* Verde claro para vitórias */
 }
 
 .defeat-row {
-  background-color: #ffebee !important;
+  background-color: #e2e8f0 !important; /* Cinza claro para derrotas */
 }
 
 .draw-row {
-  background-color: #fff3e0 !important;
+  background-color: #fff3cd !important; /* Amarelo claro para empates */
 }
 
-.sortable {
-  position: relative;
+/* Estilo para ordenação */
+th.sortable {
   cursor: pointer;
+  position: relative;
 }
 
-.sortable::after {
-  content: '↕';
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+th.sortable:hover {
+  text-decoration: underline;
 }
 
-.sort-asc::after {
-  content: '↑';
+th.sort-asc::after {
+  content: ' ↑';
+  font-size: 0.8rem;
 }
 
-.sort-desc::after {
-  content: '↓';
+th.sort-desc::after {
+  content: ' ↓';
+  font-size: 0.8rem;
 }
 
-#errorMessage {
-  display: none;
-  background-color: #f44336;
-  color: white;
-  padding: 10px;
-  margin-bottom: 20px;
-  border-radius: 5px;
-  text-align: center;
+/* Sombras e bordas para Big Numbers */
+.bg-white {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
 }
 
-/* Ajustes para o gráfico */
+/* Sombras e bordas para botões */
+.bg-blue-500, .bg-gray-500, .bg-green-500 {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 6px !important;
+  transition: transform 0.1s ease;
+}
+
+.bg-blue-500:hover, .bg-gray-500:hover, .bg-green-500:hover {
+  transform: translateY(-1px);
+}
+
+/* Mensagem de erro */
+.bg-red-100 {
+  background-color: #f5e6e8 !important; /* Tom claro de vermelho */
+}
+
+.text-red-700 {
+  color: #d91a2a !important; /* Vermelho da Portuguesa */
+}
+
+/* Estilo para notificações */
+.bg-yellow-100 {
+  background-color: #fef9e7 !important; /* Amarelo claro para notificações */
+}
+
+.text-yellow-700 {
+  color: #d97706 !important; /* Amarelo escuro para o texto */
+}
+
+/* Estilo para a seção de informações do jogador */
+.player-info img {
+  object-fit: cover;
+}
+
+/* Estilo para o gráfico */
 #convocacoesChart {
-  width: 100% !important;
-  height: 500px !important; /* Altura padrão para desktop */
+  max-width: 100%;
+  height: auto;
 }
 
-/* Media query para dispositivos móveis */
 @media (max-width: 768px) {
-  .container {
-    padding: 10px;
-  }
-
   .filters {
-    flex-direction: column;
-    align-items: flex-start;
+    font-size: 0.9rem;
   }
-
-  .filters select,
-  .filters input,
-  .filters button {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-
+  
   table {
-    font-size: 14px;
+    font-size: 0.8rem;
   }
-
+  
   th, td {
-    padding: 5px;
+    padding: 4px;
+    max-width: 150px; /* Reduzir largura das células no PIVOT em telas pequenas */
   }
 
-  .big-number {
-    flex: 1 1 100%;
-  }
-
-  /* Aumentar o tamanho do gráfico em dispositivos móveis */
   #convocacoesChart {
-    height: 600px !important; /* Aumentar a altura para melhor visualização */
+    max-height: 300px; /* Ajustar altura do gráfico em telas pequenas */
   }
 }

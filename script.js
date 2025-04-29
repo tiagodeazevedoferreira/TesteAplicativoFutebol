@@ -116,9 +116,9 @@ function populateFiltersSheet1(data) {
 function populateFiltersSheet2(data) {
   console.log('Populando filtros da Sheet2 com', data.length, 'linhas');
   const filters = [
-    { id: 'jogador', index: 0 }, // Nome do Jogador (índice 0)
+    { id: 'jogador', index: 0 }, // Nome do Jogador (agora índice 0)
     { id: 'adversario', index: 2 }, // Adversário
-    { id: 'campeonato', index: 3 } // Campeonato (índice 3)
+    { id: 'campeonato', index: 3 } // Campeonato (agora índice 3)
   ];
 
   const tab = 'tab4';
@@ -525,26 +525,27 @@ function displayTab4() { // Convocações
       datasets: [{
         label: '',
         data: contagens,
-        backgroundColor: 'rgba(59, 130, 246, 0.6)', // Azul do bg-blue-500 com opacidade
-        borderColor: '#3b82f6', // Azul do bg-blue-500
+        backgroundColor: 'rgba(217, 26, 42, 0.6)', // Vermelho da Portuguesa com opacidade
+        borderColor: '#d91a2a',
         borderWidth: 1
       }]
     },
     options: {
+      indexAxis: 'y', // Gráfico horizontal
       responsive: true,
       plugins: {
         legend: {
           display: false // Remover legenda
         },
         datalabels: {
-          anchor: 'end', // Posicionar o rótulo no topo da barra
-          align: 'top', // Alinhar acima da barra
-          color: '#000', // Cor preta para melhor contraste
+          anchor: 'center',
+          align: 'center',
+          color: '#fff',
           font: {
             weight: 'bold'
           },
           formatter: (value, context) => {
-            return context.chart.data.labels[context.dataIndex]; // Mostrar o nome do jogador acima da barra
+            return context.chart.data.labels[context.dataIndex]; // Mostrar o nome do jogador dentro da barra
           }
         }
       },
@@ -555,16 +556,13 @@ function displayTab4() { // Convocações
             display: false // Remover título do eixo X
           },
           ticks: {
-            display: false // Ocultar os rótulos (nomes dos jogadores) no eixo X
+            stepSize: 1
           }
         },
         y: {
           display: true,
           title: {
             display: false // Remover título do eixo Y
-          },
-          ticks: {
-            stepSize: 1 // Garantir que os valores no eixo Y sejam inteiros
           }
         }
       }
