@@ -193,7 +193,7 @@ function sortData(data, columnIndex, direction) {
     let valueB = b[columnIndex] || '';
 
     if (columnIndex === 1) {
-      valueA = valueA ? new Date(valueA.split('/').reverse().join('-')) : new Date(0);
+      valueA = valueA ? new Date(valuePixelsA.split('/').reverse().join('-')) : new Date(0);
       valueB = valueB ? new Date(valueB.split('/').reverse().join('-')) : new Date(0);
       return direction === 'asc' ? valueA - valueB : valueB - valueA;
     }
@@ -313,17 +313,7 @@ function pivotTable(data, filteredData, tabId) {
     return;
   }
   tbody.innerHTML = '';
-  thead.innerHTML = '';
-
-  const trHead = document.createElement('tr');
-  trHead.className = 'bg-gray-200';
-  ['', ''].forEach((_, index) => {
-    const th = document.createElement('th');
-    th.textContent = index === 0 ? 'Coluna' : 'Valores';
-    th.className = 'p-2';
-    trHead.appendChild(th);
-  });
-  thead.appendChild(trHead);
+  thead.innerHTML = ''; // Removido o cabeçalho "Coluna" e "Valores"
 
   const headers = tabId === 'tab1'
     ? data[0].slice(0, 11)
