@@ -539,7 +539,7 @@ function displayTab4() { // Convocações
         },
         datalabels: {
           anchor: 'center',
-          align: 'start', // Alinhar à esquerda
+          align: 'center', // Alinhar ao centro dentro da barra
           color: '#fff',
           font: {
             weight: 'bold'
@@ -563,6 +563,9 @@ function displayTab4() { // Convocações
           display: true,
           title: {
             display: false // Remover título do eixo Y
+          },
+          ticks: {
+            display: false // Ocultar os rótulos (nomes dos jogadores) no eixo Y
           }
         }
       }
