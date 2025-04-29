@@ -3,26 +3,29 @@ console.log('script.js iniciado');
 const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
 const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
-let allData = [];
+let allDataSheet1 = []; // Dados da Sheet1 (abas Jogos, Tabela, Resumo)
+let allDataSheet2 = []; // Dados da Sheet2 (aba Convocações)
 let filteredDataTab1 = []; // Jogos
 let filteredDataTab2 = []; // Tabela
 let filteredDataTab3 = []; // Resumo
+let filteredDataTab4 = []; // Convocações
 let isPivotTab1 = false; // Estado do Transpor para Aba 1 (Jogos)
 let isPivotTab2 = false; // Estado do Transpor para Aba 2 (Tabela)
+let convocacoesChart = null; // Instância do gráfico Chart.js
 
-async function fetchSheetData() {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:R1000?key=${API_KEY}`;
-  console.log('Iniciando requisição à API:', url);
+async function fetchSheetData(sheetName) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}!A1:R1000?key=${API_KEY}`;
+  console.log(`Iniciando requisição à API para ${sheetName}:`, url);
   try {
     const response = await fetch(url, { mode: 'cors' });
-    console.log('Resposta recebida:', response.status, response.statusText);
+    console.log(`Resposta recebida para ${sheetName}:`, response.status, response.statusText);
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Detalhes do erro:', errorText);
       if (response.status === 403) {
         throw new Error('Acesso negado (403). Verifique se a planilha está pública e se a chave API tem permissão.');
       } else if (response.status === 404) {
-        throw new Error('Planilha não encontrada (404). Verifique o ID da planilha ou a aba Sheet1.');
+        throw new Error(`Planilha ou aba ${sheetName} não encontrada (404). Verifique o ID da planilha ou a aba.`);
       } else if (response.status === 429) {
         throw new Error('Limite de requisições excedido (429). Tente novamente mais tarde.');
       } else {
@@ -30,15 +33,15 @@ async function fetchSheetData() {
       }
     }
     const data = await response.json();
-    console.log('Dados brutos:', data);
+    console.log(`Dados brutos (${sheetName}):`, data);
     if (!data.values || data.values.length === 0) {
-      throw new Error('Nenhum dado retornado. A planilha está vazia ou a aba Sheet1 não existe.');
+      throw new Error(`Nenhum dado retornado. A aba ${sheetName} está vazia ou não existe.`);
     }
-    console.log('Linhas recebidas:', data.values.length);
+    console.log(`Linhas recebidas (${sheetName}):`, data.values.length);
     return data.values;
   } catch (error) {
-    console.error('Erro ao buscar dados:', error.message);
-    showError(`Erro ao carregar dados: ${error.message}`);
+    console.error(`Erro ao buscar dados da ${sheetName}:`, error.message);
+    showError(`Erro ao carregar dados da ${sheetName}: ${error.message}`);
     return [];
   }
 }
@@ -69,8 +72,8 @@ function formatTime(timeStr) {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
-function populateFilters(data) {
-  console.log('Populando filtros com', data.length, 'linhas');
+function populateFiltersSheet1(data) {
+  console.log('Populando filtros da Sheet1 com', data.length, 'linhas');
   const filters = [
     { id: 'campeonato', index: 0 },
     { id: 'local', index: 8 },
@@ -107,6 +110,29 @@ function populateFilters(data) {
         });
       }
     });
+  });
+}
+
+function populateFiltersSheet2(data) {
+  console.log('Populando filtros da Sheet2 com', data.length, 'linhas');
+  const filters = [
+    { id: 'jogador', index: 3 }, // Nome do Jogador
+    { id: 'timeContra', index: 2 }, // Time Contra
+    { id: 'campeonato', index: 0 } // Campeonato
+  ];
+
+  const tab = 'tab4';
+  filters.forEach(filter => {
+    const select = document.getElementById(`${filter.id}-${tab}`);
+    if (select) {
+      const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
+      values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+    }
   });
 }
 
@@ -193,7 +219,7 @@ function sortData(data, columnIndex, direction) {
     let valueB = b[columnIndex] || '';
 
     if (columnIndex === 1) {
-      valueA = valueA ? new Date(valuePixelsA.split('/').reverse().join('-')) : new Date(0);
+      valueA = valueA ? new Date(valueA.split('/').reverse().join('-')) : new Date(0);
       valueB = valueB ? new Date(valueB.split('/').reverse().join('-')) : new Date(0);
       return direction === 'asc' ? valueA - valueB : valueB - valueA;
     }
@@ -313,7 +339,7 @@ function pivotTable(data, filteredData, tabId) {
     return;
   }
   tbody.innerHTML = '';
-  thead.innerHTML = ''; // Removido o cabeçalho "Coluna" e "Valores"
+  thead.innerHTML = '';
 
   const headers = tabId === 'tab1'
     ? data[0].slice(0, 11)
@@ -348,8 +374,8 @@ function pivotTable(data, filteredData, tabId) {
   console.log(`Tabela transformada para formato Transpor (${tabId})`);
 }
 
-function filterData(data, filters) {
-  console.log('Aplicando filtros:', filters);
+function filterDataSheet1(data, filters) {
+  console.log('Aplicando filtros (Sheet1):', filters);
 
   return data.slice(1).filter((row, index) => {
     if (!row || row.length < 17) {
@@ -387,6 +413,31 @@ function filterData(data, filters) {
   });
 }
 
+function filterDataSheet2(data, filters) {
+  console.log('Aplicando filtros (Sheet2):', filters);
+
+  return data.slice(1).filter((row, index) => {
+    if (!row || row.length < 4) {
+      console.log(`Linha ${index + 2} inválida na Sheet2:`, row);
+      return false;
+    }
+
+    const [campeonato, dataStr, timeContra, jogador] = row;
+
+    const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
+    const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
+    const dataJogo = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
+
+    return (
+      (!filters.jogador || jogador === filters.jogador) &&
+      (!filters.timeContra || timeContra === filters.timeContra) &&
+      (!filters.campeonato || campeonato === filters.campeonato) &&
+      (!dataInicio || (dataJogo && dataJogo >= dataInicio)) &&
+      (!dataFim || (dataJogo && dataJogo <= dataFim))
+    );
+  });
+}
+
 function displayTab1() { // Jogos
   const filters = {
     campeonato: document.getElementById('campeonato-tab1').value,
@@ -394,12 +445,12 @@ function displayTab1() { // Jogos
     dataFim: document.getElementById('dataFim-tab1').value,
     considerar: true
   };
-  filteredDataTab1 = filterData(allData, filters);
+  filteredDataTab1 = filterDataSheet1(allDataSheet1, filters);
   if (isPivotTab1) {
-    pivotTable(allData, filteredDataTab1, 'tab1');
+    pivotTable(allDataSheet1, filteredDataTab1, 'tab1');
     document.getElementById('pivotMode-tab1').textContent = 'Tabela';
   } else {
-    displayData(allData, filteredDataTab1, 'tab1');
+    displayData(allDataSheet1, filteredDataTab1, 'tab1');
     document.getElementById('pivotMode-tab1').textContent = 'Transpor';
   }
 }
@@ -419,28 +470,106 @@ function displayTab2() { // Tabela
     empate: document.getElementById('empate-tab2').value,
     derrota: document.getElementById('derrota-tab2').value
   };
-  filteredDataTab2 = filterData(allData, filters);
+  filteredDataTab2 = filterDataSheet1(allDataSheet1, filters);
   if (isPivotTab2) {
-    pivotTable(allData, filteredDataTab2, 'tab2');
+    pivotTable(allDataSheet1, filteredDataTab2, 'tab2');
     document.getElementById('pivotMode-tab2').textContent = 'Tabela';
   } else {
-    displayData(allData, filteredDataTab2, 'tab2');
+    displayData(allDataSheet1, filteredDataTab2, 'tab2');
     document.getElementById('pivotMode-tab2').textContent = 'Transpor';
   }
 }
 
 function displayTab3() { // Resumo
-  filteredDataTab3 = allData.slice(1);
+  filteredDataTab3 = allDataSheet1.slice(1);
   updateBigNumbers(filteredDataTab3, 'tab3');
 }
 
+function displayTab4() { // Convocações
+  const filters = {
+    jogador: document.getElementById('jogador-tab4').value,
+    timeContra: document.getElementById('timeContra-tab4').value,
+    campeonato: document.getElementById('campeonato-tab4').value,
+    dataInicio: document.getElementById('dataInicio-tab4').value,
+    dataFim: document.getElementById('dataFim-tab4').value
+  };
+  filteredDataTab4 = filterDataSheet2(allDataSheet2, filters);
+
+  // Contar convocações por jogador
+  const convocacoesPorJogador = {};
+  filteredDataTab4.forEach(row => {
+    const jogador = row[3]; // Nome do Jogador
+    if (jogador) {
+      convocacoesPorJogador[jogador] = (convocacoesPorJogador[jogador] || 0) + 1;
+    }
+  });
+
+  const jogadores = Object.keys(convocacoesPorJogador).sort();
+  const contagens = jogadores.map(jogador => convocacoesPorJogador[jogador]);
+
+  // Destruir o gráfico anterior, se existir
+  if (convocacoesChart) {
+    convocacoesChart.destroy();
+  }
+
+  // Renderizar o gráfico
+  const ctx = document.getElementById('convocacoesChart').getContext('2d');
+  convocacoesChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: jogadores,
+      datasets: [{
+        label: 'Número de Convocações',
+        data: contagens,
+        borderColor: '#d91a2a', // Vermelho da Portuguesa
+        backgroundColor: 'rgba(217, 26, 42, 0.2)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Número de Convocações'
+          },
+          ticks: {
+            stepSize: 1
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Nome do Jogador'
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        }
+      }
+    }
+  });
+
+  if (jogadores.length === 0) {
+    showError('Nenhum dado encontrado com os filtros aplicados.');
+  } else {
+    clearError();
+  }
+}
+
 function clearFilters() {
-  const tabs = ['tab1', 'tab2'];
+  const tabs = ['tab1', 'tab2', 'tab4'];
   tabs.forEach(tab => {
     document.getElementById(`campeonato-${tab}`).value = '';
     document.getElementById(`dataInicio-${tab}`).value = '';
     document.getElementById(`dataFim-${tab}`).value = '';
-    if (tab !== 'tab1') {
+    if (tab === 'tab2') {
       document.getElementById(`time-${tab}`).value = '';
       document.getElementById(`local-${tab}`).value = '';
       document.getElementById(`rodada-${tab}`).value = '';
@@ -450,6 +579,9 @@ function clearFilters() {
       document.getElementById(`vitoria-${tab}`).value = '';
       document.getElementById(`empate-${tab}`).value = '';
       document.getElementById(`derrota-${tab}`).value = '';
+    } else if (tab === 'tab4') {
+      document.getElementById(`jogador-${tab}`).value = '';
+      document.getElementById(`timeContra-${tab}`).value = '';
     }
   });
   isPivotTab1 = false;
@@ -472,6 +604,7 @@ function showTab(tabId) {
   if (tabId === 'tab1') displayTab1();
   else if (tabId === 'tab2') displayTab2();
   else if (tabId === 'tab3') displayTab3();
+  else if (tabId === 'tab4') displayTab4();
 }
 
 // Aba 1: Jogos
@@ -525,24 +658,51 @@ document.getElementById('pivotMode-tab2').addEventListener('click', () => {
   displayTab2();
 });
 
+// Aba 4: Convocações
+document.getElementById('aplicarFiltros-tab4').addEventListener('click', () => {
+  console.log('Aplicando filtros (Tab 4)');
+  displayTab4();
+});
+
+document.getElementById('limparFiltros-tab4').addEventListener('click', () => {
+  console.log('Limpando filtros (Tab 4)');
+  document.getElementById('jogador-tab4').value = '';
+  document.getElementById('timeContra-tab4').value = '';
+  document.getElementById('campeonato-tab4').value = '';
+  document.getElementById('dataInicio-tab4').value = '';
+  document.getElementById('dataFim-tab4').value = '';
+  displayTab4();
+});
+
 async function init() {
   console.log('Inicializando aplicação');
   try {
-    allData = await fetchSheetData();
-    if (allData.length === 0) {
-      console.error('Nenhum dado retornado');
-      showError('Nenhum dado disponível. Verifique a conexão, chave API ou planilha.');
+    // Carregar dados das duas abas
+    allDataSheet1 = await fetchSheetData('Sheet1');
+    allDataSheet2 = await fetchSheetData('Sheet2');
+
+    if (allDataSheet1.length === 0) {
+      console.error('Nenhum dado retornado da Sheet1');
+      showError('Nenhum dado disponível na Sheet1. Verifique a conexão, chave API ou planilha.');
       return;
     }
-    populateFilters(allData);
-    showUpcomingGames(allData);
+    if (allDataSheet2.length === 0) {
+      console.error('Nenhum dado retornado da Sheet2');
+      showError('Nenhum dado disponível na Sheet2. Verifique a conexão, chave API ou planilha.');
+      return;
+    }
+
+    populateFiltersSheet1(allDataSheet1);
+    populateFiltersSheet2(allDataSheet2);
+    showUpcomingGames(allDataSheet1);
 
     const tab1Btn = document.getElementById('tab1-btn');
     const tab2Btn = document.getElementById('tab2-btn');
     const tab3Btn = document.getElementById('tab3-btn');
+    const tab4Btn = document.getElementById('tab4-btn');
 
-    if (!tab1Btn || !tab2Btn || !tab3Btn) {
-      console.error('Botões de navegação não encontrados:', { tab1Btn, tab2Btn, tab3Btn });
+    if (!tab1Btn || !tab2Btn || !tab3Btn || !tab4Btn) {
+      console.error('Botões de navegação não encontrados:', { tab1Btn, tab2Btn, tab3Btn, tab4Btn });
       showError('Erro interno: botões de navegação não encontrados.');
       return;
     }
@@ -558,6 +718,10 @@ async function init() {
     tab3Btn.addEventListener('click', () => {
       console.log('Clique no botão da Aba 3');
       showTab('tab3');
+    });
+    tab4Btn.addEventListener('click', () => {
+      console.log('Clique no botão da Aba 4');
+      showTab('tab4');
     });
 
     showTab('tab1');

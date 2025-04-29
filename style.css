@@ -150,6 +150,12 @@ th.sort-desc::after {
   object-fit: cover;
 }
 
+/* Estilo para o gráfico */
+#convocacoesChart {
+  max-width: 100%;
+  height: auto;
+}
+
 @media (max-width: 768px) {
   .filters {
     font-size: 0.9rem;
@@ -162,5 +168,9 @@ th.sort-desc::after {
   th, td {
     padding: 4px;
     max-width: 150px; /* Reduzir largura das células no PIVOT em telas pequenas */
+  }
+
+  #convocacoesChart {
+    max-height: 300px; /* Ajustar altura do gráfico em telas pequenas */
   }
 }
