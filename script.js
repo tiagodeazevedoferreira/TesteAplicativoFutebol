@@ -531,21 +531,20 @@ function displayTab4() { // Convocações
       }]
     },
     options: {
-      indexAxis: 'y', // Gráfico horizontal
       responsive: true,
       plugins: {
         legend: {
           display: false // Remover legenda
         },
         datalabels: {
-          anchor: 'center',
-          align: 'center', // Alinhar ao centro dentro da barra
-          color: '#fff',
+          anchor: 'end', // Posicionar o rótulo no topo da barra
+          align: 'top', // Alinhar acima da barra
+          color: '#000', // Cor preta para melhor contraste
           font: {
             weight: 'bold'
           },
           formatter: (value, context) => {
-            return context.chart.data.labels[context.dataIndex]; // Mostrar o nome do jogador dentro da barra
+            return context.chart.data.labels[context.dataIndex]; // Mostrar o nome do jogador acima da barra
           }
         }
       },
@@ -556,7 +555,7 @@ function displayTab4() { // Convocações
             display: false // Remover título do eixo X
           },
           ticks: {
-            stepSize: 1
+            display: false // Ocultar os rótulos (nomes dos jogadores) no eixo X
           }
         },
         y: {
@@ -565,7 +564,7 @@ function displayTab4() { // Convocações
             display: false // Remover título do eixo Y
           },
           ticks: {
-            display: false // Ocultar os rótulos (nomes dos jogadores) no eixo Y
+            stepSize: 1 // Garantir que os valores no eixo Y sejam inteiros
           }
         }
       }
