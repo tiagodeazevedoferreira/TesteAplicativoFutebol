@@ -116,9 +116,9 @@ function populateFiltersSheet1(data) {
 function populateFiltersSheet2(data) {
   console.log('Populando filtros da Sheet2 com', data.length, 'linhas');
   const filters = [
-    { id: 'jogador', index: 0 }, // Nome do Jogador (agora índice 0)
+    { id: 'jogador', index: 0 }, // Nome do Jogador (índice 0)
     { id: 'adversario', index: 2 }, // Adversário
-    { id: 'campeonato', index: 3 } // Campeonato (agora índice 3)
+    { id: 'campeonato', index: 3 } // Campeonato (índice 3)
   ];
 
   const tab = 'tab4';
@@ -525,8 +525,8 @@ function displayTab4() { // Convocações
       datasets: [{
         label: '',
         data: contagens,
-        backgroundColor: 'rgba(217, 26, 42, 0.6)', // Vermelho da Portuguesa com opacidade
-        borderColor: '#d91a2a',
+        backgroundColor: 'rgba(59, 130, 246, 0.6)', // Azul do bg-blue-500 com opacidade
+        borderColor: '#3b82f6', // Azul do bg-blue-500
         borderWidth: 1
       }]
     },
@@ -539,7 +539,7 @@ function displayTab4() { // Convocações
         },
         datalabels: {
           anchor: 'center',
-          align: 'center',
+          align: 'start', // Alinhar à esquerda
           color: '#fff',
           font: {
             weight: 'bold'
