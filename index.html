@@ -136,6 +136,8 @@
           <tbody id="jogosBody-tab1"></tbody>
         </table>
       </div>
+      <!-- Controles de Paginação -->
+      <div id="pagination-tab1" class="pagination mt-4 flex justify-center space-x-2"></div>
     </section>
 
     <!-- Aba 2: Tabela -->
@@ -251,6 +253,8 @@
           <tbody id="jogosBody-tab2"></tbody>
         </table>
       </div>
+      <!-- Controles de Paginação -->
+      <div id="pagination-tab2" class="pagination mt-4 flex justify-center space-x-2"></div>
     </section>
 
     <!-- Aba 3: Resumo -->
@@ -353,7 +357,7 @@
           });
         }
       }).catch(err => {
-        console.error('Erro ao Fdesregistrar Service Workers:', err);
+        console.error('Erro ao desregistrar Service Workers:', err);
       });
     }
 
