@@ -215,16 +215,24 @@ let sortConfigTab2 = { column: null, direction: 'asc' };
 function sortData(data, columnIndex, direction) {
   const sortedData = [...data];
   sortedData.sort((a, b) => {
-    let valueA = a[columnIndex] || '';
-    let valueB = b[columnIndex] || '';
+    // Ajustar o índice da coluna para tab1, já que colunas 5 e 6 foram removidas
+    let actualIndex = columnIndex;
+    if (document.getElementById('tab1').classList.contains('active')) {
+      if (columnIndex >= 5) {
+        actualIndex = columnIndex + 2; // Pula os índices 5 e 6
+      }
+    }
 
-    if (columnIndex === 1) {
+    let valueA = a[actualIndex] || '';
+    let valueB = b[actualIndex] || '';
+
+    if (actualIndex === 1) {
       valueA = valueA ? new Date(valueA.split('/').reverse().join('-')) : new Date(0);
       valueB = valueB ? new Date(valueB.split('/').reverse().join('-')) : new Date(0);
       return direction === 'asc' ? valueA - valueB : valueB - valueA;
     }
 
-    if (columnIndex === 11 || columnIndex === 12) {
+    if (actualIndex === 11 || actualIndex === 12) {
       valueA = parseInt(valueA) || 0;
       valueB = parseInt(valueB) || 0;
       return direction === 'asc' ? valueA - valueB : valueB - valueA;
@@ -252,8 +260,9 @@ function displayData(data, filteredData, tabId) {
 
   const trHead = document.createElement('tr');
   trHead.className = 'bg-gray-200';
+  // Remover as colunas Placar1 e Placar2 (índices 5 e 6) para tab1
   const headers = tabId === 'tab1'
-    ? ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana']
+    ? ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', 'Visitante', 'Local', 'Rodada', 'Dia da Semana']
     : ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
   const sortConfig = tabId === 'tab1' ? sortConfigTab1 : sortConfigTab2;
   headers.forEach((text, index) => {
@@ -307,9 +316,14 @@ function displayData(data, filteredData, tabId) {
       }
     }
 
-    const maxColumns = tabId === 'tab1' ? 11 : 16;
-    row.slice(0, maxColumns).forEach((cell, index) => {
+    // Definir os índices das colunas a serem exibidas para tab1, ignorando 5 e 6
+    const columnIndices = tabId === 'tab1'
+      ? [0, 1, 2, 3, 4, 7, 8, 9, 10] // Ignora 5 (Placar1) e 6 (Placar2)
+      : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+
+    columnIndices.forEach(index => {
       const td = document.createElement('td');
+      const cell = row[index];
       if (index === 2) {
         td.textContent = formatTime(cell);
       } else if (tabId !== 'tab1' && (index === 13 || index === 14 || index === 15)) {
@@ -341,8 +355,9 @@ function pivotTable(data, filteredData, tabId) {
   tbody.innerHTML = '';
   thead.innerHTML = '';
 
+  // Ajustar os cabeçalhos para ignorar Placar1 e Placar2 (índices 5 e 6) em tab1
   const headers = tabId === 'tab1'
-    ? data[0].slice(0, 11)
+    ? data[0].slice(0, 5).concat(data[0].slice(7, 11)) // Pega colunas 0-4 e 7-10
     : data[0].slice(0, 16);
   console.log(`Cabeçalho para Transpor (${tabId}):`, headers);
 
@@ -355,13 +370,17 @@ function pivotTable(data, filteredData, tabId) {
 
     filteredData.forEach(row => {
       const td = document.createElement('td');
-      let cellValue;
-      if (colIndex === 2) {
-        cellValue = formatTime(row[colIndex]);
-      } else if (tabId !== 'tab1' && (colIndex === 13 || colIndex === 14 || colIndex === 15)) {
-        cellValue = row[colIndex] === '1' ? 'Sim' : '';
+      // Mapear o colIndex ajustado para o índice correto da planilha
+      const actualIndex = tabId === 'tab1'
+        ? (colIndex < 5 ? colIndex : colIndex + 2) // Ajusta para pular 5 e 6
+        : colIndex;
+      let cellValue = row[actualIndex];
+      if (actualIndex === 2) {
+        cellValue = formatTime(cellValue);
+      } else if (tabId !== 'tab1' && (actualIndex === 13 || actualIndex === 14 || actualIndex === 15)) {
+        cellValue = cellValue === '1' ? 'Sim' : '';
       } else {
-        cellValue = row[colIndex] || '';
+        cellValue = cellValue || '';
       }
       td.textContent = cellValue;
       td.className = 'p-2 border';
