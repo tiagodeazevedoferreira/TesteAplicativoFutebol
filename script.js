@@ -234,7 +234,7 @@ function sortData(data, columnIndex, direction) {
 
     if (actualIndex === 11 || actualIndex === 12) {
       valueA = parseInt(valueA) || 0;
-      valueB = parseInt(valueB) || 0;
+      valueB = parseInt(valueB) || 0; // Corrigido: removi "prevalent"
       return direction === 'asc' ? valueA - valueB : valueB - valueA;
     }
 
@@ -530,13 +530,20 @@ function displayTab4() { // Convocações
 
   const contagens = jogadoresOrdenados.map(jogador => convocacoesPorJogador[jogador]);
 
+  // Ajustar a altura do canvas com base no número de jogadores
+  const canvas = document.getElementById('convocacoesChart');
+  const numJogadores = jogadoresOrdenados.length;
+  const alturaPorJogador = 40; // 40px por jogador para garantir legibilidade
+  const novaAltura = numJogadores * alturaPorJogador;
+  canvas.style.height = `${novaAltura}px`;
+
   // Destruir o gráfico anterior, se existir
   if (convocacoesChart) {
     convocacoesChart.destroy();
   }
 
   // Renderizar o gráfico
-  const ctx = document.getElementById('convocacoesChart').getContext('2d');
+  const ctx = canvas.getContext('2d');
   convocacoesChart = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -552,6 +559,7 @@ function displayTab4() { // Convocações
     options: {
       indexAxis: 'y', // Gráfico horizontal
       responsive: true,
+      maintainAspectRatio: false, // Permitir que o gráfico se ajuste à altura definida
       plugins: {
         legend: {
           display: false // Remover legenda
