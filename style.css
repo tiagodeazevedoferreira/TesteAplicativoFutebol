@@ -150,8 +150,14 @@ th.sort-desc::after {
   object-fit: cover;
 }
 
-/* Estilo para o gráfico */
-#convocacoesChart {
+/* Estilo para os gráficos */
+.chart-container {
+  position: relative;
+  width: 100%;
+}
+
+#convocacoesChart,
+#goalsChart {
   max-width: 100%;
   height: auto;
 }
@@ -170,7 +176,8 @@ th.sort-desc::after {
     max-width: 150px; /* Reduzir largura das células no PIVOT em telas pequenas */
   }
 
-  #convocacoesChart {
+  #convocacoesChart,
+  #goalsChart {
     max-height: 300px; /* Ajustar altura do gráfico em telas pequenas */
   }
 }

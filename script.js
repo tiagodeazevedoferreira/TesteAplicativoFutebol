@@ -12,6 +12,7 @@ let filteredDataTab4 = []; // Convocações
 let isPivotTab1 = false; // Estado do Transpor para Aba 1 (Jogos)
 let isPivotTab2 = false; // Estado do Transpor para Aba 2 (Tabela)
 let convocacoesChart = null; // Instância do gráfico Chart.js
+let goalsChart = null; // Instância do gráfico de área (novo)
 
 async function fetchSheetData(sheetName) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}!A1:R1000?key=${API_KEY}`;
@@ -234,7 +235,7 @@ function sortData(data, columnIndex, direction) {
 
     if (actualIndex === 11 || actualIndex === 12) {
       valueA = parseInt(valueA) || 0;
-      valueB = parseInt(valueB) || 0; // Corrigido: removi "prevalent"
+      valueB = parseInt(valueB) || 0;
       return direction === 'asc' ? valueA - valueB : valueB - valueA;
     }
 
@@ -499,9 +500,116 @@ function displayTab2() { // Tabela
   }
 }
 
+function createGoalsChart(data) {
+  const games = data.slice(1).filter(row => row[16] !== '0'); // Filtrar jogos considerados
+  const labels = [];
+  const goalsScored = [];
+  const goalsConceded = [];
+
+  const playerTeams = ['Portuguesa', 'Opportunity']; // Times de João Lucas
+
+  games.forEach((row, index) => {
+    const mandante = row[4]?.trim();
+    const visitante = row[7]?.trim();
+    const placar1 = parseInt(row[5]) || 0; // Gols do mandante
+    const placar2 = parseInt(row[6]) || 0; // Gols do visitante
+
+    // Determinar se o time de João Lucas é mandante ou visitante
+    let scored, conceded;
+    if (playerTeams.includes(mandante)) {
+      scored = placar1;
+      conceded = placar2;
+    } else if (playerTeams.includes(visitante)) {
+      scored = placar2;
+      conceded = placar1;
+    } else {
+      // Se o time de João Lucas não está no jogo, ignorar
+      return;
+    }
+
+    goalsScored.push(scored);
+    goalsConceded.push(conceded);
+    labels.push(row[1] ? row[1] : `Jogo ${index + 1}`); // Usar data ou número do jogo
+  });
+
+  const canvas = document.getElementById('goalsChart');
+  if (!canvas) {
+    console.error('Canvas #goalsChart não encontrado');
+    return;
+  }
+
+  // Ajustar a largura do canvas com base no número de jogos
+  const gameCount = labels.length;
+  const widthPerGame = 50; // 50px por jogo
+  canvas.style.width = `${gameCount * widthPerGame}px`;
+
+  // Destruir o gráfico anterior, se existir
+  if (goalsChart) {
+    goalsChart.destroy();
+  }
+
+  const ctx = canvas.getContext('2d');
+  goalsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Gols Marcados',
+          data: goalsScored,
+          backgroundColor: '#f5e6e8', // Vermelho claro (Portuguesa)
+          borderColor: '#d91a2a', // Vermelho escuro (borda)
+          fill: true,
+        },
+        {
+          label: 'Gols Sofridos',
+          data: goalsConceded,
+          backgroundColor: '#e2e8f0', // Cinza claro
+          borderColor: '#94a3b8', // Cinza escuro (borda)
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Jogos',
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Gols',
+          },
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1, // Gols são inteiros
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: true,
+        },
+      },
+    },
+  });
+
+  if (labels.length === 0) {
+    showError('Nenhum dado disponível para o gráfico de gols marcados e sofridos.');
+  } else {
+    clearError();
+  }
+}
+
 function displayTab3() { // Resumo
   filteredDataTab3 = allDataSheet1.slice(1);
   updateBigNumbers(filteredDataTab3, 'tab3');
+  createGoalsChart(allDataSheet1); // Adicionar o gráfico de área
 }
 
 function displayTab4() { // Convocações
