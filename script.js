@@ -12,9 +12,6 @@ let filteredDataTab4 = []; // Convocações
 let isPivotTab1 = false; // Estado do Transpor para Aba 1 (Jogos)
 let isPivotTab2 = false; // Estado do Transpor para Aba 2 (Tabela)
 let convocacoesChart = null; // Instância do gráfico Chart.js
-let currentPageTab1 = 1; // Página atual para Tab 1
-let currentPageTab2 = 1; // Página atual para Tab 2
-const rowsPerPage = 10; // Número de linhas por página
 
 async function fetchSheetData(sheetName) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}!A1:R1000?key=${API_KEY}`;
@@ -248,66 +245,6 @@ function sortData(data, columnIndex, direction) {
   return sortedData;
 }
 
-function renderPagination(data, tabId, currentPage) {
-  const totalRows = data.length;
-  const totalPages = Math.ceil(totalRows / rowsPerPage);
-  const paginationDiv = document.getElementById(`pagination-${tabId}`);
-  paginationDiv.innerHTML = '';
-
-  if (totalRows === 0) {
-    return;
-  }
-
-  // Botão "Anterior"
-  const prevButton = document.createElement('button');
-  prevButton.textContent = 'Anterior';
-  prevButton.className = 'pagination-btn';
-  prevButton.disabled = currentPage === 1;
-  prevButton.addEventListener('click', () => {
-    if (tabId === 'tab1') {
-      currentPageTab1--;
-      displayData(allDataSheet1, filteredDataTab1, 'tab1');
-    } else {
-      currentPageTab2--;
-      displayData(allDataSheet1, filteredDataTab2, 'tab2');
-    }
-  });
-  paginationDiv.appendChild(prevButton);
-
-  // Botões de número de página
-  for (let i = 1; i <= totalPages; i++) {
-    const pageButton = document.createElement('button');
-    pageButton.textContent = i;
-    pageButton.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
-    pageButton.addEventListener('click', () => {
-      if (tabId === 'tab1') {
-        currentPageTab1 = i;
-        displayData(allDataSheet1, filteredDataTab1, 'tab1');
-      } else {
-        currentPageTab2 = i;
-        displayData(allDataSheet1, filteredDataTab2, 'tab2');
-      }
-    });
-    paginationDiv.appendChild(pageButton);
-  }
-
-  // Botão "Próximo"
-  const nextButton = document.createElement('button');
-  nextButton.textContent = 'Próximo';
-  nextButton.className = 'pagination-btn';
-  nextButton.disabled = currentPage === totalPages;
-  nextButton.addEventListener('click', () => {
-    if (tabId === 'tab1') {
-      currentPageTab1++;
-      displayData(allDataSheet1, filteredDataTab1, 'tab1');
-    } else {
-      currentPageTab2++;
-      displayData(allDataSheet1, filteredDataTab2, 'tab2');
-    }
-  });
-  paginationDiv.appendChild(nextButton);
-}
-
 function displayData(data, filteredData, tabId) {
   console.log(`Exibindo dados (modo tabela normal) para ${tabId}`);
   clearError();
@@ -344,15 +281,7 @@ function displayData(data, filteredData, tabId) {
         sortConfigTab2 = { column: index, direction: newDirection };
       }
       const sortedData = sortData(filteredData, index, newDirection);
-      if (tabId === 'tab1') {
-        filteredDataTab1 = sortedData;
-        currentPageTab1 = 1; // Resetar para a primeira página ao ordenar
-        displayData(data, filteredDataTab1, tabId);
-      } else {
-        filteredDataTab2 = sortedData;
-        currentPageTab2 = 1; // Resetar para a primeira página ao ordenar
-        displayData(data, filteredDataTab2, tabId);
-      }
+      displayData(data, sortedData, tabId);
       console.log(`Ordenando por coluna ${text} (${index}) em ordem ${newDirection} para ${tabId}`);
     });
     trHead.appendChild(th);
@@ -362,18 +291,10 @@ function displayData(data, filteredData, tabId) {
   console.log(`Total de linhas filtradas (tabela normal) para ${tabId}:`, filteredData.length);
   if (filteredData.length === 0) {
     showError('Nenhum jogo encontrado com os filtros aplicados ou dados não carregados.');
-    document.getElementById(`pagination-${tabId}`).innerHTML = ''; // Limpar paginação
-    return;
   }
 
-  // Calcular índices de início e fim para a página atual
-  const currentPage = tabId === 'tab1' ? currentPageTab1 : currentPageTab2;
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
-
   let hasInconsistency = false;
-  paginatedData.forEach((row, rowIndex) => {
+  filteredData.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
     if (tabId !== 'tab1') {
       const vitoria = row[13] === '1';
@@ -419,9 +340,6 @@ function displayData(data, filteredData, tabId) {
   if (hasInconsistency && tabId !== 'tab1') {
     showError('Inconsistência nos dados: Algumas linhas possuem mais de um resultado (Vitória, Derrota, Empate). Corrija a planilha.');
   }
-
-  // Renderizar os controles de paginação
-  renderPagination(filteredData, tabId, currentPage);
 }
 
 function pivotTable(data, filteredData, tabId) {
@@ -471,9 +389,6 @@ function pivotTable(data, filteredData, tabId) {
 
     tbody.appendChild(tr);
   });
-
-  // Limpar a paginação quando no modo transposto
-  document.getElementById(`pagination-${tabId}`).innerHTML = '';
 
   console.log(`Tabela transformada para formato Transpor (${tabId})`);
 }
@@ -550,7 +465,6 @@ function displayTab1() { // Jogos
     considerar: true
   };
   filteredDataTab1 = filterDataSheet1(allDataSheet1, filters);
-  currentPageTab1 = 1; // Resetar para a primeira página ao aplicar filtros
   if (isPivotTab1) {
     pivotTable(allDataSheet1, filteredDataTab1, 'tab1');
     document.getElementById('pivotMode-tab1').textContent = 'Tabela';
@@ -576,7 +490,6 @@ function displayTab2() { // Tabela
     derrota: document.getElementById('derrota-tab2').value
   };
   filteredDataTab2 = filterDataSheet1(allDataSheet1, filters);
-  currentPageTab2 = 1; // Resetar para a primeira página ao aplicar filtros
   if (isPivotTab2) {
     pivotTable(allDataSheet1, filteredDataTab2, 'tab2');
     document.getElementById('pivotMode-tab2').textContent = 'Tabela';
@@ -718,8 +631,6 @@ function clearFilters() {
   });
   isPivotTab1 = false;
   isPivotTab2 = false;
-  currentPageTab1 = 1; // Resetar página ao limpar filtros
-  currentPageTab2 = 1; // Resetar página ao limpar filtros
 }
 
 function showTab(tabId) {
@@ -753,14 +664,12 @@ document.getElementById('limparFiltros-tab1').addEventListener('click', () => {
   document.getElementById('dataInicio-tab1').value = '';
   document.getElementById('dataFim-tab1').value = '';
   isPivotTab1 = false;
-  currentPageTab1 = 1; // Resetar página ao limpar filtros
   displayTab1();
 });
 
 document.getElementById('pivotMode-tab1').addEventListener('click', () => {
   console.log('Botão Transpor clicado (Tab 1)');
   isPivotTab1 = !isPivotTab1;
-  currentPageTab1 = 1; // Resetar página ao alternar modo
   displayTab1();
 });
 
@@ -785,14 +694,12 @@ document.getElementById('limparFiltros-tab2').addEventListener('click', () => {
   document.getElementById('empate-tab2').value = '';
   document.getElementById('derrota-tab2').value = '';
   isPivotTab2 = false;
-  currentPageTab2 = 1; // Resetar página ao limpar filtros
   displayTab2();
 });
 
 document.getElementById('pivotMode-tab2').addEventListener('click', () => {
   console.log('Botão Transpor clicado (Tab 2)');
   isPivotTab2 = !isPivotTab2;
-  currentPageTab2 = 1; // Resetar página ao alternar modo
   displayTab2();
 });
 
