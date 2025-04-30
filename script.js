@@ -234,7 +234,7 @@ function sortData(data, columnIndex, direction) {
 
     if (actualIndex === 11 || actualIndex === 12) {
       valueA = parseInt(valueA) || 0;
-      valueB = parseInt(valueB) prevalent || 0;
+      valueB = parseInt(valueB) || 0; // Corrigido: removi "prevalent"
       return direction === 'asc' ? valueA - valueB : valueB - valueA;
     }
 

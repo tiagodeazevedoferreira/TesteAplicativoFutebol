@@ -353,7 +353,7 @@
           });
         }
       }).catch(err => {
-        console.error('Erro ao desregistrar Service Workers:', err);
+        console.error('Erro ao Fdesregistrar Service Workers:', err);
       });
     }
 
@@ -368,7 +368,7 @@
       });
       const errorDiv = document.getElementById('errorMessage');
       if (errorDiv) {
-        errorDiv.textContent = 'Erro ao carregar a aplicação. Verifique o console para detalhes.';
+        errorDiv.textContent = `Erro ao carregar a aplicação: ${message}. Verifique o console para detalhes.`;
         errorDiv.style.display = 'block';
       }
       return false;
