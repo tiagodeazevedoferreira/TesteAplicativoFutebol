@@ -721,24 +721,10 @@ function clearFilters() {
     if (dataInicio) dataInicio.value = '';
     if (dataFim) dataFim.value = '';
     if (tab === 'tab2') {
-      const time = document.getElementById(`time-${tab}`);
-      const local = document.getElementById(`local-${tab}`);
-      const rodada = document.getElementById(`rodada-${tab}`);
-      const diaSemana = document.getElementById(`diaSemana-${tab}`);
-      const gol = document.getElementById(`gol-${tab}`);
-      const assistencias = document.getElementById(`assistencias-${tab}`);
-      const vitoria = document.getElementById(`vitoria-${tab}`);
-      const empate = document.getElementById(`empate-${tab}`);
-      const derrota = document.getElementById(`derrota-${tab}`);
-      if (time) time.value = '';
-      if (local) local.value = '';
-      if (rodada) rodada.value = '';
-      if (diaSemana) diaSemana.value = '';
-      if (gol) gol.value = '';
-      if (assistencias) assistencias.value = '';
-      if (vitoria) vitoria.value = '';
-      if (empate) empate.value = '';
-      if (derrota) derrota.value = '';
+      const elements = ['time', 'local', 'rodada', 'diaSemana', 'gol', 'assistencias', 'vitoria', 'empate', 'derrota'].map(id => document.getElementById(`${id}-tab2`));
+      elements.forEach(el => {
+        if (el) el.value = '';
+      });
     } else if (tab === 'tab4') {
       const jogador = document.getElementById(`jogador-${tab}`);
       const adversario = document.getElementById(`adversario-${tab}`);
@@ -807,7 +793,9 @@ document.getElementById('aplicarFiltros-tab2')?.addEventListener('click', () => 
 document.getElementById('limparFiltros-tab2')?.addEventListener('click', () => {
   console.log('Limpando filtros (Tab 2)');
   const elements = ['campeonato', 'dataInicio', 'dataFim', 'time', 'local', 'rodada', 'diaSemana', 'gol', 'assistencias', 'vitoria', 'empate', 'derrota'].map(id => document.getElementById(`${id}-tab2`));
-  elements.forEach(el => el?.value = '');
+  elements.forEach(el => {
+    if (el) el.value = '';
+  });
   isPivotTab2 = false;
   displayTab2();
 });
