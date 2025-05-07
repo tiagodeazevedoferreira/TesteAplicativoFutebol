@@ -42,402 +42,414 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplicativo de Futebol</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f5f5f5;
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#1e40af">
+  <title>Jogos do JL</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
     }
-
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 20px;
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
     }
-
-    .tab-button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #f0f0f0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .tab-button:hover {
-      background-color: #e0e0e0;
-    }
-
-    .active-tab {
-      background-color: #007bff;
-      color: white;
-      border-color: #0056b3;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .error-message {
-      background-color: #fee2e2;
-      color: #dc2626;
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-      display: none;
-      text-align: center;
-    }
-
-    .filters {
-      margin-bottom: 20px;
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 5px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .filters label {
-      margin-right: 10px;
-      font-weight: bold;
-    }
-
-    .filters select,
-    .filters input {
-      margin-right: 20px;
-      padding: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    .filters button {
-      padding: 5px 15px;
-      background-color: #10b981;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .filters button:hover {
-      background-color: #059669;
-    }
-
-    .filters .pivot-button {
-      background-color: #6b7280;
-    }
-
-    .filters .pivot-button:hover {
-      background-color: #4b5563;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-    }
-
-    th,
-    td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-
-    th {
-      background-color: #f0f0f0;
-      cursor: pointer;
-    }
-
-    th.sortable:hover {
-      background-color: #e0e0e0;
-    }
-
-    th.sort-asc::after {
-      content: ' ↑';
-    }
-
-    th.sort-desc::after {
-      content: ' ↓';
-    }
-
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    .victory-row {
-      background-color: #d1fae5;
-    }
-
-    .draw-row {
-      background-color: #fef9c3;
-    }
-
-    .defeat-row {
-      background-color: #fee2e2;
-    }
-
-    .big-numbers {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .big-number-card {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      flex: 1;
-      min-width: 150px;
-    }
-
-    .big-number-card h3 {
-      margin: 0 0 10px;
-      font-size: 1.2rem;
-      color: #333;
-    }
-
-    .big-number-card p {
-      margin: 0;
-      font-size: 2rem;
-      font-weight: bold;
-      color: #1f2937;
-    }
-
-    .chart-container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      max-height: 600px;
-      overflow-y: auto;
-      position: relative;
-    }
-
-    .upcoming-games {
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 5px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-    }
-
-    .upcoming-games h3 {
-      margin: 0 0 10px;
-      font-size: 1.2rem;
-    }
-
-    .upcoming-games ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .upcoming-games li {
-      padding: 5px 0;
-    }
-
-    .flex {
-      display: flex;
-      gap: 10px;
-    }
-
-    .flex-wrap {
-      flex-wrap: wrap;
-    }
-  </style>
+  </script>
 </head>
-<body>
-  <h1>Aplicativo de Futebol</h1>
+<body class="bg-gray-100 font-sans">
+  <header class="header">
+    <h1>Jogos do JL</h1>
+  </header>
 
-  <div id="errorMessage" class="error-message"></div>
-
-  <div class="flex flex-wrap mb-4">
-    <button id="tab1-btn" class="tab-button active-tab">Jogos</button>
-    <button id="tab2-btn" class="tab-button">Tabela</button>
-    <button id="tab3-btn" class="tab-button">Resumo</button>
-    <button id="tab4-btn" class="tab-button">Convocações</button>
-  </div>
-  <div class="flex mb-4">
-    <button id="tab5-btn" class="tab-button">Classificação</button>
-  </div>
-
-  <div id="upcomingGames" class="upcoming-games" style="display: none;">
-    <h3>Jogos dos Próximos 3 Dias</h3>
-    <ul id="upcomingGamesList"></ul>
-  </div>
-
-  <div id="tab1" class="tab-content active">
-    <div class="filters">
-      <label for="campeonato-tab1">Campeonato:</label>
-      <select id="campeonato-tab1"></select>
-
-      <label for="dataInicio-tab1">Data Início:</label>
-      <input type="date" id="dataInicio-tab1">
-
-      <label for="dataFim-tab1">Data Fim:</label>
-      <input type="date" id="dataFim-tab1">
-
-      <button id="aplicarFiltros-tab1">Filtrar</button>
-      <button id="limparFiltros-tab1">Limpar</button>
-      <button id="pivotMode-tab1" class="pivot-button">Transpor</button>
+  <!-- Seção de Notificações -->
+  <div id="notifications" class="container mx-auto p-4">
+    <div id="upcomingGames" class="bg-yellow-100 text-yellow-700 p-4 mb-4 rounded" style="display: none;">
+      <h2 class="text-lg font-semibold">Próximos Jogos (3 Dias)</h2>
+      <ul id="upcomingGamesList" class="list-disc pl-5"></ul>
     </div>
-    <table>
-      <thead id="tableHead-tab1"></thead>
-      <tbody id="jogosBody-tab1"></tbody>
-    </table>
   </div>
 
-  <div id="tab2" class="tab-content">
-    <div class="filters">
-      <label for="campeonato-tab2">Campeonato:</label>
-      <select id="campeonato-tab2"></select>
-
-      <label for="dataInicio-tab2">Data Início:</label>
-      <input type="date" id="dataInicio-tab2">
-
-      <label for="dataFim-tab2">Data Fim:</label>
-      <input type="date" id="dataFim-tab2">
-
-      <label for="time-tab2">Time:</label>
-      <select id="time-tab2"></select>
-
-      <label for="local-tab2">Local:</label>
-      <select id="local-tab2"></select>
-
-      <label for="rodada-tab2">Rodada:</label>
-      <select id="rodada-tab2"></select>
-
-      <label for="diaSemana-tab2">Dia da Semana:</label>
-      <select id="diaSemana-tab2"></select>
-
-      <label for="gol-tab2">Gol:</label>
-      <select id="gol-tab2"></select>
-
-      <label for="assistencias-tab2">Assistências:</label>
-      <select id="assistencias-tab2"></select>
-
-      <label for="vitoria-tab2">Vitória:</label>
-      <select id="vitoria-tab2">
-        <option value="">Todos</option>
-        <option value="1">Sim</option>
-        <option value="0">Não</option>
-      </select>
-
-      <label for="empate-tab2">Empate:</label>
-      <select id="empate-tab2">
-        <option value="">Todos</option>
-        <option value="1">Sim</option>
-        <option value="0">Não</option>
-      </select>
-
-      <label for="derrota-tab2">Derrota:</label>
-      <select id="derrota-tab2">
-        <option value="">Todos</option>
-        <option value="1">Sim</option>
-        <option value="0">Não</option>
-      </select>
-
-      <button id="aplicarFiltros-tab2">Filtrar</button>
-      <button id="limparFiltros-tab2">Limpar</button>
-      <button id="pivotMode-tab2" class="pivot-button">Transpor</button>
-    </div>
-    <table>
-      <thead id="tableHead-tab2"></thead>
-      <tbody id="jogosBody-tab2"></tbody>
-    </table>
-  </div>
-
-  <div id="tab3" class="tab-content">
-    <div class="big-numbers">
-      <div class="big-number-card">
-        <h3>Jogos</h3>
-        <p id="bigNumberJogos-tab3">0</p>
-      </div>
-      <div class="big-number-card">
-        <h3>Gols</h3>
-        <p id="bigNumberGols-tab3">0</p>
-      </div>
-      <div class="big-number-card">
-        <h3>Média de Gols</h3>
-        <p id="bigNumberMedia-tab3">0.00</p>
-      </div>
-      <div class="big-number-card">
-        <h3>Assistências</h3>
-        <p id="bigNumberAssistencias-tab3">0</p>
-      </div>
-      <div class="big-number-card">
-        <h3>Jogos por Gol</h3>
-        <p id="bigNumberGolACada-tab3">0.00</p>
-      </div>
-      <div class="big-number-card">
-        <h3>Vitórias</h3>
-        <p id="bigNumberVitorias-tab3">0</p>
-      </div>
-      <div class="big-number-card">
-        <h3>Empates</h3>
-        <p id="bigNumberEmpates-tab3">0</p>
-      </div>
-      <div class="big-number-card">
-        <h3>Derrotas</h3>
-        <p id="bigNumberDerrotas-tab3">0</p>
+  <div class="player-info container mx-auto p-4">
+    <div class="flex items-center bg-white rounded-lg shadow-md p-4">
+      <img src="./Foto_Jogador.png" alt="Foto de João Lucas" class="w-24 h-24 rounded-full mr-4">
+      <div>
+        <h2 class="text-lg font-bold">João Lucas</h2>
+        <p><strong>Posição:</strong> Fixo/Pivô</p>
+        <p><strong>Times:</strong> Portuguesa, Opportunity</p>
       </div>
     </div>
   </div>
 
-  <div id="tab4" class="tab-content">
-    <div class="filters">
-      <label for="jogador-tab4">Jogador:</label>
-      <select id="jogador-tab4"></select>
+  <nav class="tab-navigation">
+    <button id="tab1-btn" class="tab-button active-tab" data-tab="tab1">Jogos</button>
+    <button id="tab2-btn" class="tab-button" data-tab="tab2">Tabela</button>
+    <button id="tab3-btn" class="tab-button" data-tab="tab3">Resumo</button>
+    <button id="tab4-btn" class="tab-button" data-tab="tab4">Convocações</button>
+    <button id="tab5-btn" class="tab-button" data-tab="tab5">Classificação</button>
+  </nav>
 
-      <label for="adversario-tab4">Adversário:</label>
-      <select id="adversario-tab4"></select>
+  <main class="container mx-auto p-4">
+    <!-- Mensagem de Erro -->
+    <div id="errorMessage" style="display: none;" class="bg-red-100 text-red-700 p-4 mb-4 rounded"></div>
 
-      <label for="campeonato-tab4">Campeonato:</label>
-      <select id="campeonato-tab4"></select>
+    <!-- Aba 1: Jogos -->
+    <section id="tab1" class="tab-content active">
+      <!-- Filtros -->
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="campeonato-tab1">Campeonato:</label>
+            <select id="campeonato-tab1" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="dataInicio-tab1">Data Início:</label>
+            <input type="date" id="dataInicio-tab1" class="w-full p-2 border rounded">
+          </div>
+          <div>
+            <label for="dataFim-tab1">Data Fim:</label>
+            <input type="date" id="dataFim-tab1" class="w-full p-2 border rounded">
+          </div>
+        </div>
+        <div class="mt-4">
+          <button id="aplicarFiltros-tab1" class="bg-blue-500 text-white p-2 rounded mr-2 hover:bg-blue-600">Aplicar Filtros</button>
+          <button id="limparFiltros-tab1" class="bg-gray-500 text-white p-2 rounded mr-2 hover:bg-gray-600">Limpar Filtros</button>
+          <button id="pivotMode-tab1" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Transpor</button>
+        </div>
+      </div>
+      <!-- Tabela -->
+      <div class="overflow-x-auto">
+        <table id="jogosTable-tab1" class="w-full bg-white border">
+          <thead id="tableHead-tab1">
+            <tr class="bg-gray-200">
+              <th class="p-2">Campeonato</th>
+              <th class="p-2">Data</th>
+              <th class="p-2">Horário</th>
+              <th class="p-2">Ginásio</th>
+              <th class="p-2">Mandante</th>
+              <th class="p-2">Visitante</th>
+              <th class="p-2">Local</th>
+              <th class="p-2">Rodada</th>
+              <th class="p-2">Dia da Semana</th>
+            </tr>
+          </thead>
+          <tbody id="jogosBody-tab1"></tbody>
+        </table>
+      </div>
+    </section>
 
-      <label for="dataInicio-tab4">Data Início:</label>
-      <input type="date" id="dataInicio-tab4">
+    <!-- Aba 2: Tabela -->
+    <section id="tab2" class="tab-content">
+      <!-- Filtros -->
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="campeonato-tab2">Campeonato:</label>
+            <select id="campeonato-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="dataInicio-tab2">Data Início:</label>
+            <input type="date" id="dataInicio-tab2" class="w-full p-2 border rounded">
+          </div>
+          <div>
+            <label for="dataFim-tab2">Data Fim:</label>
+            <input type="date" id="dataFim-tab2" class="w-full p-2 border rounded">
+          </div>
+          <div>
+            <label for="time-tab2">Time:</label>
+            <select id="time-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="local-tab2">Local:</label>
+            <select id="local-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="rodada-tab2">Rodada:</label>
+            <select id="rodada-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="diaSemana-tab2">Dia da Semana:</label>
+            <select id="diaSemana-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="gol-tab2">Gols:</label>
+            <select id="gol-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="assistencias-tab2">Assistências:</label>
+            <select id="assistencias-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="vitoria-tab2">Vitória:</label>
+            <select id="vitoria-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+              <option value="1">Sim</option>
+              <option value="0">Não</option>
+            </select>
+          </div>
+          <div>
+            <label for="empate-tab2">Empate:</label>
+            <select id="empate-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+              <option value="1">Sim</option>
+              <option value="0">Não</option>
+            </select>
+          </div>
+          <div>
+            <label for="derrota-tab2">Derrota:</label>
+            <select id="derrota-tab2" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+              <option value="1">Sim</option>
+              <option value="0">Não</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4">
+          <button id="aplicarFiltros-tab2" class="bg-blue-500 text-white p-2 rounded mr-2 hover:bg-blue-600">Aplicar Filtros</button>
+          <button id="limparFiltros-tab2" class="bg-gray-500 text-white p-2 rounded mr-2 hover:bg-gray-600">Limpar Filtros</button>
+          <button id="pivotMode-tab2" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Transpor</button>
+        </div>
+      </div>
+      <!-- Tabela -->
+      <div class="overflow-x-auto">
+        <table id="jogosTable-tab2" class="w-full bg-white border">
+          <thead id="tableHead-tab2">
+            <tr class="bg-gray-200">
+              <th class="p-2">Campeonato</th>
+              <th class="p-2">Data</th>
+              <th class="p-2">Horário</th>
+              <th class="p-2">Ginásio</th>
+              <th class="p-2">Mandante</th>
+              <th class="p-2"></th>
+              <th class="p-2"></th>
+              <th class="p-2">Visitante</th>
+              <th class="p-2">Local</th>
+              <th class="p-2">Rodada</th>
+              <th class="p-2">Dia da Semana</th>
+              <th class="p-2">Gol</th>
+              <th class="p-2">Assistências</th>
+              <th class="p-2">Vitória</th>
+              <th class="p-2">Derrota</th>
+              <th class="p-2">Empate</th>
+            </tr>
+          </thead>
+          <tbody id="jogosBody-tab2"></tbody>
+        </table>
+      </div>
+    </section>
 
-      <label for="dataFim-tab4">Data Fim:</label>
-      <input type="date" id="dataFim-tab4">
+    <!-- Aba 3: Resumo -->
+    <section id="tab3" class="tab-content">
+      <!-- Big Numbers -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Jogos</h3>
+          <p id="bigNumberJogos-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Gols</h3>
+          <p id="bigNumberGols-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Média de Gols</h3>
+          <p id="bigNumberMedia-tab3" class="text-lg font-bold">0.00</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Assistências</h3>
+          <p id="bigNumberAssistencias-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Gol a Cada</h3>
+          <p id="bigNumberGolACada-tab3" class="text-lg font-bold">0.00</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Vitórias</h3>
+          <p id="bigNumberVitorias-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Empates</h3>
+          <p id="bigNumberEmpates-tab3" class="text-lg font-bold">0</p>
+        </div>
+        <div class="bg-white p-2 rounded shadow text-center">
+          <h3 class="text-sm font-semibold">Derrotas</h3>
+          <p id="bigNumberDerrotas-tab3" class="text-lg font-bold">0</p>
+        </div>
+      </div>
+    </section>
 
-      <button id="aplicarFiltros-tab4">Filtrar</button>
-      <button id="limparFiltros-tab4">Limpar</button>
-    </div>
-    <div class="chart-container">
-      <canvas id="convocacoesChart"></canvas>
-    </div>
-  </div>
+    <!-- Aba 4: Convocações -->
+    <section id="tab4" class="tab-content">
+      <!-- Filtros -->
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="jogador-tab4">Nome do Jogador:</label>
+            <select id="jogador-tab4" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="adversario-tab4">Adversário:</label>
+            <select id="adversario-tab4" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="campeonato-tab4">Campeonato:</label>
+            <select id="campeonato-tab4" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label for="dataInicio-tab4">Data Início:</label>
+            <input type="date" id="dataInicio-tab4" class="w-full p-2 border rounded">
+          </div>
+          <div>
+            <label for="dataFim-tab4">Data Fim:</label>
+            <input type="date" id="dataFim-tab4" class="w-full p-2 border rounded">
+          </div>
+        </div>
+        <div class="mt-4">
+          <button id="aplicarFiltros-tab4" class="bg-blue-500 text-white p-2 rounded mr-2 hover:bg-blue-600">Aplicar Filtros</button>
+          <button id="limparFiltros-tab4" class="bg-gray-500 text-white p-2 rounded mr-2 hover:bg-gray-600">Limpar Filtros</button>
+        </div>
+      </div>
+      <!-- Gráfico com Rolagem Vertical -->
+      <div class="bg-white p-4 rounded shadow">
+        <div class="chart-container" style="overflow-y: auto; max-height: 400px; width: 100%;">
+          <canvas id="convocacoesChart" style="width: 100%;"></canvas>
+        </div>
+      </div>
+    </section>
 
-  <div id="tab5" class="tab-content">
-    <div class="filters">
-      <label for="time-tab5">Time:</label>
-      <select id="time-tab5"></select>
+    <!-- Aba 5: Classificação -->
+    <section id="tab5" class="tab-content">
+      <!-- Filtros -->
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="time-tab5">Time:</label>
+            <select id="time-tab5" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4">
+          <button id="aplicarFiltros-tab5" class="bg-blue-500 text-white p-2 rounded mr-2 hover:bg-blue-600">Aplicar Filtros</button>
+          <button id="limparFiltros-tab5" class="bg-gray-500 text-white p-2 rounded mr-2 hover:bg-gray-600">Limpar Filtros</button>
+          <button id="pivotMode-tab5" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Transpor</button>
+        </div>
+      </div>
+      <!-- Tabela -->
+      <div class="overflow-x-auto">
+        <table id="jogosTable-tab5" class="w-full bg-white border">
+          <thead id="tableHead-tab5">
+            <tr class="bg-gray-200">
+              <th class="p-2">Posição</th>
+              <th class="p-2">Time</th>
+              <th class="p-2">Pontos</th>
+              <th class="p-2">Jogos</th>
+              <th class="p-2">Vitórias</th>
+              <th class="p-2">Empates</th>
+              <th class="p-2">Derrotas</th>
+              <th class="p-2">Gols Pró</th>
+              <th class="p-2">Gols Contra</th>
+              <th class="p-2">Saldo de Gols</th>
+              <th class="p-2">Aproveitamento</th>
+            </tr>
+          </thead>
+          <tbody id="jogosBody-tab5"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
-      <button id="aplicarFiltros-tab5">Filtrar</button>
-      <button id="limparFiltros-tab5">Limpar</button>
-      <button id="pivotMode-tab5" class="pivot-button">Transpor</button>
-    </div>
-    <table>
-      <thead id="tableHead-tab5"></thead>
-      <tbody id="jogosBody-tab5"></tbody>
-    </table>
-  </div>
+  <footer class="footer">
+    <p>© 2025 Jogos do JL</p>
+  </footer>
 
-  <script src="script.js"></script>
+  <script>
+    // Desregistrar Service Workers antigos
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.unregister().then(() => {
+            console.log('Service Worker desregistrado:', registration.scope);
+          });
+        }
+      }).catch(err => {
+        console.error('Erro ao desregistrar Service Workers:', err);
+      });
+    }
+
+    // Capturar erros de script
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('Erro de script detectado:', {
+        message: message,
+        source: source,
+        line: lineno,
+        column: colno,
+        error: error
+      });
+      const errorDiv = document.getElementById('errorMessage');
+      if (errorDiv) {
+        errorDiv.textContent = `Erro ao carregar a aplicação: ${message}. Verifique o console para detalhes.`;
+        errorDiv.style.display = 'block';
+      }
+      return false;
+    };
+  </script>
+  <script src="./script.js" onerror="console.error('Falha ao carregar script.js'); document.getElementById('errorMessage').textContent = 'Erro ao carregar script.js'; document.getElementById('errorMessage').style.display = 'block';"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c2fe682c3a44fc',t:'MTc0NjY0NDc3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
