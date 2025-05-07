@@ -93,6 +93,7 @@ function populateFiltersSheet1(data) {
       const mandantes = data.slice(1).map(row => row[4]?.trim()).filter(v => v);
       const visitantes = data.slice(1).map(row => row[7]?.trim()).filter(v => v);
       const times = [...new Set([...mandantes, ...visitantes])].sort();
+      timeSelect.innerHTML = '<option value="">Todos</option>';
       times.forEach(value => {
         const option = document.createElement('option');
         option.value = value;
@@ -104,6 +105,7 @@ function populateFiltersSheet1(data) {
     filters.forEach(filter => {
       const select = document.getElementById(`${filter.id}-${tab}`);
       if (select) {
+        select.innerHTML = '<option value="">Todos</option>';
         const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
         values.forEach(value => {
           const option = document.createElement('option');
@@ -128,6 +130,7 @@ function populateFiltersSheet2(data) {
   filters.forEach(filter => {
     const select = document.getElementById(`${filter.id}-${tab}`);
     if (select) {
+      select.innerHTML = '<option value="">Todos</option>';
       const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
       values.forEach(value => {
         const option = document.createElement('option');
@@ -149,6 +152,7 @@ function populateFiltersSheet3(data) {
   filters.forEach(filter => {
     const select = document.getElementById(`${filter.id}-${tab}`);
     if (select) {
+      select.innerHTML = '<option value="">Todos</option>';
       const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
       values.forEach(value => {
         const option = document.createElement('option');
@@ -190,14 +194,20 @@ function updateBigNumbers(data, tabId) {
   const media = jogos > 0 ? (gols / jogos).toFixed(2) : '0.00';
   const golACada = jogos > 0 && gols > 0 ? (jogos / gols).toFixed(2) : '0.00';
 
-  document.getElementById(`bigNumberJogos-${tabId}`).textContent = jogos;
-  document.getElementById(`bigNumberGols-${tabId}`).textContent = gols;
-  document.getElementById(`bigNumberAssistencias-${tabId}`).textContent = assistencias;
-  document.getElementById(`bigNumberVitorias-${tabId}`).textContent = vitorias;
-  document.getElementById(`bigNumberEmpates-${tabId}`).textContent = empates;
-  document.getElementById(`bigNumberDerrotas-${tabId}`).textContent = derrotas;
-  document.getElementById(`bigNumberMedia-${tabId}`).textContent = media;
-  document.getElementById(`bigNumberGolACada-${tabId}`).textContent = golACada;
+  const elements = {
+    jogos: document.getElementById(`bigNumberJogos-${tabId}`),
+    gols: document.getElementById(`bigNumberGols-${tabId}`),
+    assistencias: document.getElementById(`bigNumberAssistencias-${tabId}`),
+    vitorias: document.getElementById(`bigNumberVitorias-${tabId}`),
+    empates: document.getElementById(`bigNumberEmpates-${tabId}`),
+    derrotas: document.getElementById(`bigNumberDerrotas-${tabId}`),
+    media: document.getElementById(`bigNumberMedia-${tabId}`),
+    golACada: document.getElementById(`bigNumberGolACada-${tabId}`)
+  };
+
+  for (const [key, element] of Object.entries(elements)) {
+    if (element) element.textContent = key === 'media' || key === 'golACada' ? eval(key) : eval(key);
+  }
 
   console.log(`Big Numbers atualizados (${tabId}):`, { jogos, gols, media, assistencias, golACada, vitorias, empates, derrotas });
 }
@@ -218,6 +228,10 @@ function showUpcomingGames(data) {
 
   const upcomingGamesList = document.getElementById('upcomingGamesList');
   const upcomingGamesDiv = document.getElementById('upcomingGames');
+  if (!upcomingGamesList || !upcomingGamesDiv) {
+    console.error('Elementos #upcomingGamesList ou #upcomingGames não encontrados');
+    return;
+  }
   upcomingGamesList.innerHTML = '';
 
   if (upcomingGames.length > 0) {
@@ -534,9 +548,9 @@ function filterDataSheet3(data, filters) {
 
 function displayTab1() { // Jogos
   const filters = {
-    campeonato: document.getElementById('campeonato-tab1').value,
-    dataInicio: document.getElementById('dataInicio-tab1').value,
-    dataFim: document.getElementById('dataFim-tab1').value,
+    campeonato: document.getElementById('campeonato-tab1')?.value || '',
+    dataInicio: document.getElementById('dataInicio-tab1')?.value || '',
+    dataFim: document.getElementById('dataFim-tab1')?.value || '',
     considerar: true
   };
   filteredDataTab1 = filterDataSheet1(allDataSheet1, filters);
@@ -551,18 +565,18 @@ function displayTab1() { // Jogos
 
 function displayTab2() { // Tabela
   const filters = {
-    campeonato: document.getElementById('campeonato-tab2').value,
-    dataInicio: document.getElementById('dataInicio-tab2').value,
-    dataFim: document.getElementById('dataFim-tab2').value,
-    time: document.getElementById('time-tab2').value,
-    local: document.getElementById('local-tab2').value,
-    rodada: document.getElementById('rodada-tab2').value,
-    diaSemana: document.getElementById('diaSemana-tab2').value,
-    gol: document.getElementById('gol-tab2').value,
-    assistencias: document.getElementById('assistencias-tab2').value,
-    vitoria: document.getElementById('vitoria-tab2').value,
-    empate: document.getElementById('empate-tab2').value,
-    derrota: document.getElementById('derrota-tab2').value
+    campeonato: document.getElementById('campeonato-tab2')?.value || '',
+    dataInicio: document.getElementById('dataInicio-tab2')?.value || '',
+    dataFim: document.getElementById('dataFim-tab2')?.value || '',
+    time: document.getElementById('time-tab2')?.value || '',
+    local: document.getElementById('local-tab2')?.value || '',
+    rodada: document.getElementById('rodada-tab2')?.value || '',
+    diaSemana: document.getElementById('diaSemana-tab2')?.value || '',
+    gol: document.getElementById('gol-tab2')?.value || '',
+    assistencias: document.getElementById('assistencias-tab2')?.value || '',
+    vitoria: document.getElementById('vitoria-tab2')?.value || '',
+    empate: document.getElementById('empate-tab2')?.value || '',
+    derrota: document.getElementById('derrota-tab2')?.value || ''
   };
   filteredDataTab2 = filterDataSheet1(allDataSheet1, filters);
   if (isPivotTab2) {
@@ -581,11 +595,11 @@ function displayTab3() { // Resumo
 
 function displayTab4() { // Convocações
   const filters = {
-    jogador: document.getElementById('jogador-tab4').value,
-    adversario: document.getElementById('adversario-tab4').value,
-    campeonato: document.getElementById('campeonato-tab4').value,
-    dataInicio: document.getElementById('dataInicio-tab4').value,
-    dataFim: document.getElementById('dataFim-tab4').value
+    jogador: document.getElementById('jogador-tab4')?.value || '',
+    adversario: document.getElementById('adversario-tab4')?.value || '',
+    campeonato: document.getElementById('campeonato-tab4')?.value || '',
+    dataInicio: document.getElementById('dataInicio-tab4')?.value || '',
+    dataFim: document.getElementById('dataFim-tab4')?.value || ''
   };
   filteredDataTab4 = filterDataSheet2(allDataSheet2, filters);
 
@@ -680,7 +694,7 @@ function displayTab4() { // Convocações
 
 function displayTab5() { // Classificação
   const filters = {
-    time: document.getElementById('time-tab5').value
+    time: document.getElementById('time-tab5')?.value || ''
   };
   filteredDataTab5 = filterDataSheet3(allDataSheet3, filters);
   if (isPivotTab5) {
@@ -695,24 +709,39 @@ function displayTab5() { // Classificação
 function clearFilters() {
   const tabs = ['tab1', 'tab2', 'tab4', 'tab5'];
   tabs.forEach(tab => {
-    document.getElementById(`campeonato-${tab}`).value = '';
-    document.getElementById(`dataInicio-${tab}`).value = '';
-    document.getElementById(`dataFim-${tab}`).value = '';
+    const campeonato = document.getElementById(`campeonato-${tab}`);
+    const dataInicio = document.getElementById(`dataInicio-${tab}`);
+    const dataFim = document.getElementById(`dataFim-${tab}`);
+    if (campeonato) campeonato.value = '';
+    if (dataInicio) dataInicio.value = '';
+    if (dataFim) dataFim.value = '';
     if (tab === 'tab2') {
-      document.getElementById(`time-${tab}`).value = '';
-      document.getElementById(`local-${tab}`).value = '';
-      document.getElementById(`rodada-${tab}`).value = '';
-      document.getElementById(`diaSemana-${tab}`).value = '';
-      document.getElementById(`gol-${tab}`).value = '';
-      document.getElementById(`assistencias-${tab}`).value = '';
-      document.getElementById(`vitoria-${tab}`).value = '';
-      document.getElementById(`empate-${tab}`).value = '';
-      document.getElementById(`derrota-${tab}`).value = '';
+      const time = document.getElementById(`time-${tab}`);
+      const local = document.getElementById(`local-${tab}`);
+      const rodada = document.getElementById(`rodada-${tab}`);
+      const diaSemana = document.getElementById(`diaSemana-${tab}`);
+      const gol = document.getElementById(`gol-${tab}`);
+      const assistencias = document.getElementById(`assistencias-${tab}`);
+      const vitoria = document.getElementById(`vitoria-${tab}`);
+      const empate = document.getElementById(`empate-${tab}`);
+      const derrota = document.getElementById(`derrota-${tab}`);
+      if (time) time.value = '';
+      if (local) local.value = '';
+      if (rodada) rodada.value = '';
+      if (diaSemana) diaSemana.value = '';
+      if (gol) gol.value = '';
+      if (assistencias) assistencias.value = '';
+      if (vitoria) vitoria.value = '';
+      if (empate) empate.value = '';
+      if (derrota) derrota.value = '';
     } else if (tab === 'tab4') {
-      document.getElementById(`jogador-${tab}`).value = '';
-      document.getElementById(`adversario-${tab}`).value = '';
+      const jogador = document.getElementById(`jogador-${tab}`);
+      const adversario = document.getElementById(`adversario-${tab}`);
+      if (jogador) jogador.value = '';
+      if (adversario) adversario.value = '';
     } else if (tab === 'tab5') {
-      document.getElementById(`time-${tab}`).value = '';
+      const time = document.getElementById(`time-${tab}`);
+      if (time) time.value = '';
     }
   });
   isPivotTab1 = false;
@@ -741,86 +770,85 @@ function showTab(tabId) {
 }
 
 // Aba 1: Jogos
-document.getElementById('aplicarFiltros-tab1').addEventListener('click', () => {
+document.getElementById('aplicarFiltros-tab1')?.addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 1)');
   displayTab1();
 });
 
-document.getElementById('limparFiltros-tab1').addEventListener('click', () => {
+document.getElementById('limparFiltros-tab1')?.addEventListener('click', () => {
   console.log('Limpando filtros (Tab 1)');
-  document.getElementById('campeonato-tab1').value = '';
-  document.getElementById('dataInicio-tab1').value = '';
-  document.getElementById('dataFim-tab1').value = '';
+  const campeonato = document.getElementById('campeonato-tab1');
+  const dataInicio = document.getElementById('dataInicio-tab1');
+  const dataFim = document.getElementById('dataFim-tab1');
+  if (campeonato) campeonato.value = '';
+  if (dataInicio) dataInicio.value = '';
+  if (dataFim) dataFim.value = '';
   isPivotTab1 = false;
   displayTab1();
 });
 
-document.getElementById('pivotMode-tab1').addEventListener('click', () => {
+document.getElementById('pivotMode-tab1')?.addEventListener('click', () => {
   console.log('Botão Transpor clicado (Tab 1)');
   isPivotTab1 = !isPivotTab1;
   displayTab1();
 });
 
 // Aba 2: Tabela
-document.getElementById('aplicarFiltros-tab2').addEventListener('click', () => {
+document.getElementById('aplicarFiltros-tab2')?.addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 2)');
   displayTab2();
 });
 
-document.getElementById('limparFiltros-tab2').addEventListener('click', () => {
+document.getElementById('limparFiltros-tab2')?.addEventListener('click', () => {
   console.log('Limpando filtros (Tab 2)');
-  document.getElementById('campeonato-tab2').value = '';
-  document.getElementById('dataInicio-tab2').value = '';
-  document.getElementById('dataFim-tab2').value = '';
-  document.getElementById('time-tab2').value = '';
-  document.getElementById('local-tab2').value = '';
-  document.getElementById('rodada-tab2').value = '';
-  document.getElementById('diaSemana-tab2').value = '';
-  document.getElementById('gol-tab2').value = '';
-  document.getElementById('assistencias-tab2').value = '';
-  document.getElementById('vitoria-tab2').value = '';
-  document.getElementById('empate-tab2').value = '';
-  document.getElementById('derrota-tab2').value = '';
+  const elements = ['campeonato', 'dataInicio', 'dataFim', 'time', 'local', 'rodada', 'diaSemana', 'gol', 'assistencias', 'vitoria', 'empate', 'derrota'].map(id => document.getElementById(`${id}-tab2`));
+  elements.forEach(el => el?.value = '');
   isPivotTab2 = false;
   displayTab2();
 });
 
-document.getElementById('pivotMode-tab2').addEventListener('click', () => {
+document.getElementById('pivotMode-tab2')?.addEventListener('click', () => {
   console.log('Botão Transpor clicado (Tab 2)');
   isPivotTab2 = !isPivotTab2;
   displayTab2();
 });
 
 // Aba 4: Convocações
-document.getElementById('aplicarFiltros-tab4').addEventListener('click', () => {
+document.getElementById('aplicarFiltros-tab4')?.addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 4)');
   displayTab4();
 });
 
-document.getElementById('limparFiltros-tab4').addEventListener('click', () => {
+document.getElementById('limparFiltros-tab4')?.addEventListener('click', () => {
   console.log('Limpando filtros (Tab 4)');
-  document.getElementById('jogador-tab4').value = '';
-  document.getElementById('adversario-tab4').value = '';
-  document.getElementById('campeonato-tab4').value = '';
-  document.getElementById('dataInicio-tab4').value = '';
-  document.getElementById('dataFim-tab4').value = '';
+  const jogador = document.getElementById('jogador-tab4');
+  const adversario = document.getElementById('adversario-tab4');
+  const campeonato = document.getElementById('campeonato-tab4');
+  const dataInicio = document.getElementById('dataInicio-tab4');
+  const dataFim = document.getElementById('dataFim-tab4');
+  if (jogador) jogador.value = '';
+  if (adversario) adversario.value = '';
+  if (campeonato) campeonato.value = '';
+  if (dataInicio) dataInicio.value = '';
+  if (dataFim) dataFim.value = '';
   displayTab4();
 });
 
 // Aba 5: Classificação
-document.getElementById('aplicarFiltros-tab5').addEventListener('click', () => {
+document.getElementById('aplicarFiltros-tab5')?.addEventListener('click', () => {
   console.log('Aplicando filtros (Tab 5)');
   displayTab5();
 });
 
-document.getElementById('limparFiltros-tab5').addEventListener('click', () => {
+document.getElementById('limparFiltros-tab5')?.addEventListener('click', () => {
   console.log('Limpando filtros (Tab 5)');
-  document.getElementById('time-tab5').value = '';
+  const time = document.getElementById('time-tab5');
+  if (time) time.value = '';
   isPivotTab5 = false;
   displayTab5();
 });
 
-document.getElementById('pivotMode-tab5').addEventListener('click', () => {
+document.getElementById('pivotMode-tab5')?.addEventListener('click', () => {
   console.log('Botão Transpor clicado (Tab 5)');
   isPivotTab5 = !isPivotTab5;
   displayTab5();
@@ -894,4 +922,4 @@ async function init() {
   }
 }
 
-init();
+document.addEventListener('DOMContentLoaded', init);
