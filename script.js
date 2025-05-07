@@ -195,19 +195,24 @@ function updateBigNumbers(data, tabId) {
   const golACada = jogos > 0 && gols > 0 ? (jogos / gols).toFixed(2) : '0.00';
 
   const elements = {
-    jogos: document.getElementById(`bigNumberJogos-${tabId}`),
-    gols: document.getElementById(`bigNumberGols-${tabId}`),
-    assistencias: document.getElementById(`bigNumberAssistencias-${tabId}`),
-    vitorias: document.getElementById(`bigNumberVitorias-${tabId}`),
-    empates: document.getElementById(`bigNumberEmpates-${tabId}`),
-    derrotas: document.getElementById(`bigNumberDerrotas-${tabId}`),
-    media: document.getElementById(`bigNumberMedia-${tabId}`),
-    golACada: document.getElementById(`bigNumberGolACada-${tabId}`)
+    bigNumberJogos: document.getElementById(`bigNumberJogos-${tabId}`),
+    bigNumberGols: document.getElementById(`bigNumberGols-${tabId}`),
+    bigNumberAssistencias: document.getElementById(`bigNumberAssistencias-${tabId}`),
+    bigNumberVitorias: document.getElementById(`bigNumberVitorias-${tabId}`),
+    bigNumberEmpates: document.getElementById(`bigNumberEmpates-${tabId}`),
+    bigNumberDerrotas: document.getElementById(`bigNumberDerrotas-${tabId}`),
+    bigNumberMedia: document.getElementById(`bigNumberMedia-${tabId}`),
+    bigNumberGolACada: document.getElementById(`bigNumberGolACada-${tabId}`)
   };
 
-  for (const [key, element] of Object.entries(elements)) {
-    if (element) element.textContent = key === 'media' || key === 'golACada' ? eval(key) : eval(key);
-  }
+  if (elements.bigNumberJogos) elements.bigNumberJogos.textContent = jogos;
+  if (elements.bigNumberGols) elements.bigNumberGols.textContent = gols;
+  if (elements.bigNumberAssistencias) elements.bigNumberAssistencias.textContent = assistencias;
+  if (elements.bigNumberVitorias) elements.bigNumberVitorias.textContent = vitorias;
+  if (elements.bigNumberEmpates) elements.bigNumberEmpates.textContent = empates;
+  if (elements.bigNumberDerrotas) elements.bigNumberDerrotas.textContent = derrotas;
+  if (elements.bigNumberMedia) elements.bigNumberMedia.textContent = media;
+  if (elements.bigNumberGolACada) elements.bigNumberGolACada.textContent = golACada;
 
   console.log(`Big Numbers atualizados (${tabId}):`, { jogos, gols, media, assistencias, golACada, vitorias, empates, derrotas });
 }
