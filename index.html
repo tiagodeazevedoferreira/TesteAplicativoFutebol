@@ -54,6 +54,38 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+  </script>
 </head>
 <body class="bg-gray-100 font-sans">
   <header class="header">
@@ -84,6 +116,7 @@
     <button id="tab2-btn" class="tab-button" data-tab="tab2">Tabela</button>
     <button id="tab3-btn" class="tab-button" data-tab="tab3">Resumo</button>
     <button id="tab4-btn" class="tab-button" data-tab="tab4">Convocações</button>
+    <button id="tab5-btn" class="tab-button" data-tab="tab5">Classificação</button>
   </nav>
 
   <main class="container mx-auto p-4">
@@ -337,6 +370,48 @@
         </div>
       </div>
     </section>
+
+    <!-- Aba 5: Classificação -->
+    <section id="tab5" class="tab-content">
+      <!-- Filtros -->
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="time-tab5">Time:</label>
+            <select id="time-tab5" class="w-full p-2 border rounded">
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4">
+          <button id="aplicarFiltros-tab5" class="bg-blue-500 text-white p-2 rounded mr-2 hover:bg-blue-600">Aplicar Filtros</button>
+          <button id="limparFiltros-tab5" class="bg-gray-500 text-white p-2 rounded mr-2 hover:bg-gray-600">Limpar Filtros</button>
+          <button id="pivotMode-tab5" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Transpor</button>
+        </div>
+      </div>
+      <!-- Tabela -->
+      <div class="overflow-x-auto">
+        <table id="jogosTable-tab5" class="w-full bg-white border">
+          <thead id="tableHead-tab5">
+            <tr class="bg-gray-200">
+              <th class="p-2">Posição</th>
+              <th class="p-2">Time</th>
+              <th class="p-2">Pontos</th>
+              <th class="p-2">Jogos</th>
+              <th class="p-2">Vitórias</th>
+              <th class="p-2">Empates</th>
+              <th class="p-2">Derrotas</th>
+              <th class="p-2">Gols Pró</th>
+              <th class="p-2">Gols Contra</th>
+              <th class="p-2">Saldo de Gols</th>
+              <th class="p-2">Aproveitamento</th>
+            </tr>
+          </thead>
+          <tbody id="jogosBody-tab5"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -353,7 +428,7 @@
           });
         }
       }).catch(err => {
-        console.error('Erro ao Fdesregistrar Service Workers:', err);
+        console.error('Erro ao desregistrar Service Workers:', err);
       });
     }
 
@@ -375,5 +450,6 @@
     };
   </script>
   <script src="./script.js" onerror="console.error('Falha ao carregar script.js'); document.getElementById('errorMessage').textContent = 'Erro ao carregar script.js'; document.getElementById('errorMessage').style.display = 'block';"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c2fe682c3a44fc',t:'MTc0NjY0NDc3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
