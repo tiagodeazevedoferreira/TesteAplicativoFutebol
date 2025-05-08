@@ -119,7 +119,8 @@
     </div>
     <div class="flex w-full">
       <button id="tab4-btn" class="tab-button flex-1 text-center" data-tab="tab4" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px; background-color: #e5e7eb;">Convocações</button>
-      <button id="tab5-btn" class="tab-button flex-1 text-center" data-tab="tab5" style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 0 4px 4px 0; background-color: #e5e7eb;">Classificação</button>
+      <button id="tab5-btn" class="tab-button flex-1 text-center" data-tab="tab5" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; background-color: #e5e7eb;">Classificação</button>
+      <button id="tab6-btn" class="tab-button flex-1 text-center" data-tab="tab6" style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 0 4px 4px 0; background-color: #e5e7eb;">Placares</button>
     </div>
   </nav>
 
@@ -413,6 +414,29 @@
             </tr>
           </thead>
           <tbody id="jogosBody-tab5"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Aba 6: Placares -->
+    <section id="tab6" class="tab-content">
+      <!-- Tabela -->
+      <div class="overflow-x-auto">
+        <table id="jogosTable-tab6" class="w-full bg-white border">
+          <thead id="tableHead-tab6">
+            <tr class="bg-gray-200">
+              <th class="p-2">Campeonato</th>
+              <th class="p-2">Mandante</th>
+              <th class="p-2">Visitante</th>
+              <th class="p-2">Data</th>
+              <th class="p-2">Horário</th>
+              <th class="p-2">Ginásio</th>
+              <th class="p-2">Local</th>
+              <th class="p-2">Rodada</th>
+              <th class="p-2">Dia da Semana</th>
+            </tr>
+          </thead>
+          <tbody id="jogosBody-tab6"></tbody>
         </table>
       </div>
     </section>
