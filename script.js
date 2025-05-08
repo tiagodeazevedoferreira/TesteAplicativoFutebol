@@ -326,7 +326,7 @@ function displayData(data, filteredData, tabId) {
     headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
     sortConfig = sortConfigTab2;
   } else if (tabId === 'tab5') {
-    headers = ['Posição', 'Time', 'Pontos', 'Jogos', 'Vitórias', 'Empates', 'Derrotas', 'Gols Pró', 'Gols Contra', 'Saldo de Gols', 'Aproveitamento'];
+    headers = ['#', 'Time', 'Pontos', 'Jogos', 'Vitórias', 'Empates', 'Derrotas', 'Gols Pró', 'Gols Contra', 'Saldo de Gols', 'Aproveitamento'];
     sortConfig = sortConfigTab5;
   }
 
@@ -433,6 +433,7 @@ function pivotTable(data, filteredData, tabId) {
     headers = data[0].slice(0, 16);
   } else if (tabId === 'tab5') {
     headers = data[0].slice(0, 11);
+    headers[0] = '#'; // Sobrescreve o primeiro cabeçalho ("Posição") com "#"
   }
   console.log(`Cabeçalho para Transpor (${tabId}):`, headers);
 
