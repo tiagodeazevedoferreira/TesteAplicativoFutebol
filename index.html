@@ -111,9 +111,9 @@
     </div>
   </div>
 
-  <nav class="tab-navigation">
-    <div class="flex w-full mb-4">
-      <button id="tab1-btn" class="tab-button active-tab flex-1 text-center" data-tab="tab1" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px; background-color: #3b82f6; color: white;">Jogos</button>
+  <nav class="tab-navigation flex flex-col">
+    <div class="flex w-full mb-2">
+      <button id="tab1-btn" class="tab-button active-tab flex-1 text-center" data-tab="tab1" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px; background-color: #e5e7eb;">Jogos</button>
       <button id="tab2-btn" class="tab-button flex-1 text-center" data-tab="tab2" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; background-color: #e5e7eb;">Tabela</button>
       <button id="tab3-btn" class="tab-button flex-1 text-center" data-tab="tab3" style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 0 4px 4px 0; background-color: #e5e7eb;">Resumo</button>
     </div>
@@ -452,6 +452,43 @@
       }
       return false;
     };
+
+    // Script para alternar a classe active-tab e trocar cores
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Remover active-tab de todos os botões
+          tabButtons.forEach(btn => {
+            btn.classList.remove('active-tab');
+            btn.style.backgroundColor = '#e5e7eb'; // Cor padrão
+            btn.style.color = 'black';
+          });
+
+          // Adicionar active-tab ao botão clicado
+          this.classList.add('active-tab');
+          this.style.backgroundColor = '#3b82f6'; // Cor ativa
+          this.style.color = 'white';
+
+          // Esconder todos os conteúdos
+          tabContents.forEach(content => {
+            content.classList.remove('active');
+            content.style.display = 'none';
+          });
+
+          // Mostrar o conteúdo da aba clicada
+          const tabId = this.getAttribute('data-tab');
+          const targetContent = document.getElementById(tabId);
+          targetContent.classList.add('active');
+          targetContent.style.display = 'block';
+        });
+      });
+
+      // Inicializar com o primeiro botão ativo
+      tabButtons[0].click();
+    });
   </script>
   <script src="./script.js" onerror="console.error('Falha ao carregar script.js'); document.getElementById('errorMessage').textContent = 'Erro ao carregar script.js'; document.getElementById('errorMessage').style.display = 'block';"></script>
   <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c2fe682c3a44fc',t:'MTc0NjY0NDc3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
