@@ -161,6 +161,13 @@ th.sort-desc::after {
   font-size: 0.9rem; /* Reduzir para 14.4px (90% do padrão 16px) */
 }
 
+/* Largura das colunas específica para a tabela Classificação */
+#jogosTable-tab5 th,
+#jogosTable-tab5 td {
+  max-width: 150px; /* Reduzir largura máxima das colunas */
+  padding: 6px; /* Reduzir padding para compactar ainda mais */
+}
+
 @media (max-width: 768px) {
   .filters {
     font-size: 0.9rem;
@@ -182,5 +189,11 @@ th.sort-desc::after {
   /* Ajuste para a tabela Classificação em telas pequenas */
   #jogosTable-tab5 {
     font-size: 0.7rem; /* Reduzir para 11.2px em telas pequenas */
+  }
+
+  #jogosTable-tab5 th,
+  #jogosTable-tab5 td {
+    max-width: 120px; /* Reduzir ainda mais em telas pequenas */
+    padding: 4px; /* Manter consistência com outras tabelas */
   }
 }
