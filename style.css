@@ -156,6 +156,11 @@ th.sort-desc::after {
   height: auto;
 }
 
+/* Tamanho de fonte específico para a tabela Classificação */
+#jogosTable-tab5 {
+  font-size: 0.9rem; /* Reduzir para 14.4px (90% do padrão 16px) */
+}
+
 @media (max-width: 768px) {
   .filters {
     font-size: 0.9rem;
@@ -172,5 +177,10 @@ th.sort-desc::after {
 
   #convocacoesChart {
     max-height: 300px; /* Ajustar altura do gráfico em telas pequenas */
+  }
+
+  /* Ajuste para a tabela Classificação em telas pequenas */
+  #jogosTable-tab5 {
+    font-size: 0.7rem; /* Reduzir para 11.2px em telas pequenas */
   }
 }
