@@ -327,7 +327,7 @@ function displayData(data, filteredData, tabId) {
     sortConfig = sortConfigTab2;
   } else if (tabId === 'tab5') {
     //headers = ['#', 'Time', 'Pontos', 'Jogos', 'Vitórias', 'Empates', 'Derrotas', 'GP', 'GC', 'SG', 'Aproveitamento'];
-	headers = ['#', 'Time', 'Pontos', 'Jogos', 'V', 'E', 'E', 'GP', 'GC', 'SG', 'Índice'];
+	headers = ['#', 'Time', 'Pontos', 'Jogos', 'V', 'E', 'D', 'GP', 'GC', 'SG', 'Índice'];
     sortConfig = sortConfigTab5;
   } else if (tabId === 'tab6') {
     headers = ['Campeonato', 'Mandante', 'Visitante', 'Data', 'Horário', 'Ginásio', 'Local', 'Rodada', 'Dia da Semana'];
