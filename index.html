@@ -93,7 +93,7 @@
   </header>
 
   <div id="notifications" class="container mx-auto p-4">
-    <div id="upcomingGames" class="bg-yellow-100 text-yellow-700 p-4 mb-4 rounded hidden animate-pulse">
+    <div id="upcomingGames" class="bg-yellow-500 text-yellow-900 p-4 mb-4 rounded">
       <h2 class="text-lg font-semibold flex items-center"><i class="fas fa-bell mr-2"></i>Próximos Jogos (3 Dias)</h2>
       <ul id="upcomingGamesList" class="list-disc pl-5"></ul>
     </div>
@@ -110,17 +110,19 @@
     </div>
   </div>
 
-  <nav class="tab-navigation md:flex hidden justify-center mb-2">
-    <button id="tab1-btn" class="tab-button active-tab flex-1 text-center" data-tab="tab1"><i class="fas fa-futbol mr-2"></i>Jogos</button>
-    <button id="tab2-btn" class="tab-button flex-1 text-center" data-tab="tab2"><i class="fas fa-table mr-2"></i>Tabela</button>
-    <button id="tab3-btn" class="tab-button flex-1 text-center" data-tab="tab3"><i class="fas fa-chart-line mr-2"></i>Resumo</button>
+  <nav class="container mx-auto p-4">
+    <div class="flex justify-between mb-2">
+      <button id="tab1-btn" class="tab-button flex-1 text-center bg-white p-2 rounded shadow-md hover:bg-gray-200" data-tab="tab1"><i class="fas fa-futbol mr-2"></i>Jogos</button>
+      <button id="tab2-btn" class="tab-button flex-1 text-center bg-white p-2 rounded shadow-md hover:bg-gray-200" data-tab="tab2"><i class="fas fa-table mr-2"></i>Tabela</button>
+      <button id="tab3-btn" class="tab-button flex-1 text-center bg-white p-2 rounded shadow-md hover:bg-gray-200" data-tab="tab3"><i class="fas fa-chart-line mr-2"></i>Resumo</button>
+    </div>
+    <div class="flex justify-between">
+      <button id="tab4-btn" class="tab-button flex-1 text-center bg-white p-2 rounded shadow-md hover:bg-gray-200" data-tab="tab4"><i class="fas fa-users mr-2"></i>Convocações</button>
+      <button id="tab5-btn" class="tab-button flex-1 text-center bg-white p-2 rounded shadow-md hover:bg-gray-200" data-tab="tab5"><i class="fas fa-trophy mr-2"></i>Classificação</button>
+      <button id="tab6-btn" class="tab-button flex-1 text-center bg-white p-2 rounded shadow-md hover:bg-gray-200" data-tab="tab6"><i class="fas fa-scoreboard mr-2"></i>Placares</button>
+    </div>
   </nav>
-  <nav class="tab-navigation md:flex hidden justify-center">
-    <button id="tab4-btn" class="tab-button flex-1 text-center" data-tab="tab4"><i class="fas fa-users mr-2"></i>Convocações</button>
-    <button id="tab5-btn" class="tab-button flex-1 text-center" data-tab="tab5"><i class="fas fa-trophy mr-2"></i>Classificação</button>
-    <button id="tab6-btn" class="tab-button flex-1 text-center" data-tab="tab6"><i class="fas fa-scoreboard mr-2"></i>Placares</button>
-  </nav>
-  <select class="md:hidden w-full p-2 border rounded" onchange="switchTab(this.value)">
+  <select class="md:hidden w-full p-2 border rounded container mx-auto mt-2" onchange="switchTab(this.value)">
     <option value="tab1">Jogos</option>
     <option value="tab2">Tabela</option>
     <option value="tab3">Resumo</option>
