@@ -42,7 +42,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estatísticas de Futsal</title>
+  <title>Gerenciador de Jogos</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -50,15 +50,19 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-100 font-sans">
-  <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Estatísticas de Futsal</h1>
-    <nav class="flex space-x-4">
-      <button id="tab1-btn" class="tab-button active-tab px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab1')">Jogos</button>
-      <button id="tab2-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab2')">Tabela</button>
-      <button id="tab3-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab3')">Resumo</button>
-      <button id="tab4-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab4')">Convocações</button>
-      <button id="tab5-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab5')">Classificação</button>
-      <button id="tab6-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab6')">Placar</button>
+  <header class="bg-blue-600 text-white p-4 flex flex-col justify-between items-center">
+    <h1 class="text-xl font-bold mb-2">Gerenciador de Jogos</h1>
+    <nav class="w-full">
+      <div class="flex justify-around mb-2">
+        <button id="tab1-btn" class="tab-button active-tab px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab1')">Jogos</button>
+        <button id="tab2-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab2')">Tabela</button>
+        <button id="tab3-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab3')">Resumo</button>
+      </div>
+      <div class="flex justify-around">
+        <button id="tab4-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab4')">Convocações</button>
+        <button id="tab5-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab5')">Classificação</button>
+        <button id="tab6-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab6')">Placar</button>
+      </div>
     </nav>
   </header>
 
@@ -211,7 +215,7 @@
           <p id="bigNumberVitorias-tab3" class="text-2xl font-bold">0</p>
         </div>
         <div class="bg-white p-4 rounded shadow">
-          <h3 class="text-lg font-semibold">Empates</h3>
+          <h3 class="text-lg font-medium text-gray-700">Empates</h3>
           <p id="bigNumberEmpates-tab3" class="text-2xl font-bold">0</p>
         </div>
         <div class="bg-white p-4 rounded shadow">
