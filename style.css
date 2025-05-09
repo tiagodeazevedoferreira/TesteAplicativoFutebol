@@ -1,42 +1,44 @@
 body {
   font-family: 'Roboto', sans-serif;
-  background-color: #f9f9f9 !important; /* Sobrescrever Tailwind bg-gray-100 */
+  background-color: #F5F5F5 !important;
 }
 
 .header {
-  background-color: #1e40af;
+  background-color: #1B263B;
   color: white;
   text-align: center;
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
 .tab-navigation {
   display: flex;
   justify-content: center;
-  background-color: #f2f2f2;
+  background-color: #F5F5F5;
   padding: 0.5rem;
 }
 
 .tab-button {
-  background-color: #3b82f6;
-  color: white;
-  padding: 0.5rem 1rem;
+  background-color: #F5F5F5;
+  color: #333333;
+  padding: 0.75rem 1.5rem;
   border: none;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
 .tab-button:hover {
-  background-color: #2563eb;
+  background-color: #E5E7EB;
 }
 
 .tab-button.active-tab {
-  background-color: #1d4ed8;
+  background-color: #1B263B;
+  color: white;
+  border-bottom: 3px solid #F48C06;
 }
 
 .tab-content {
   display: none;
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
 .tab-content.active {
@@ -45,52 +47,56 @@ body {
 
 .footer {
   text-align: center;
-  background-color: #1e40af;
+  background-color: #1B263B;
   color: white;
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
-/* Estilo da tabela */
 table {
   border-collapse: collapse;
   width: 100%;
-  min-width: 800px; /* Forçar rolagem horizontal em telas pequenas */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra na tabela */
+  min-width: 800px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 th, td {
   text-align: left;
-  padding: 8px;
-  border: 1px solid #e2e8f0; /* Borda mais suave */
+  padding: 12px;
+  border: 1px solid #6B7280;
 }
 
 tr:nth-child(even) {
-  background-color: #e6f0ea; /* Tom claro de verde (Portuguesa) */
+  background-color: #E5E7EB;
+}
+
+tr:hover {
+  background-color: #F1F1F1;
 }
 
 th {
-  white-space: nowrap; /* Evitar quebra de texto nos cabeçalhos */
-  background-color: #f5e6e8; /* Tom claro de vermelho (Portuguesa) */
+  white-space: nowrap;
+  background-color: #1B263B;
+  color: white;
 }
 
 td {
-  max-width: 200px; /* Limitar largura das células no modo PIVOT */
+  max-width: 200px;
 }
 
-/* Destaque visual para linhas */
 .victory-row {
-  background-color: #d4edda !important; /* Verde claro para vitórias */
+  background-color: #D1FAE5 !important;
 }
 
 .defeat-row {
-  background-color: #e2e8f0 !important; /* Cinza claro para derrotas */
+  background-color: #E2E8F0 !important;
 }
 
 .draw-row {
-  background-color: #fff3cd !important; /* Amarelo claro para empates */
+  background-color: #FEF3C7 !important;
 }
 
-/* Estilo para ordenação */
 th.sortable {
   cursor: pointer;
   position: relative;
@@ -110,62 +116,69 @@ th.sort-desc::after {
   font-size: 0.8rem;
 }
 
-/* Sombras e bordas para Big Numbers */
 .bg-white {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
   border-radius: 8px !important;
 }
 
-/* Sombras e bordas para botões */
-.bg-blue-500, .bg-gray-500, .bg-green-500 {
+.bg-orange-500 {
+  background-color: #F48C06 !important;
+}
+
+.bg-orange-500:hover {
+  background-color: #E07B00 !important;
+}
+
+.bg-blue-500, .bg-gray-500 {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
   border-radius: 6px !important;
   transition: transform 0.1s ease;
 }
 
-.bg-blue-500:hover, .bg-gray-500:hover, .bg-green-500:hover {
+.bg-blue-500:hover, .bg-gray-500:hover {
   transform: translateY(-1px);
 }
 
-/* Mensagem de erro */
 .bg-red-100 {
-  background-color: #f5e6e8 !important; /* Tom claro de vermelho */
+  background-color: #FEE2E2 !important;
 }
 
 .text-red-700 {
-  color: #d91a2a !important; /* Vermelho da Portuguesa */
+  color: #DC2626 !important;
 }
 
-/* Estilo para notificações */
 .bg-yellow-100 {
-  background-color: #fef9e7 !important; /* Amarelo claro para notificações */
+  background-color: #FEF9E7 !important;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
 }
 
 .text-yellow-700 {
-  color: #d97706 !important; /* Amarelo escuro para o texto */
+  color: #D97706 !important;
 }
 
-/* Estilo para a seção de informações do jogador */
 .player-info img {
   object-fit: cover;
 }
 
-/* Estilo para o gráfico */
 #convocacoesChart {
   max-width: 100%;
   height: auto;
 }
 
-/* Tamanho de fonte específico para a tabela Classificação */
 #jogosTable-tab5 {
-  font-size: 0.8rem; /* Reduzir para 12.8px (80% do padrão 16px) */
+  font-size: 0.8rem;
 }
 
-/* Largura das colunas específico para a tabela Classificação */
 #jogosTable-tab5 th,
 #jogosTable-tab5 td {
-  max-width: 120px; /* Reduzir largura máxima das colunas */
-  padding: 4px; /* Reduzir padding para compactar ainda mais */
+  max-width: 120px;
+  padding: 4px;
 }
 
 @media (max-width: 768px) {
@@ -173,27 +186,31 @@ th.sort-desc::after {
     font-size: 0.9rem;
   }
   
+  .filters .grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
   table {
     font-size: 0.8rem;
   }
   
   th, td {
-    padding: 4px;
-    max-width: 150px; /* Reduzir largura das células no PIVOT em telas pequenas */
+    padding: 6px;
+    max-width: 150px;
   }
 
   #convocacoesChart {
-    max-height: 300px; /* Ajustar altura do gráfico em telas pequenas */
+    max-height: 300px;
   }
 
-  /* Ajuste para a tabela Classificação em telas pequenas */
   #jogosTable-tab5 {
-    font-size: 0.6rem; /* Reduzir para 9.6px em telas pequenas */
+    font-size: 0.6rem;
   }
 
   #jogosTable-tab5 th,
   #jogosTable-tab5 td {
-    max-width: 100px; /* Reduzir ainda mais em telas pequenas */
-    padding: 3px; /* Reduzir padding ainda mais em telas pequenas */
+    max-width: 100px;
+    padding: 3px;
   }
 }
