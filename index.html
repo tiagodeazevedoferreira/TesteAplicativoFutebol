@@ -52,16 +52,16 @@
 <body class="bg-gray-100 font-sans">
   <header class="bg-blue-600 text-white p-4 flex flex-col justify-between items-center">
     <h1 class="text-xl font-bold mb-2">Gerenciador de Jogos</h1>
-    <nav class="w-full">
-      <div class="flex justify-around mb-2">
-        <button id="tab1-btn" class="tab-button active-tab px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab1')">Jogos</button>
-        <button id="tab2-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab2')">Tabela</button>
-        <button id="tab3-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab3')">Resumo</button>
+    <nav class="flex flex-col w-full">
+      <div class="flex w-full mb-2">
+        <button id="tab1-btn" class="tab-button active-tab flex-1 text-center" data-tab="tab1" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">Jogos</button>
+        <button id="tab2-btn" class="tab-button flex-1 text-center" data-tab="tab2" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none;">Tabela</button>
+        <button id="tab3-btn" class="tab-button flex-1 text-center" data-tab="tab3" style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 0 4px 4px 0;">Resumo</button>
       </div>
-      <div class="flex justify-around">
-        <button id="tab4-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab4')">Convocações</button>
-        <button id="tab5-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab5')">Classificação</button>
-        <button id="tab6-btn" class="tab-button px-3 py-2 rounded hover:bg-blue-700" onclick="showTab('tab6')">Placar</button>
+      <div class="flex w-full">
+        <button id="tab4-btn" class="tab-button flex-1 text-center" data-tab="tab4" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">Convocações</button>
+        <button id="tab5-btn" class="tab-button flex-1 text-center" data-tab="tab5" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none;">Classificação</button>
+        <button id="tab6-btn" class="tab-button flex-1 text-center" data-tab="tab6" style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 0 4px 4px 0;">Placar</button>
       </div>
     </nav>
   </header>
@@ -293,5 +293,44 @@
       </table>
     </div>
   </div>
+
+  <script>
+    // Script para alternar a classe active-tab e trocar cores
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Remover active-tab de todos os botões
+          tabButtons.forEach(btn => {
+            btn.classList.remove('active-tab');
+            btn.style.backgroundColor = '#e5e7eb'; // Cor padrão
+            btn.style.color = 'black';
+          });
+
+          // Adicionar active-tab ao botão clicado
+          this.classList.add('active-tab');
+          this.style.backgroundColor = '#3b82f6'; // Cor ativa
+          this.style.color = 'white';
+
+          // Esconder todos os conteúdos
+          tabContents.forEach(content => {
+            content.classList.remove('active');
+            content.style.display = 'none';
+          });
+
+          // Mostrar o conteúdo da aba clicada
+          const tabId = this.getAttribute('data-tab');
+          const targetContent = document.getElementById(tabId);
+          targetContent.classList.add('active');
+          targetContent.style.display = 'block';
+        });
+      });
+
+      // Inicializar com o primeiro botão ativo
+      tabButtons[0].click();
+    });
+  </script>
 </body>
 </html>
