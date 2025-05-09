@@ -48,6 +48,29 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <script src="script.js" defer></script>
   <link rel="stylesheet" href="style.css">
+  <style>
+    @media (max-width: 640px) {
+      details[open] > summary + * {
+        animation: sweep .5s ease-in-out;
+      }
+      @keyframes sweep {
+        0%    {opacity: 0; transform: translateY(-10px);}
+        100%  {opacity: 1; transform: translateY(0);}
+      }
+      details > summary {
+        list-style: none;
+      }
+      details > summary::after {
+        content: "▼";
+        float: right;
+        font-size: 1.5rem;
+        transition: transform 0.3s ease;
+      }
+      details[open] > summary::after {
+        transform: rotate(180deg);
+      }
+    }
+  </style>
 </head>
 <body class="bg-gray-100 font-sans">
   <header class="bg-blue-600 text-white p-4 flex flex-col justify-between items-center">
@@ -76,27 +99,36 @@
   <div class="container mx-auto p-4">
     <div id="tab1" class="tab-content active">
       <!-- Filtros e tabela para Jogos -->
-      <div class="mb-4">
-        <label for="campeonato-tab1" class="block text-sm font-medium text-gray-700">Campeonato:</label>
-        <select id="campeonato-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4 flex space-x-4">
-        <div>
-          <label for="dataInicio-tab1" class="block text-sm font-medium text-gray-700">Data Início:</label>
-          <input type="date" id="dataInicio-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Datas</summary>
+        <div class="mb-4 flex space-x-4">
+          <div>
+            <label for="dataInicio-tab1" class="block text-sm font-medium text-gray-700">Data Início:</label>
+            <input type="date" id="dataInicio-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+          </div>
+          <div>
+            <label for="dataFim-tab1" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+            <input type="date" id="dataFim-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+          </div>
         </div>
-        <div>
-          <label for="dataFim-tab1" class="block text-sm font-medium text-gray-700">Data Fim:</label>
-          <input type="date" id="dataFim-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+      </details>
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Outros Filtros</summary>
+        <div class="mb-4">
+          <label for="campeonato-tab1" class="block text-sm font-medium text-gray-700">Campeonato:</label>
+          <select id="campeonato-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">Todos</option>
+          </select>
         </div>
-      </div>
-      <div class="flex space-x-4 mb-4">
-        <button id="aplicarFiltros-tab1" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
-        <button id="limparFiltros-tab1" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
-        <button id="pivotMode-tab1" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
-      </div>
+      </details>
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Ações</summary>
+        <div class="flex space-x-4 mb-4">
+          <button id="aplicarFiltros-tab1" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+          <button id="limparFiltros-tab1" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+          <button id="pivotMode-tab1" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
+        </div>
+      </details>
       <div class="overflow-x-auto">
         <table id="jogosTable-tab1" class="min-w-full bg-white border border-gray-300">
           <thead id="tableHead-tab1"></thead>
@@ -107,86 +139,95 @@
 
     <div id="tab2" class="tab-content hidden">
       <!-- Filtros e tabela para Tabela -->
-      <div class="mb-4">
-        <label for="campeonato-tab2" class="block text-sm font-medium text-gray-700">Campeonato:</label>
-        <select id="campeonato-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4 flex space-x-4">
-        <div>
-          <label for="dataInicio-tab2" class="block text-sm font-medium text-gray-700">Data Início:</label>
-          <input type="date" id="dataInicio-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Datas</summary>
+        <div class="mb-4 flex space-x-4">
+          <div>
+            <label for="dataInicio-tab2" class="block text-sm font-medium text-gray-700">Data Início:</label>
+            <input type="date" id="dataInicio-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+          </div>
+          <div>
+            <label for="dataFim-tab2" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+            <input type="date" id="dataFim-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+          </div>
         </div>
-        <div>
-          <label for="dataFim-tab2" class="block text-sm font-medium text-gray-700">Data Fim:</label>
-          <input type="date" id="dataFim-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-        </div>
-      </div>
-      <div class="mb-4">
-        <label for="time-tab2" class="block text-sm font-medium text-gray-700">Time:</label>
-        <select id="time-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label for="local-tab2" class="block text-sm font-medium text-gray-700">Local:</label>
-        <select id="local-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label for="rodada-tab2" class="block text-sm font-medium text-gray-700">Rodada:</label>
-        <select id="rodada-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label for="diaSemana-tab2" class="block text-sm font-medium text-gray-700">Dia da Semana:</label>
-        <select id="diaSemana-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label for="gol-tab2" class="block text-sm font-medium text-gray-700">Gol:</label>
-        <select id="gol-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label for="assistencias-tab2" class="block text-sm font-medium text-gray-700">Assistências:</label>
-        <select id="assistencias-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4 flex space-x-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Vitória:</label>
-          <select id="vitoria-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+      </details>
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Outros Filtros</summary>
+        <div class="mb-4">
+          <label for="campeonato-tab2" class="block text-sm font-medium text-gray-700">Campeonato:</label>
+          <select id="campeonato-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
             <option value="">Todos</option>
-            <option value="1">Sim</option>
           </select>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Empate:</label>
-          <select id="empate-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+        <div class="mb-4">
+          <label for="time-tab2" class="block text-sm font-medium text-gray-700">Time:</label>
+          <select id="time-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
             <option value="">Todos</option>
-            <option value="1">Sim</option>
           </select>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Derrota:</label>
-          <select id="derrota-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+        <div class="mb-4">
+          <label for="local-tab2" class="block text-sm font-medium text-gray-700">Local:</label>
+          <select id="local-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
             <option value="">Todos</option>
-            <option value="1">Sim</option>
           </select>
         </div>
-      </div>
-      <div class="flex space-x-4 mb-4">
-        <button id="aplicarFiltros-tab2" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
-        <button id="limparFiltros-tab2" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
-        <button id="pivotMode-tab2" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
-      </div>
+        <div class="mb-4">
+          <label for="rodada-tab2" class="block text-sm font-medium text-gray-700">Rodada:</label>
+          <select id="rodada-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label for="diaSemana-tab2" class="block text-sm font-medium text-gray-700">Dia da Semana:</label>
+          <select id="diaSemana-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label for="gol-tab2" class="block text-sm font-medium text-gray-700">Gol:</label>
+          <select id="gol-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label for="assistencias-tab2" class="block text-sm font-medium text-gray-700">Assistências:</label>
+          <select id="assistencias-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="mb-4 flex space-x-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Vitória:</label>
+            <select id="vitoria-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+              <option value="">Todos</option>
+              <option value="1">Sim</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Empate:</label>
+            <select id="empate-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+              <option value="">Todos</option>
+              <option value="1">Sim</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Derrota:</label>
+            <select id="derrota-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+              <option value="">Todos</option>
+              <option value="1">Sim</option>
+            </select>
+          </div>
+        </div>
+      </details>
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Ações</summary>
+        <div class="flex space-x-4 mb-4">
+          <button id="aplicarFiltros-tab2" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+          <button id="limparFiltros-tab2" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+          <button id="pivotMode-tab2" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
+        </div>
+      </details>
       <div class="overflow-x-auto">
         <table id="jogosTable-tab2" class="min-w-full bg-white border border-gray-300">
           <thead id="tableHead-tab2"></thead>
@@ -235,54 +276,69 @@
 
     <div id="tab4" class="tab-content hidden">
       <!-- Filtros e gráfico para Convocações -->
-      <div class="mb-4">
-        <label for="jogador-tab4" class="block text-sm font-medium text-gray-700">Jogador:</label>
-        <select id="jogador-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label for="adversario-tab4" class="block text-sm font-medium text-gray-700">Adversário:</label>
-        <select id="adversario-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label for="campeonato-tab4" class="block text-sm font-medium text-gray-700">Campeonato:</label>
-        <select id="campeonato-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="mb-4 flex space-x-4">
-        <div>
-          <label for="dataInicio-tab4" class="block text-sm font-medium text-gray-700">Data Início:</label>
-          <input type="date" id="dataInicio-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Datas</summary>
+        <div class="mb-4 flex space-x-4">
+          <div>
+            <label for="dataInicio-tab4" class="block text-sm font-medium text-gray-700">Data Início:</label>
+            <input type="date" id="dataInicio-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+          </div>
+          <div>
+            <label for="dataFim-tab4" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+            <input type="date" id="dataFim-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+          </div>
         </div>
-        <div>
-          <label for="dataFim-tab4" class="block text-sm font-medium text-gray-700">Data Fim:</label>
-          <input type="date" id="dataFim-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+      </details>
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Outros Filtros</summary>
+        <div class="mb-4">
+          <label for="jogador-tab4" class="block text-sm font-medium text-gray-700">Jogador:</label>
+          <select id="jogador-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">Todos</option>
+          </select>
         </div>
-      </div>
-      <div class="flex space-x-4 mb-4">
-        <button id="aplicarFiltros-tab4" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
-        <button id="limparFiltros-tab4" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
-      </div>
+        <div class="mb-4">
+          <label for="adversario-tab4" class="block text-sm font-medium text-gray-700">Adversário:</label>
+          <select id="adversario-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label for="campeonato-tab4" class="block text-sm font-medium text-gray-700">Campeonato:</label>
+          <select id="campeonato-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </details>
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Ações</summary>
+        <div class="flex space-x-4 mb-4">
+          <button id="aplicarFiltros-tab4" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+          <button id="limparFiltros-tab4" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+        </div>
+      </details>
       <canvas id="convocacoesChart" class="w-full"></canvas>
     </div>
 
     <div id="tab5" class="tab-content hidden">
       <!-- Filtros e tabela para Classificação -->
-      <div class="mb-4">
-        <label for="time-tab5" class="block text-sm font-medium text-gray-700">Time:</label>
-        <select id="time-tab5" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="flex space-x-4 mb-4">
-        <button id="aplicarFiltros-tab5" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
-        <button id="limparFiltros-tab5" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
-        <button id="pivotMode-tab5" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
-      </div>
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Outros Filtros</summary>
+        <div class="mb-4">
+          <label for="time-tab5" class="block text-sm font-medium text-gray-700">Time:</label>
+          <select id="time-tab5" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </details>
+      <details class="mb-4" open>
+        <summary class="bg-gray-200 p-2 rounded cursor-pointer font-semibold">Ações</summary>
+        <div class="flex space-x-4 mb-4">
+          <button id="aplicarFiltros-tab5" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+          <button id="limparFiltros-tab5" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+          <button id="pivotMode-tab5" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
+        </div>
+      </details>
       <div class="overflow-x-auto">
         <table id="jogosTable-tab5" class="min-w-full bg-white border border-gray-300">
           <thead id="tableHead-tab5"></thead>
@@ -292,7 +348,7 @@
     </div>
 
     <div id="tab6" class="tab-content hidden">
-      <!-- Filtros e tabela para Placar -->
+      <!-- Tabela para Placar -->
       <div class="overflow-x-auto">
         <table id="jogosTable-tab6" class="min-w-full bg-white border border-gray-300">
           <thead id="tableHead-tab6"></thead>
