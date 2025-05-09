@@ -54,17 +54,48 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+  </script>
 </head>
 <body class="bg-gray-100 font-sans">
-  <header class="header">
-    <h1>Jogos do JL</h1>
+  <header class="header bg-blue-700 text-white text-center py-4">
+    <h1 class="text-2xl font-bold">Jogos do JL</h1>
   </header>
 
   <div id="notifications" class="container mx-auto p-4">
-    <div id="upcomingGames" class="bg-yellow-100 text-yellow-700 p-4 mb-4 rounded" style="display: none;">
-      <h2 class="text-lg font-semibold"><i class="fas fa-bell mr-2"></i>Próximos Jogos (3 Dias)</h2>
+    <div id="upcomingGames" class="bg-yellow-100 text-yellow-700 p-4 mb-4 rounded hidden animate-pulse">
+      <h2 class="text-lg font-semibold flex items-center"><i class="fas fa-bell mr-2"></i>Próximos Jogos (3 Dias)</h2>
       <ul id="upcomingGamesList" class="list-disc pl-5"></ul>
     </div>
   </div>
@@ -80,26 +111,24 @@
     </div>
   </div>
 
-  <nav class="tab-navigation flex-col">
-    <div class="md:flex hidden w-full mb-2">
-      <button id="tab1-btn" class="tab-button active-tab flex-1 text-center" data-tab="tab1"><i class="fas fa-futbol mr-2"></i>Jogos</button>
-      <button id="tab2-btn" class="tab-button flex-1 text-center" data-tab="tab2"><i class="fas fa-table mr-2"></i>Tabela</button>
-      <button id="tab3-btn" class="tab-button flex-1 text-center" data-tab="tab3"><i class="fas fa-chart-line mr-2"></i>Resumo</button>
-    </div>
-    <div class="md:flex hidden w-full">
-      <button id="tab4-btn" class="tab-button flex-1 text-center" data-tab="tab4"><i class="fas fa-users mr-2"></i>Convocações</button>
-      <button id="tab5-btn" class="tab-button flex-1 text-center" data-tab="tab5"><i class="fas fa-trophy mr-2"></i>Classificação</button>
-      <button id="tab6-btn" class="tab-button flex-1 text-center" data-tab="tab6"><i class="fas fa-scoreboard mr-2"></i>Placares</button>
-    </div>
-    <select class="md:hidden w-full p-2 border rounded" onchange="switchTab(this.value)">
-      <option value="tab1">Jogos</option>
-      <option value="tab2">Tabela</option>
-      <option value="tab3">Resumo</option>
-      <option value="tab4">Convocações</option>
-      <option value="tab5">Classificação</option>
-      <option value="tab6">Placares</option>
-    </select>
+  <nav class="tab-navigation md:flex hidden justify-center mb-2">
+    <button id="tab1-btn" class="tab-button active-tab flex-1 text-center" data-tab="tab1"><i class="fas fa-futbol mr-2"></i>Jogos</button>
+    <button id="tab2-btn" class="tab-button flex-1 text-center" data-tab="tab2"><i class="fas fa-table mr-2"></i>Tabela</button>
+    <button id="tab3-btn" class="tab-button flex-1 text-center" data-tab="tab3"><i class="fas fa-chart-line mr-2"></i>Resumo</button>
   </nav>
+  <nav class="tab-navigation md:flex hidden justify-center">
+    <button id="tab4-btn" class="tab-button flex-1 text-center" data-tab="tab4"><i class="fas fa-users mr-2"></i>Convocações</button>
+    <button id="tab5-btn" class="tab-button flex-1 text-center" data-tab="tab5"><i class="fas fa-trophy mr-2"></i>Classificação</button>
+    <button id="tab6-btn" class="tab-button flex-1 text-center" data-tab="tab6"><i class="fas fa-scoreboard mr-2"></i>Placares</button>
+  </nav>
+  <select class="md:hidden w-full p-2 border rounded" onchange="switchTab(this.value)">
+    <option value="tab1">Jogos</option>
+    <option value="tab2">Tabela</option>
+    <option value="tab3">Resumo</option>
+    <option value="tab4">Convocações</option>
+    <option value="tab5">Classificação</option>
+    <option value="tab6">Placares</option>
+  </select>
 
   <main class="container mx-auto p-6">
     <div id="errorMessage" style="display: none;" class="bg-red-100 text-red-700 p-4 mb-4 rounded">
@@ -120,11 +149,11 @@
             </div>
             <div>
               <label for="dataInicio-tab1">Data Início:</label>
-              <input type="date" id="dataInicio-tab1" class="w-full p-2 border rounded" placeholder="Selecione a data inicial">
+              <input type="date" id="dataInicio-tab1" class="w-full p-2 border rounded">
             </div>
             <div>
               <label for="dataFim-tab1">Data Fim:</label>
-              <input type="date" id="dataFim-tab1" class="w-full p-2 border rounded" placeholder="Selecione a data final">
+              <input type="date" id="dataFim-tab1" class="w-full p-2 border rounded">
             </div>
           </div>
         </details>
@@ -174,11 +203,11 @@
             </div>
             <div>
               <label for="dataInicio-tab2">Data Início:</label>
-              <input type="date" id="dataInicio-tab2" class="w-full p-2 border rounded" placeholder="Selecione a data inicial">
+              <input type="date" id="dataInicio-tab2" class="w-full p-2 border rounded">
             </div>
             <div>
               <label for="dataFim-tab2">Data Fim:</label>
-              <input type="date" id="dataFim-tab2" class="w-full p-2 border rounded" placeholder="Selecione a data final">
+              <input type="date" id="dataFim-tab2" class="w-full p-2 border rounded">
             </div>
             <div>
               <label for="time-tab2">Time:</label>
@@ -344,11 +373,11 @@
             </div>
             <div>
               <label for="dataInicio-tab4">Data Início:</label>
-              <input type="date" id="dataInicio-tab4" class="w-full p-2 border rounded" placeholder="Selecione a data inicial">
+              <input type="date" id="dataInicio-tab4" class="w-full p-2 border rounded">
             </div>
             <div>
               <label for="dataFim-tab4">Data Fim:</label>
-              <input type="date" id="dataFim-tab4" class="w-full p-2 border rounded" placeholder="Selecione a data final">
+              <input type="date" id="dataFim-tab4" class="w-full p-2 border rounded">
             </div>
           </div>
         </details>
@@ -417,36 +446,6 @@
     </section>
 
     <section id="tab6" class="tab-content">
-      <div class="filters mb-4">
-        <h2 class="text-lg font-semibold">Filtros</h2>
-        <details class="md:open">
-          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-            <div>
-              <label for="dataInicio-tab6">Data Início:</label>
-              <input type="date" id="dataInicio-tab6" class="w-full p-2 border rounded" placeholder="Selecione a data inicial">
-            </div>
-            <div>
-              <label for="dataFim-tab6">Data Fim:</label>
-              <input type="date" id="dataFim-tab6" class="w-full p-2 border rounded" placeholder="Selecione a data final">
-            </div>
-            <div>
-              <label for="time-tab6">Time:</label>
-              <select id="time-tab6" class="w-full p-2 border rounded">
-                <option value="">Todos</option>
-              </select>
-            </div>
-          </div>
-        </details>
-        <div class="mt-4 flex gap-2">
-          <button id="aplicarFiltros-tab6" class="bg-orange-500 text-white p-2 rounded hover:bg-orange-600 flex items-center gap-2">
-            <i class="fas fa-filter"></i>Aplicar Filtros
-          </button>
-          <button id="limparFiltros-tab6" class="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 flex items-center gap-2">
-            <i class="fas fa-trash"></i>Limpar Filtros
-          </button>
-        </div>
-      </div>
       <div class="overflow-x-auto">
         <table id="jogosTable-tab6" class="w-full bg-white border">
           <thead id="tableHead-tab6">
@@ -468,11 +467,12 @@
     </section>
   </main>
 
-  <footer class="footer">
+  <footer class="footer bg-blue-700 text-white py-4">
     <p>© 2025 Jogos do JL</p>
   </footer>
 
   <script>
+    // Desregistrar Service Workers antigos
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
         for (let registration of registrations) {
@@ -485,6 +485,7 @@
       });
     }
 
+    // Capturar erros de script
     window.onerror = function(message, source, lineno, colno, error) {
       console.error('Erro de script detectado:', {
         message: message,
@@ -495,7 +496,7 @@
       });
       const errorDiv = document.getElementById('errorMessage');
       if (errorDiv) {
-        errorDiv.textContent = `Ops! Algo deu errado. Tente recarregar a página ou verifique sua conexão.`;
+        errorDiv.textContent = `Erro ao carregar a aplicação: ${message}. Verifique o console para detalhes.`;
         errorDiv.style.display = 'block';
       }
       return false;
@@ -504,8 +505,6 @@
     function switchTab(tabId) {
       document.querySelectorAll('.tab-button').forEach(btn => {
         btn.classList.remove('active-tab');
-        btn.style.backgroundColor = '#F5F5F5';
-        btn.style.color = '#333333';
       });
       document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
@@ -514,45 +513,20 @@
       const targetContent = document.getElementById(tabId);
       targetContent.classList.add('active');
       targetContent.style.display = 'block';
-      const targetButton = document.querySelector(`[data-tab="${tabId}"]`);
-      if (targetButton) {
-        targetButton.classList.add('active-tab');
-        targetButton.style.backgroundColor = '#1B263B';
-        targetButton.style.color = 'white';
-      }
+      document.querySelector(`[data-tab="${tabId}"]`).classList.add('active-tab');
     }
 
     document.addEventListener('DOMContentLoaded', function() {
       const tabButtons = document.querySelectorAll('.tab-button');
-      const tabContents = document.querySelectorAll('.tab-content');
-
       tabButtons.forEach(button => {
         button.addEventListener('click', function() {
-          tabButtons.forEach(btn => {
-            btn.classList.remove('active-tab');
-            btn.style.backgroundColor = '#F5F5F5';
-            btn.style.color = '#333333';
-          });
-
-          this.classList.add('active-tab');
-          this.style.backgroundColor = '#1B263B';
-          this.style.color = 'white';
-
-          tabContents.forEach(content => {
-            content.classList.remove('active');
-            content.style.display = 'none';
-          });
-
-          const tabId = this.getAttribute('data-tab');
-          const targetContent = document.getElementById(tabId);
-          targetContent.classList.add('active');
-          targetContent.style.display = 'block';
+          switchTab(this.getAttribute('data-tab'));
         });
       });
-
       tabButtons[0].click();
     });
   </script>
   <script src="./script.js" onerror="console.error('Falha ao carregar script.js'); document.getElementById('errorMessage').textContent = 'Erro ao carregar script.js'; document.getElementById('errorMessage').style.display = 'block';"></script>
+  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d10ff43917bcb0',t:'MTc0Njc5MjI5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
