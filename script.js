@@ -326,11 +326,12 @@ function displayData(data, filteredData, tabId) {
     headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
     sortConfig = sortConfigTab2;
   } else if (tabId === 'tab5') {
-    headers = ['#', 'Time', 'Pontos', 'Jogos', 'Vitórias', 'Empates', 'Derrotas', 'Gols Pró', 'Gols Contra', 'Saldo de Gols', 'Aproveitamento'];
+    //headers = ['#', 'Time', 'Pontos', 'Jogos', 'Vitórias', 'Empates', 'Derrotas', 'GP', 'GC', 'SG', 'Aproveitamento'];
+	headers = ['#', 'Time', 'Pontos', 'Jogos', 'V', 'E', 'E', 'GP', 'GC', 'SG', 'Índice'];
     sortConfig = sortConfigTab5;
   } else if (tabId === 'tab6') {
     headers = ['Campeonato', 'Mandante', 'Visitante', 'Data', 'Horário', 'Ginásio', 'Local', 'Rodada', 'Dia da Semana'];
-    sortConfig = sortConfigTab1; // Reutilizando sortConfigTab1, já que é uma aba de visualização simples
+    sortConfig = sortConfigTab1;
   }
 
   headers.forEach((text, index) => {
