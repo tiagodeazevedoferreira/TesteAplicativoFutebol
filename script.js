@@ -328,6 +328,9 @@ function displayData(data, filteredData, tabId) {
   } else if (tabId === 'tab5') {
     headers = ['#', 'Time', 'Pontos', 'Jogos', 'Vitórias', 'Empates', 'Derrotas', 'Gols Pró', 'Gols Contra', 'Saldo de Gols', 'Aproveitamento'];
     sortConfig = sortConfigTab5;
+  } else if (tabId === 'tab6') {
+    headers = ['Campeonato', 'Mandante', 'Visitante', 'Data', 'Horário', 'Ginásio', 'Local', 'Rodada', 'Dia da Semana'];
+    sortConfig = sortConfigTab1; // Reutilizando sortConfigTab1, já que é uma aba de visualização simples
   }
 
   headers.forEach((text, index) => {
@@ -346,6 +349,8 @@ function displayData(data, filteredData, tabId) {
         sortConfigTab2 = { column: index, direction: newDirection };
       } else if (tabId === 'tab5') {
         sortConfigTab5 = { column: index, direction: newDirection };
+      } else if (tabId === 'tab6') {
+        sortConfigTab1 = { column: index, direction: newDirection };
       }
       const sortedData = sortData(filteredData, index, newDirection);
       displayData(data, sortedData, tabId);
@@ -390,12 +395,14 @@ function displayData(data, filteredData, tabId) {
       columnIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     } else if (tabId === 'tab5') {
       columnIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    } else if (tabId === 'tab6') {
+      columnIndices = [0, 4, 7, 1, 2, 3, 8, 9, 10];
     }
 
     columnIndices.forEach(index => {
       const td = document.createElement('td');
       const cell = row[index];
-      if (index === 2 && (tabId === 'tab1' || tabId === 'tab2')) {
+      if (index === 2 && (tabId === 'tab1' || tabId === 'tab2' || tabId === 'tab6')) {
         td.textContent = formatTime(cell);
       } else if (tabId === 'tab2' && (index === 13 || index === 14 || index === 15)) {
         td.textContent = cell === '1' ? 'Sim' : '';
@@ -434,6 +441,8 @@ function pivotTable(data, filteredData, tabId) {
   } else if (tabId === 'tab5') {
     headers = data[0].slice(0, 11);
     headers[0] = '#';
+  } else if (tabId === 'tab6') {
+    headers = data[0].slice(0, 5).concat(data[0].slice(7, 11));
   }
   console.log(`Cabeçalho para Transpor (${tabId}):`, headers);
 
@@ -447,13 +456,13 @@ function pivotTable(data, filteredData, tabId) {
     filteredData.forEach(row => {
       const td = document.createElement('td');
       let actualIndex;
-      if (tabId === 'tab1') {
+      if (tabId === 'tab1' || tabId === 'tab6') {
         actualIndex = colIndex < 5 ? colIndex : colIndex + 2;
       } else {
         actualIndex = colIndex;
       }
       let cellValue = row[actualIndex];
-      if (actualIndex === 2 && (tabId === 'tab1' || tabId === 'tab2')) {
+      if (actualIndex === 2 && (tabId === 'tab1' || tabId === 'tab2' || tabId === 'tab6')) {
         cellValue = formatTime(cellValue);
       } else if (tabId === 'tab2' && (actualIndex === 13 || actualIndex === 14 || actualIndex === 15)) {
         cellValue = cellValue === '1' ? 'Sim' : '';
@@ -712,6 +721,17 @@ function displayTab5() {
   }
 }
 
+function displayTab6() {
+  const filters = {
+    campeonato: document.getElementById('campeonato-tab1')?.value || '',
+    dataInicio: document.getElementById('dataInicio-tab1')?.value || '',
+    dataFim: document.getElementById('dataFim-tab1')?.value || '',
+    considerar: true
+  };
+  filteredDataTab1 = filterDataSheet1(allDataSheet1, filters);
+  displayData(allDataSheet1, filteredDataTab1, 'tab6');
+}
+
 function clearFilters() {
   const tabs = ['tab1', 'tab2', 'tab4', 'tab5'];
   tabs.forEach(tab => {
@@ -759,6 +779,7 @@ function showTab(tabId) {
   else if (tabId === 'tab3') displayTab3();
   else if (tabId === 'tab4') displayTab4();
   else if (tabId === 'tab5') displayTab5();
+  else if (tabId === 'tab6') displayTab6();
 }
 
 // Aba 1: Jogos
@@ -803,4 +824,88 @@ document.getElementById('limparFiltros-tab2')?.addEventListener('click', () => {
 
 document.getElementById('pivotMode-tab2')?.addEventListener('click', () => {
   console.log('Botão Transpor clicado (Tab 2)');
-  is
+  isPivotTab2 = !isPivotTab2;
+  displayTab2();
+});
+
+// Aba 4: Convocações
+document.getElementById('aplicarFiltros-tab4')?.addEventListener('click', () => {
+  console.log('Aplicando filtros (Tab 4)');
+  displayTab4();
+});
+
+document.getElementById('limparFiltros-tab4')?.addEventListener('click', () => {
+  console.log('Limpando filtros (Tab 4)');
+  const elements = ['jogador', 'adversario', 'campeonato', 'dataInicio', 'dataFim'].map(id => document.getElementById(`${id}-tab4`));
+  elements.forEach(el => {
+    if (el) el.value = '';
+  });
+  displayTab4();
+});
+
+// Aba 5: Classificação
+document.getElementById('aplicarFiltros-tab5')?.addEventListener('click', () => {
+  console.log('Aplicando filtros (Tab 5)');
+  displayTab5();
+});
+
+document.getElementById('limparFiltros-tab5')?.addEventListener('click', () => {
+  console.log('Limpando filtros (Tab 5)');
+  const time = document.getElementById('time-tab5');
+  if (time) time.value = '';
+  isPivotTab5 = false;
+  displayTab5();
+});
+
+document.getElementById('pivotMode-tab5')?.addEventListener('click', () => {
+  console.log('Botão Transpor clicado (Tab 5)');
+  isPivotTab5 = !isPivotTab5;
+  displayTab5();
+});
+
+async function init() {
+  console.log('Iniciando a aplicação');
+  try {
+    const [sheet1Data, sheet2Data, sheet3Data] = await Promise.all([
+      fetchSheetData('Sheet1'),
+      fetchSheetData('Sheet2'),
+      fetchSheetData('Classificação')
+    ]);
+
+    if (sheet1Data.length > 0) {
+      allDataSheet1 = sheet1Data;
+      populateFiltersSheet1(allDataSheet1);
+      showUpcomingGames(allDataSheet1);
+      displayTab1();
+      displayTab2();
+      displayTab3();
+      displayTab6();
+    } else {
+      showError('Nenhum dado encontrado na Sheet1.');
+    }
+
+    if (sheet2Data.length > 0) {
+      allDataSheet2 = sheet2Data;
+      populateFiltersSheet2(allDataSheet2);
+      displayTab4();
+    } else {
+      showError('Nenhum dado encontrado na Sheet2.');
+    }
+
+    if (sheet3Data.length > 0) {
+      allDataSheet3 = sheet3Data;
+      populateFiltersSheet3(allDataSheet3);
+      displayTab5();
+    } else {
+      showError('Nenhum dado encontrado na aba Classificação.');
+    }
+  } catch (error) {
+    console.error('Erro durante a inicialização:', error);
+    showError(`Erro ao inicializar a aplicação: ${error.message}`);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM completamente carregado');
+  init();
+});
