@@ -44,9 +44,15 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
 client = gspread.authorize(creds)
 
-# Abrir a Google Sheet (substitua pelo nome da sua planilha)
-sheet = client.open("Futsal Classificação").sheet1
+# Abrir a Google Sheet
+spreadsheet = client.open("Futsal Classificação")
 
-# Limpar a planilha e atualizar com os novos dados
-sheet.clear()
-sheet.update([df.columns.values.tolist()] + df.values.tolist())
+# Atualizar aba Classificação
+classificacao_sheet = spreadsheet.worksheet("Classificação")
+classificacao_sheet.clear()
+classificacao_sheet.update([df.columns.values.tolist()] + df.values.tolist())
+
+# Atualizar aba Placar
+placar_sheet = spreadsheet.worksheet("Placar")
+placar_sheet.clear()
+placar_sheet.update([df.columns.values.tolist()] + df.values.tolist())
