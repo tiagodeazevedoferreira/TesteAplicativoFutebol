@@ -1,26 +1,23 @@
-```javascript
 console.log('script.js iniciado');
 
 const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
 const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
-let allDataSheet1 = []; // Dados da sheet Jogos (abas Jogos, Tabela, Resumo, Placar)
-let allDataSheet2 = []; // Dados da sheet Convocações
-let allDataSheet3 = []; // Dados da aba Classificação
+let allDataSheet1 = []; // Dados da Sheet1 (abas Jogos, Tabela, Resumo)
+let allDataSheet2 = []; // Dados da Sheet2 (aba Convocações)
+let allDataSheet3 = []; // Dados da aba Classificação (nova aba)
 let filteredDataTab1 = []; // Jogos
 let filteredDataTab2 = []; // Tabela
 let filteredDataTab3 = []; // Resumo
 let filteredDataTab4 = []; // Convocações
 let filteredDataTab5 = []; // Classificação
-let filteredDataTab6 = []; // Placar
 let isPivotTab1 = false; // Estado do Transpor para Aba 1 (Jogos)
 let isPivotTab2 = false; // Estado do Transpor para Aba 2 (Tabela)
 let isPivotTab5 = false; // Estado do Transpor para Aba 5 (Classificação)
 let convocacoesChart = null; // Instância do gráfico Chart.js
 
 async function fetchSheetData(sheetName) {
-  const encodedSheetName = encodeURIComponent(sheetName);
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodedSheetName}!A1:R1000?key=${API_KEY}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}!A1:R1000?key=${API_KEY}`;
   console.log(`Iniciando requisição à API para ${sheetName}:`, url);
   try {
     const response = await fetch(url, { mode: 'cors' });
@@ -81,16 +78,15 @@ function formatTime(timeStr) {
 function populateFiltersSheet1(data) {
   console.log('Populando filtros da Sheet1 com', data.length, 'linhas');
   const filters = [
-    { id: 'campeonato', index: 0, tabs: ['tab1', 'tab2'] },
-    { id: 'local', index: 8, tabs: ['tab2'] },
-    { id: 'rodada', index: 9, tabs: ['tab2'] },
-    { id: 'diaSemana', index: 10, tabs: ['tab2'] },
-    { id: 'gol', index: 11, tabs: ['tab2'] },
-    { id: 'assistencias', index: 12, tabs: ['tab2'] },
-    { id: 'ginasio', index: 3, tabs: ['tab6'] }
+    { id: 'campeonato', index: 0 },
+    { id: 'local', index: 8 },
+    { id: 'rodada', index: 9 },
+    { id: 'diaSemana', index: 10 },
+    { id: 'gol', index: 11 },
+    { id: 'assistencias', index: 12 }
   ];
 
-  const tabs = ['tab1', 'tab2', 'tab6'];
+  const tabs = ['tab1', 'tab2'];
   tabs.forEach(tab => {
     const timeSelect = document.getElementById(`time-${tab}`);
     if (timeSelect) {
@@ -107,18 +103,16 @@ function populateFiltersSheet1(data) {
     }
 
     filters.forEach(filter => {
-      if (filter.tabs.includes(tab)) {
-        const select = document.getElementById(`${filter.id}-${tab}`);
-        if (select) {
-          select.innerHTML = '<option value="">Todos</option>';
-          const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
-          values.forEach(value => {
-            const option = document.createElement('option');
-            option.value = value;
-            option.textContent = value;
-            select.appendChild(option);
-          });
-        }
+      const select = document.getElementById(`${filter.id}-${tab}`);
+      if (select) {
+        select.innerHTML = '<option value="">Todos</option>';
+        const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
+        values.forEach(value => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
       }
     });
   });
@@ -177,7 +171,7 @@ function updateBigNumbers(data, tabId) {
   data.forEach(row => {
     const placar1 = row[5];
     const considerar = row[16];
-    const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim().toLowerCase() : '';
+    const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim() : '';
     const isValidConsiderar = considerarValue !== '0';
     const isValidPlacar1 = placar1 && placar1.trim() !== '';
 
@@ -261,13 +255,12 @@ function showUpcomingGames(data) {
 let sortConfigTab1 = { column: null, direction: 'asc' };
 let sortConfigTab2 = { column: null, direction: 'asc' };
 let sortConfigTab5 = { column: null, direction: 'asc' };
-let sortConfigTab6 = { column: null, direction: 'asc' };
 
 function sortData(data, columnIndex, direction) {
   const sortedData = [...data];
   sortedData.sort((a, b) => {
     let actualIndex = columnIndex;
-    if (document.getElementById('tab1').classList.contains('active') || document.getElementById('tab6').classList.contains('active')) {
+    if (document.getElementById('tab1').classList.contains('active')) {
       if (columnIndex >= 5) {
         actualIndex = columnIndex + 2;
       }
@@ -333,11 +326,12 @@ function displayData(data, filteredData, tabId) {
     headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
     sortConfig = sortConfigTab2;
   } else if (tabId === 'tab5') {
-    headers = ['#', 'Time', 'Pontos', 'Jogos', 'V', 'E', 'D', 'GP', 'GC', 'SG', 'Índice'];
+    //headers = ['#', 'Time', 'Pontos', 'Jogos', 'Vitórias', 'Empates', 'Derrotas', 'GP', 'GC', 'SG', 'Aproveitamento'];
+	headers = ['#', 'Time', 'Pontos', 'Jogos', 'V', 'E', 'D', 'GP', 'GC', 'SG', 'Índice'];
     sortConfig = sortConfigTab5;
   } else if (tabId === 'tab6') {
     headers = ['Campeonato', 'Mandante', 'Visitante', 'Data', 'Horário', 'Ginásio', 'Local', 'Rodada', 'Dia da Semana'];
-    sortConfig = sortConfigTab6;
+    sortConfig = sortConfigTab1;
   }
 
   headers.forEach((text, index) => {
@@ -357,7 +351,7 @@ function displayData(data, filteredData, tabId) {
       } else if (tabId === 'tab5') {
         sortConfigTab5 = { column: index, direction: newDirection };
       } else if (tabId === 'tab6') {
-        sortConfigTab6 = { column: index, direction: newDirection };
+        sortConfigTab1 = { column: index, direction: newDirection };
       }
       const sortedData = sortData(filteredData, index, newDirection);
       displayData(data, sortedData, tabId);
@@ -491,24 +485,18 @@ function filterDataSheet1(data, filters) {
   console.log('Aplicando filtros (Sheet1):', filters);
 
   return data.slice(1).filter((row, index) => {
-    if (!row || row.length < 8) {
+    if (!row || row.length < 17) {
       console.log(`Linha ${index + 2} inválida:`, row);
       return false;
     }
 
-    const filledRow = Array(17).fill('');
-    row.forEach((value, i) => {
-      filledRow[i] = value !== undefined && value !== null ? String(value).trim() : '';
-    });
-
     const [
-      campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante,
-      local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar
-    ] = filledRow;
+      campeonato, dataStr, horario, ginasio, mandante, placar1, placar2, visitante, local, rodada, diaSemana, gol, assistencias, vitoria, derrota, empate, considerar
+    ] = row;
 
-    const considerarValue = String(considerar).trim().toLowerCase();
-    const isValidConsiderar = considerarValue === 'x' || considerarValue === '1' || considerarValue === 'true' || considerarValue === '';
-    console.log(`Linha ${index + 2}: Placar1=${placar1 || 'vazio'}, Considerar=${considerarValue || 'vazio'}, isValidConsiderar=${isValidConsiderar}`);
+    const considerarValue = considerar !== undefined && considerar !== null ? String(considerar).trim().toLowerCase() : '';
+    const isValidConsiderar = filters.considerar ? considerarValue === 'x' : considerarValue !== '0';
+    console.log(`Linha ${index + 2}: Placar1=${placar1 || 'vazio'}, Considerar=${considerarValue || 'vazio'}, isValidConsiderar=${isValidConsiderar}, Incluída=${isValidConsiderar}`);
 
     const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
     const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
@@ -527,8 +515,7 @@ function filterDataSheet1(data, filters) {
       (!filters.assistencias || assistencias === filters.assistencias) &&
       (!filters.vitoria || vitoria === filters.vitoria) &&
       (!filters.empate || empate === filters.empate) &&
-      (!filters.derrota || derrota === filters.derrota) &&
-      (!filters.ginasio || ginasio === filters.ginasio)
+      (!filters.derrota || derrota === filters.derrota)
     );
   });
 }
@@ -737,22 +724,21 @@ function displayTab5() {
 
 function displayTab6() {
   const filters = {
-    dataInicio: document.getElementById('dataInicio-tab6')?.value || '',
-    dataFim: document.getElementById('dataFim-tab6')?.value || '',
-    time: document.getElementById('time-tab6')?.value || '',
-    ginasio: document.getElementById('ginasio-tab6')?.value || '',
+    campeonato: document.getElementById('campeonato-tab1')?.value || '',
+    dataInicio: document.getElementById('dataInicio-tab1')?.value || '',
+    dataFim: document.getElementById('dataFim-tab1')?.value || '',
     considerar: true
   };
-  filteredDataTab6 = filterDataSheet1(allDataSheet1, filters);
-  displayData(allDataSheet1, filteredDataTab6, 'tab6');
+  filteredDataTab1 = filterDataSheet1(allDataSheet1, filters);
+  displayData(allDataSheet1, filteredDataTab1, 'tab6');
 }
 
 function clearFilters() {
-  const tabs = ['tab1', 'tab2', 'tab4', 'tab5', 'tab6'];
+  const tabs = ['tab1', 'tab2', 'tab4', 'tab5'];
   tabs.forEach(tab => {
     const campeonato = document.getElementById(`campeonato-${tab}`);
     const dataInicio = document.getElementById(`dataInicio-${tab}`);
-    const dataFim = document.getElementById(`dataFim-tab6`);
+    const dataFim = document.getElementById(`dataFim-${tab}`);
     if (campeonato) campeonato.value = '';
     if (dataInicio) dataInicio.value = '';
     if (dataFim) dataFim.value = '';
@@ -769,11 +755,6 @@ function clearFilters() {
     } else if (tab === 'tab5') {
       const time = document.getElementById(`time-${tab}`);
       if (time) time.value = '';
-    } else if (tab === 'tab6') {
-      const time = document.getElementById(`time-${tab}`);
-      const ginasio = document.getElementById(`ginasio-${tab}`);
-      if (time) time.value = '';
-      if (ginasio) ginasio.value = '';
     }
   });
   isPivotTab1 = false;
@@ -883,27 +864,12 @@ document.getElementById('pivotMode-tab5')?.addEventListener('click', () => {
   displayTab5();
 });
 
-// Aba 6: Placar
-document.getElementById('aplicarFiltros-tab6')?.addEventListener('click', () => {
-  console.log('Aplicando filtros (Tab 6)');
-  displayTab6();
-});
-
-document.getElementById('limparFiltros-tab6')?.addEventListener('click', () => {
-  console.log('Limpando filtros (Tab 6)');
-  const elements = ['dataInicio', 'dataFim', 'time', 'ginasio'].map(id => document.getElementById(`${id}-tab6`));
-  elements.forEach(el => {
-    if (el) el.value = '';
-  });
-  displayTab6();
-});
-
 async function init() {
   console.log('Iniciando a aplicação');
   try {
     const [sheet1Data, sheet2Data, sheet3Data] = await Promise.all([
-      fetchSheetData('Jogos'),
-      fetchSheetData('Convocações'),
+      fetchSheetData('Sheet1'),
+      fetchSheetData('Sheet2'),
       fetchSheetData('Classificação')
     ]);
 
@@ -916,7 +882,7 @@ async function init() {
       displayTab3();
       displayTab6();
     } else {
-      showError('Nenhum dado encontrado na sheet Jogos.');
+      showError('Nenhum dado encontrado na Sheet1.');
     }
 
     if (sheet2Data.length > 0) {
@@ -924,7 +890,7 @@ async function init() {
       populateFiltersSheet2(allDataSheet2);
       displayTab4();
     } else {
-      showError('Nenhum dado encontrado na sheet Convocações.');
+      showError('Nenhum dado encontrado na Sheet2.');
     }
 
     if (sheet3Data.length > 0) {
@@ -944,4 +910,3 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM completamente carregado');
   init();
 });
-```

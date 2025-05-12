@@ -61,15 +61,33 @@ spreadsheet = client.open("Futsal Classificação")
 # Função para garantir que a aba exista, criando-a se necessário
 def ensure_worksheet(spreadsheet, title, rows=100, cols=20):
     try:
-        return spreadsheet.worksheet(title)
+        sheet = spreadsheet.worksheet(title)
+        print(f"Aba '{title}' encontrada.")
+        return sheet
     except gspread.exceptions.WorksheetNotFound:
-        return spreadsheet.add_worksheet(title=title, rows=rows, cols=cols)
+        print(f"Aba '{title}' não encontrada. Criando nova aba...")
+        try:
+            # Tentar criar a aba
+            new_sheet = spreadsheet.add_worksheet(title=title, rows=rows, cols=cols)
+            print(f"Aba '{title}' criada com sucesso.")
+            return new_sheet
+        except Exception as e:
+            print(f"Erro ao criar a aba '{title}': {str(e)}")
+            raise
 
 # Garantir que as abas "Classificação" e "Placar" existam
-classificacao_sheet = ensure_worksheet(spreadsheet, "Classificação")
-classificacao_sheet.clear()
-classificacao_sheet.update([df.columns.values.tolist()] + df.values.tolist())
+try:
+    classificacao_sheet = ensure_worksheet(spreadsheet, "Classificação")
+    classificacao_sheet.clear()
+    classificacao_sheet.update([df.columns.values.tolist()] + df.values.tolist())
+    print("Aba 'Classificação' atualizada com sucesso.")
+except Exception as e:
+    print(f"Erro ao atualizar a aba 'Classificação': {str(e)}")
 
-placar_sheet = ensure_worksheet(spreadsheet, "Placar")
-placar_sheet.clear()
-placar_sheet.update([df.columns.values.tolist()] + df.values.tolist())
+try:
+    placar_sheet = ensure_worksheet(spreadsheet, "Placar")
+    placar_sheet.clear()
+    placar_sheet.update([df.columns.values.tolist()] + df.values.tolist())
+    print("Aba 'Placar' atualizada com sucesso.")
+except Exception as e:
+    print(f"Erro ao atualizar a aba 'Placar': {str(e)}")
