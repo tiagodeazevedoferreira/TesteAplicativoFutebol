@@ -752,7 +752,7 @@ function clearFilters() {
   tabs.forEach(tab => {
     const campeonato = document.getElementById(`campeonato-${tab}`);
     const dataInicio = document.getElementById(`dataInicio-${tab}`);
-    const dataFim = document.getElementById(`dataFim-${tab}`);
+    const dataFim = document.getElementById(`dataFim-tab6`);
     if (campeonato) campeonato.value = '';
     if (dataInicio) dataInicio.value = '';
     if (dataFim) dataFim.value = '';
