@@ -58,12 +58,18 @@ client = gspread.authorize(creds)
 # Abrir a Google Sheet
 spreadsheet = client.open("Futsal Classificação")
 
-# Atualizar aba Classificação
-classificacao_sheet = spreadsheet.worksheet("Classificação")
+# Função para garantir que a aba exista, criando-a se necessário
+def ensure_worksheet(spreadsheet, title, rows=100, cols=20):
+    try:
+        return spreadsheet.worksheet(title)
+    except gspread.exceptions.WorksheetNotFound:
+        return spreadsheet.add_worksheet(title=title, rows=rows, cols=cols)
+
+# Garantir que as abas "Classificação" e "Placar" existam
+classificacao_sheet = ensure_worksheet(spreadsheet, "Classificação")
 classificacao_sheet.clear()
 classificacao_sheet.update([df.columns.values.tolist()] + df.values.tolist())
 
-# Atualizar aba Placar
-placar_sheet = spreadsheet.worksheet("Placar")
+placar_sheet = ensure_worksheet(spreadsheet, "Placar")
 placar_sheet.clear()
 placar_sheet.update([df.columns.values.tolist()] + df.values.tolist())
