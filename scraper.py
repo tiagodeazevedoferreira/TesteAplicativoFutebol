@@ -40,21 +40,46 @@ try:
     driver.get(url_jogos)
     time.sleep(10)
     table_jogos = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, 'table'))  # Ajuste este seletor!
+        EC.presence_of_element_located((By.CSS_SELECTOR, 'table'))  # Ajuste este seletor se necessário
     )
     rows_jogos = table_jogos.find_elements(By.TAG_NAME, 'tr')
     data_jogos = []
     for row in rows_jogos:
         cols = row.find_elements(By.TAG_NAME, 'td')
-        cols = [col.text for col in cols]
+        cols = [col.text.replace("Ver Súmula", "").strip() for col in cols]
         data_jogos.append(cols)
-    df_jogos = pd.DataFrame(data_jogos)
-    print(f"Dados de jogos extraídos: {len(data_jogos)} linhas.")
+
+    # Processar os dados de jogos para o formato desejado
+    formatted_jogos = []
+    for row in data_jogos:
+        if len(row) < 5:  # Pular linhas incompletas
+            continue
+        # Assumindo que as colunas da tabela de jogos são: Data, Horário, Ginásio, Jogo (Mandante vs Visitante), Placar
+        data = row[0]  # Data
+        horario = row[1]  # Horário
+        ginasio = row[2]  # Ginásio
+        jogo = row[3]  # "Mandante vs Visitante"
+        placar = row[4] if len(row) > 4 else ""  # "X" (ex.: "2 X 1")
+
+        # Separar Mandante e Visitante
+        if " vs " in jogo:
+            mandante, visitante = jogo.split(" vs ")
+        else:
+            mandante, visitante = jogo, ""
+
+        # Criar 4 linhas para cada jogo
+        formatted_jogos.append([data, horario, ginasio, mandante])
+        formatted_jogos.append(["", "", "", ""])  # Linha em branco
+        formatted_jogos.append(["", "", "", placar])  # Linha com "X"
+        formatted_jogos.append(["", "", "", visitante])
+
+    df_jogos = pd.DataFrame(formatted_jogos, columns=["Data", "Horário", "Ginásio", "Coluna 4"])
+    print(f"Dados de jogos formatados: {len(formatted_jogos)} linhas.")
 
 except Exception as e:
     print(f"Erro ao extrair dados: {str(e)}")
     df_classificacao = pd.DataFrame()
-    df_jogos = pd.DataFrame()
+    df_jogos = pd.DataFrame(columns=["Data", "Horário", "Ginásio", "Coluna 4"])
 
 finally:
     # Fechar o navegador
