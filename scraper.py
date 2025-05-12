@@ -41,6 +41,7 @@ try:
 
     # Criar um DataFrame com os dados
     df = pd.DataFrame(data)
+    print(f"Dados extraídos: {len(data)} linhas.")
 
 except Exception as e:
     print(f"Erro ao extrair dados do site: {str(e)}")
@@ -57,17 +58,24 @@ client = gspread.authorize(creds)
 
 # Abrir a Google Sheet
 spreadsheet = client.open("Futsal Classificação")
+print(f"Planilha 'Futsal Classificação' aberta.")
 
 # Função para garantir que a aba exista, criando-a se necessário
 def ensure_worksheet(spreadsheet, title, rows=100, cols=20):
     try:
         sheet = spreadsheet.worksheet(title)
-        print(f"Aba '{title}' encontrada.")
+        print(f"Aba '{title}' encontrada com {sheet.row_count} linhas e {sheet.col_count} colunas.")
         return sheet
     except gspread.exceptions.WorksheetNotFound:
         print(f"Aba '{title}' não encontrada. Criando nova aba...")
         try:
-            # Tentar criar a aba
+            # Remover aba existente com nome semelhante (se existir) para evitar conflitos
+            worksheets = spreadsheet.worksheets()
+            for ws in worksheets:
+                if title.lower() in ws.title.lower():
+                    spreadsheet.del_worksheet(ws)
+                    print(f"Aba '{ws.title}' removida por ser semelhante a '{title}'.")
+            # Criar nova aba
             new_sheet = spreadsheet.add_worksheet(title=title, rows=rows, cols=cols)
             print(f"Aba '{title}' criada com sucesso.")
             return new_sheet
@@ -79,15 +87,15 @@ def ensure_worksheet(spreadsheet, title, rows=100, cols=20):
 try:
     classificacao_sheet = ensure_worksheet(spreadsheet, "Classificação")
     classificacao_sheet.clear()
-    classificacao_sheet.update([df.columns.values.tolist()] + df.values.tolist())
-    print("Aba 'Classificação' atualizada com sucesso.")
+    result = classificacao_sheet.update([df.columns.values.tolist()] + df.values.tolist())
+    print(f"Aba 'Classificação' atualizada com sucesso. Resposta da API: {result}")
 except Exception as e:
     print(f"Erro ao atualizar a aba 'Classificação': {str(e)}")
 
 try:
     placar_sheet = ensure_worksheet(spreadsheet, "Placar")
     placar_sheet.clear()
-    placar_sheet.update([df.columns.values.tolist()] + df.values.tolist())
-    print("Aba 'Placar' atualizada com sucesso.")
+    result = placar_sheet.update([df.columns.values.tolist()] + df.values.tolist())
+    print(f"Aba 'Placar' atualizada com sucesso. Resposta da API: {result}")
 except Exception as e:
     print(f"Erro ao atualizar a aba 'Placar': {str(e)}")
