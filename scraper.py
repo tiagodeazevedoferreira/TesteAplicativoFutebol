@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 import pandas as pd
 import time
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
 # Configurar o Selenium para rodar sem interface (headless)
 options = webdriver.ChromeOptions()
@@ -41,7 +41,7 @@ driver.quit()
 
 # Configurar credenciais para Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+creds = Credentials.from_service_account_file('credentials.json', scopes=scope)
 client = gspread.authorize(creds)
 
 # Abrir a Google Sheet
