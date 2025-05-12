@@ -49,13 +49,45 @@ try:
         cols = [col.text.replace("Ver Súmula", "").strip() for col in cols]
         data_jogos.append(cols)
 
-    df_jogos = pd.DataFrame(data_jogos)
-    print(f"Dados de jogos extraídos: {len(data_jogos)} linhas.")
+    # Processar a última coluna para quebrar em Mandante, Placar 1, X, Placar 2, Visitante
+    formatted_jogos = []
+    for row in data_jogos:
+        if len(row) < 4:  # Garantir que haja pelo menos Data, Horário, Ginásio e a última coluna
+            continue
+        data = row[0] if len(row) > 0 else ""
+        horario = row[1] if len(row) > 1 else ""
+        ginasio = row[2] if len(row) > 2 else ""
+        ultima_coluna = row[-1] if row else ""  # Última coluna com o jogo e placar
+
+        # Quebrar a última coluna (ex.: "Time A 2 X 1 Time B" ou "Time A vs Time B (2 X 1)")
+        mandante = ""
+        placar1 = ""
+        placar2 = ""
+        visitante = ""
+
+        if " vs " in ultima_coluna or " x " in ultima_coluna.lower():
+            partes = ultima_coluna.replace(" vs ", " ").replace("(", "").replace(")", "").split()
+            for i, parte in enumerate(partes):
+                if parte.isdigit() and i > 0 and partes[i-1].isdigit():
+                    placar2 = parte
+                elif parte.isdigit():
+                    placar1 = parte
+                elif "x" in parte.lower():
+                    continue  # Ignora o "x" ou "X"
+                elif not placar1 and not mandante:
+                    mandante = " ".join(partes[:i]).strip()
+                elif placar2 or (placar1 and "x" in partes[i-1].lower()):
+                    visitante = " ".join(partes[i+1:]).strip()
+
+        formatted_jogos.append([data, horario, ginasio, mandante, placar1, "X", placar2, visitante])
+
+    df_jogos = pd.DataFrame(formatted_jogos, columns=["Data", "Horário", "Ginásio", "Mandante", "Placar 1", "X", "Placar 2", "Visitante"])
+    print(f"Dados de jogos formatados: {len(formatted_jogos)} linhas.")
 
 except Exception as e:
     print(f"Erro ao extrair dados: {str(e)}")
     df_classificacao = pd.DataFrame()
-    df_jogos = pd.DataFrame()
+    df_jogos = pd.DataFrame(columns=["Data", "Horário", "Ginásio", "Mandante", "Placar 1", "X", "Placar 2", "Visitante"])
 
 finally:
     # Fechar o navegador
