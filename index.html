@@ -37,249 +37,373 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script><!DOCTYPE html>
-<html lang="pt-br">
+        </script><script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+</script>
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplicativo de Jogos de Futebol</title>
+  <title>Gerenciador de Jogos</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="script.js" defer></script>
   <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="icon" href="favicon.ico">
+  <style>
+    @media (max-width: 640px) {
+      details[open] > summary + * {
+        animation: sweep .5s ease-in-out;
+      }
+      @keyframes sweep {
+        0%    {opacity: 0; transform: translateY(-10px);}
+        100%  {opacity: 1; transform: translateY(0);}
+      }
+      details > summary {
+        list-style: none;
+      }
+      details > summary::after {
+        content: "▼";
+        float: right;
+        font-size: 1.5rem;
+        transition: transform 0.3s ease;
+      }
+      details[open] > summary::after {
+        transform: rotate(180deg);
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 font-sans">
+  <header class="bg-blue-600 text-white p-4 flex flex-col justify-between items-center">
+    <h1 class="text-xl font-bold mb-2">Gerenciador de Jogos</h1>
+    <nav class="flex flex-col w-full">
+      <div class="flex w-full mb-2">
+        <button id="tab1-btn" class="tab-button active-tab flex-1 text-center" data-tab="tab1" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">Jogos</button>
+        <button id="tab2-btn" class="tab-button flex-1 text-center" data-tab="tab2" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none;">Tabela</button>
+        <button id="tab3-btn" class="tab-button flex-1 text-center" data-tab="tab3" style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 0 4px 4px 0;">Resumo</button>
+      </div>
+      <div class="flex w-full">
+        <button id="tab4-btn" class="tab-button flex-1 text-center" data-tab="tab4" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">Convocações</button>
+        <button id="tab5-btn" class="tab-button flex-1 text-center" data-tab="tab5" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none;">Classificação</button>
+        <button id="tab6-btn" class="tab-button flex-1 text-center" data-tab="tab6" style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 0 4px 4px 0;">Placar</button>
+      </div>
+    </nav>
+  </header>
+
+  <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4 mx-4" role="alert"></div>
+
+  <div id="upcomingGames" class="mt-4 mx-4 hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+    <h2 class="font-bold">Jogos nos Próximos 3 Dias</h2>
+    <ul id="upcomingGamesList" class="list-disc list-inside"></ul>
+  </div>
+
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4 text-center">Aplicativo de Jogos de Futebol</h1>
-
-    <div id="errorMessage" class="bg-red-100 text-red-700 p-4 mb-4 rounded hidden"></div>
-
-    <div id="upcomingGames" class="mb-4 bg-blue-100 p-4 rounded hidden">
-      <h2 class="text-lg font-semibold">Jogos dos Próximos 3 Dias</h2>
-      <ul id="upcomingGamesList" class="list-disc pl-5"></ul>
-    </div>
-
-    <div class="tabs flex flex-wrap justify-center mb-4">
-      <button id="tab1-btn" class="tab-button px-4 py-2 bg-blue-500 text-white rounded-l active-tab" onclick="showTab('tab1')">Jogos</button>
-      <button id="tab2-btn" class="tab-button px-4 py-2 bg-blue-500 text-white" onclick="showTab('tab2')">Tabela</button>
-      <button id="tab3-btn" class="tab-button px-4 py-2 bg-blue-500 text-white" onclick="showTab('tab3')">Resumo</button>
-      <button id="tab4-btn" class="tab-button px-4 py-2 bg-blue-500 text-white" onclick="showTab('tab4')">Convocações</button>
-      <button id="tab5-btn" class="tab-button px-4 py-2 bg-blue-500 text-white" onclick="showTab('tab5')">Classificação</button>
-      <button id="tab6-btn" class="tab-button px-4 py-2 bg-blue-500 text-white rounded-r" onclick="showTab('tab6')">Placar</button>
-    </div>
-
-    <!-- Tab 1: Jogos -->
     <div id="tab1" class="tab-content active">
-      <div class="filters mb-4 p-4 bg-white rounded shadow">
-        <h2 class="text-lg font-semibold mb-2">Filtros</h2>
-        <div class="flex flex-wrap gap-4">
-          <div>
-            <label for="campeonato-tab1">Campeonato:</label>
-            <select id="campeonato-tab1" class="border p-2 rounded"></select>
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="campeonato-tab1" class="block text-sm font-medium text-gray-700">Campeonato:</label>
+              <select id="campeonato-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataInicio-tab1" class="block text-sm font-medium text-gray-700">Data Início:</label>
+              <input type="date" id="dataInicio-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="dataFim-tab1" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+              <input type="date" id="dataFim-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
           </div>
-          <div>
-            <label for="dataInicio-tab1">Data Início:</label>
-            <input type="date" id="dataInicio-tab1" class="border p-2 rounded">
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab1" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab1" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+            <button id="pivotMode-tab1" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
           </div>
-          <div>
-            <label for="dataFim-tab1">Data Fim:</label>
-            <input type="date" id="dataFim-tab1" class="border p-2 rounded">
-          </div>
-        </div>
-        <div class="mt-4 flex gap-2">
-          <button id="aplicarFiltros-tab1" class="bg-blue-500 text-white px-4 py-2 rounded">Aplicar Filtros</button>
-          <button id="limparFiltros-tab1" class="bg-gray-500 text-white px-4 py-2 rounded">Limpar Filtros</button>
-          <button id="pivotMode-tab1" class="bg-green-500 text-white px-4 py-2 rounded">Transpor</button>
-        </div>
+        </details>
       </div>
       <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded shadow">
+        <table id="jogosTable-tab1" class="min-w-full bg-white border border-gray-300">
           <thead id="tableHead-tab1"></thead>
           <tbody id="jogosBody-tab1"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Tab 2: Tabela -->
     <div id="tab2" class="tab-content hidden">
-      <div class="filters mb-4 p-4 bg-white rounded shadow">
-        <h2 class="text-lg font-semibold mb-2">Filtros</h2>
-        <div class="flex flex-wrap gap-4">
-          <div>
-            <label for="campeonato-tab2">Campeonato:</label>
-            <select id="campeonato-tab2" class="border p-2 rounded"></select>
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="campeonato-tab2" class="block text-sm font-medium text-gray-700">Campeonato:</label>
+              <select id="campeonato-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataInicio-tab2" class="block text-sm font-medium text-gray-700">Data Início:</label>
+              <input type="date" id="dataInicio-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="dataFim-tab2" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+              <input type="date" id="dataFim-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="time-tab2" class="block text-sm font-medium text-gray-700">Time:</label>
+              <select id="time-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="local-tab2" class="block text-sm font-medium text-gray-700">Local:</label>
+              <select id="local-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="rodada-tab2" class="block text-sm font-medium text-gray-700">Rodada:</label>
+              <select id="rodada-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="diaSemana-tab2" class="block text-sm font-medium text-gray-700">Dia da Semana:</label>
+              <select id="diaSemana-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="gol-tab2" class="block text-sm font-medium text-gray-700">Gol:</label>
+              <select id="gol-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="assistencias-tab2" class="block text-sm font-medium text-gray-700">Assistências:</label>
+              <select id="assistencias-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="vitoria-tab2" class="block text-sm font-medium text-gray-700">Vitória:</label>
+              <select id="vitoria-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+                <option value="1">Sim</option>
+                <option value="0">Não</option>
+              </select>
+            </div>
+            <div>
+              <label for="empate-tab2" class="block text-sm font-medium text-gray-700">Empate:</label>
+              <select id="empate-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+                <option value="1">Sim</option>
+                <option value="0">Não</option>
+              </select>
+            </div>
+            <div>
+              <label for="derrota-tab2" class="block text-sm font-medium text-gray-700">Derrota:</label>
+              <select id="derrota-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+                <option value="1">Sim</option>
+                <option value="0">Não</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="dataInicio-tab2">Data Início:</label>
-            <input type="date" id="dataInicio-tab2" class="border p-2 rounded">
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab2" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab2" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+            <button id="pivotMode-tab2" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
           </div>
-          <div>
-            <label for="dataFim-tab2">Data Fim:</label>
-            <input type="date" id="dataFim-tab2" class="border p-2 rounded">
-          </div>
-          <div>
-            <label for="time-tab2">Time:</label>
-            <select id="time-tab2" class="border p-2 rounded"></select>
-          </div>
-          <div>
-            <label for="local-tab2">Local:</label>
-            <select id="local-tab2" class="border p-2 rounded"></select>
-          </div>
-          <div>
-            <label for="rodada-tab2">Rodada:</label>
-            <select id="rodada-tab2" class="border p-2 rounded"></select>
-          </div>
-          <div>
-            <label for="diaSemana-tab2">Dia da Semana:</label>
-            <select id="diaSemana-tab2" class="border p-2 rounded"></select>
-          </div>
-          <div>
-            <label for="gol-tab2">Gol:</label>
-            <select id="gol-tab2" class="border p-2 rounded"></select>
-          </div>
-          <div>
-            <label for="assistencias-tab2">Assistências:</label>
-            <select id="assistencias-tab2" class="border p-2 rounded"></select>
-          </div>
-        </div>
-        <div class="mt-4 flex gap-2">
-          <button id="aplicarFiltros-tab2" class="bg-blue-500 text-white px-4 py-2 rounded">Aplicar Filtros</button>
-          <button id="limparFiltros-tab2" class="bg-gray-500 text-white px-4 py-2 rounded">Limpar Filtros</button>
-          <button id="pivotMode-tab2" class="bg-green-500 text-white px-4 py-2 rounded">Transpor</button>
-        </div>
+        </details>
       </div>
       <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded shadow">
+        <table id="jogosTable-tab2" class="min-w-full bg-white border border-gray-300">
           <thead id="tableHead-tab2"></thead>
           <tbody id="jogosBody-tab2"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Tab 3: Resumo -->
     <div id="tab3" class="tab-content hidden">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded shadow text-center">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div class="bg-white p-4 rounded shadow">
           <h3 class="text-lg font-semibold">Jogos</h3>
           <p id="bigNumberJogos-tab3" class="text-2xl font-bold">0</p>
         </div>
-        <div class="bg-white p-4 rounded shadow text-center">
+        <div class="bg-white p-4 rounded shadow">
           <h3 class="text-lg font-semibold">Gols</h3>
           <p id="bigNumberGols-tab3" class="text-2xl font-bold">0</p>
         </div>
-        <div class="bg-white p-4 rounded shadow text-center">
-          <h3 class="text-lg font-semibold">Média de Gols</h3>
-          <p id="bigNumberMedia-tab3" class="text-2xl font-bold">0.00</p>
-        </div>
-        <div class="bg-white p-4 rounded shadow text-center">
+        <div class="bg-white p-4 rounded shadow">
           <h3 class="text-lg font-semibold">Assistências</h3>
           <p id="bigNumberAssistencias-tab3" class="text-2xl font-bold">0</p>
         </div>
-        <div class="bg-white p-4 rounded shadow text-center">
-          <h3 class="text-lg font-semibold">Gol a Cada</h3>
-          <p id="bigNumberGolACada-tab3" class="text-2xl font-bold">0.00</p>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">Média</h3>
+          <p id="bigNumberMedia-tab3" class="text-2xl font-bold">0.00</p>
         </div>
-        <div class="bg-white p-4 rounded shadow text-center">
+        <div class="bg-white p-4 rounded shadow">
           <h3 class="text-lg font-semibold">Vitórias</h3>
           <p id="bigNumberVitorias-tab3" class="text-2xl font-bold">0</p>
         </div>
-        <div class="bg-white p-4 rounded shadow text-center">
-          <h3 class="text-lg font-semibold">Empates</h3>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-medium text-gray-700">Empates</h3>
           <p id="bigNumberEmpates-tab3" class="text-2xl font-bold">0</p>
         </div>
-        <div class="bg-white p-4 rounded shadow text-center">
+        <div class="bg-white p-4 rounded shadow">
           <h3 class="text-lg font-semibold">Derrotas</h3>
           <p id="bigNumberDerrotas-tab3" class="text-2xl font-bold">0</p>
         </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">Gol a Cada</h3>
+          <p id="bigNumberGolACada-tab3" class="text-2xl font-bold">0.00</p>
+        </div>
       </div>
     </div>
 
-    <!-- Tab 4: Convocações -->
     <div id="tab4" class="tab-content hidden">
-      <div class="filters mb-4 p-4 bg-white rounded shadow">
-        <h2 class="text-lg font-semibold mb-2">Filtros</h2>
-        <div class="flex flex-wrap gap-4">
-          <div>
-            <label for="jogador-tab4">Jogador:</label>
-            <select id="jogador-tab4" class="border p-2 rounded"></select>
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="jogador-tab4" class="block text-sm font-medium text-gray-700">Jogador:</label>
+              <select id="jogador-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="adversario-tab4" class="block text-sm font-medium text-gray-700">Adversário:</label>
+              <select id="adversario-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="campeonato-tab4" class="block text-sm font-medium text-gray-700">Campeonato:</label>
+              <select id="campeonato-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataInicio-tab4" class="block text-sm font-medium text-gray-700">Data Início:</label>
+              <input type="date" id="dataInicio-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="dataFim-tab4" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+              <input type="date" id="dataFim-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
           </div>
-          <div>
-            <label for="adversario-tab4">Adversário:</label>
-            <select id="adversario-tab4" class="border p-2 rounded"></select>
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab4" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab4" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
           </div>
-          <div>
-            <label for="campeonato-tab4">Campeonato:</label>
-            <select id="campeonato-tab4" class="border p-2 rounded"></select>
-          </div>
-          <div>
-            <label for="dataInicio-tab4">Data Início:</label>
-            <input type="date" id="dataInicio-tab4" class="border p-2 rounded">
-          </div>
-          <div>
-            <label for="dataFim-tab4">Data Fim:</label>
-            <input type="date" id="dataFim-tab4" class="border p-2 rounded">
-          </div>
-        </div>
-        <div class="mt-4 flex gap-2">
-          <button id="aplicarFiltros-tab4" class="bg-blue-500 text-white px-4 py-2 rounded">Aplicar Filtros</button>
-          <button id="limparFiltros-tab4" class="bg-gray-500 text-white px-4 py-2 rounded">Limpar Filtros</button>
-        </div>
+        </details>
       </div>
-      <div class="bg-white p-4 rounded shadow">
-        <canvas id="convocacoesChart" style="max-height: 400px;"></canvas>
-      </div>
+      <canvas id="convocacoesChart" class="w-full"></canvas>
     </div>
 
-    <!-- Tab 5: Classificação -->
     <div id="tab5" class="tab-content hidden">
-      <div class="filters mb-4 p-4 bg-white rounded shadow">
-        <h2 class="text-lg font-semibold mb-2">Filtros</h2>
-        <div class="flex flex-wrap gap-4">
-          <div>
-            <label for="time-tab5">Time:</label>
-            <select id="time-tab5" class="border p-2 rounded"></select>
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="time-tab5" class="block text-sm font-medium text-gray-700">Time:</label>
+              <select id="time-tab5" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
           </div>
-        </div>
-        <div class="mt-4 flex gap-2">
-          <button id="aplicarFiltros-tab5" class="bg-blue-500 text-white px-4 py-2 rounded">Aplicar Filtros</button>
-          <button id="limparFiltros-tab5" class="bg-gray-500 text-white px-4 py-2 rounded">Limpar Filtros</button>
-          <button id="pivotMode-tab5" class="bg-green-500 text-white px-4 py-2 rounded">Transpor</button>
-        </div>
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab5" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab5" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+            <button id="pivotMode-tab5" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
+          </div>
+        </details>
       </div>
       <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded shadow">
+        <table id="jogosTable-tab5" class="min-w-full bg-white border border-gray-300">
           <thead id="tableHead-tab5"></thead>
           <tbody id="jogosBody-tab5"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- Tab 6: Placar -->
     <div id="tab6" class="tab-content hidden">
-      <div class="filters mb-4 p-4 bg-white rounded shadow">
-        <h2 class="text-lg font-semibold mb-2">Filtros</h2>
-        <div class="flex flex-wrap gap-4">
-          <div>
-            <label for="dataInicio-tab6">Data Início:</label>
-            <input type="date" id="dataInicio-tab6" class="border p-2 rounded">
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="dataInicio-tab6" class="block text-sm font-medium text-gray-700">Data Início:</label>
+              <input type="date" id="dataInicio-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="dataFim-tab6" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+              <input type="date" id="dataFim-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="time-tab6" class="block text-sm font-medium text-gray-700">Time:</label>
+              <select id="time-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="ginasio-tab6" class="block text-sm font-medium text-gray-700">Ginásio:</label>
+              <select id="ginasio-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="dataFim-tab6">Data Fim:</label>
-            <input type="date" id="dataFim-tab6" class="border p-2 rounded">
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab6" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab6" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+            <button id="pivotMode-tab6" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
           </div>
-          <div>
-            <label for="time-tab6">Time:</label>
-            <select id="time-tab6" class="border p-2 rounded"></select>
-          </div>
-        </div>
-        <div class="mt-4 flex gap-2">
-          <button id="aplicarFiltros-tab6" class="bg-blue-500 text-white px-4 py-2 rounded">Aplicar Filtros</button>
-          <button id="limparFiltros-tab6" class="bg-gray-500 text-white px-4 py-2 rounded">Limpar Filtros</button>
-        </div>
+        </details>
       </div>
       <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded shadow">
+        <table id="jogosTable-tab6" class="min-w-full bg-white border border-gray-300">
           <thead id="tableHead-tab6"></thead>
           <tbody id="jogosBody-tab6"></tbody>
         </table>
@@ -287,8 +411,37 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          tabButtons.forEach(btn => {
+            btn.classList.remove('active-tab');
+            btn.style.backgroundColor = '#e5e7eb';
+            btn.style.color = 'black';
+          });
+
+          this.classList.add('active-tab');
+          this.style.backgroundColor = '#3b82f6';
+          this.style.color = 'white';
+
+          tabContents.forEach(content => {
+            content.classList.remove('active');
+            content.style.display = 'none';
+          });
+
+          const tabId = this.getAttribute('data-tab');
+          const targetContent = document.getElementById(tabId);
+          targetContent.classList.add('active');
+          targetContent.style.display = 'block';
+        });
+      });
+
+      tabButtons[0].click();
+    });
+  </script>
 </body>
 </html>
