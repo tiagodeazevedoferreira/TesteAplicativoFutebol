@@ -59,25 +59,27 @@ try:
         ginasio = row[2] if len(row) > 2 else ""
         ultima_coluna = row[-1] if row else ""  # Última coluna com o jogo e placar
 
-        # Quebrar a última coluna (ex.: "Time A 2 X 1 Time B" ou "Time A vs Time B (2 X 1)")
+        # Quebrar a última coluna (ex.: "SPORT CLUB CORINTHIANS PAULISTA 1 x 2 SÃO PAULO FC - A")
         mandante = ""
         placar1 = ""
         placar2 = ""
         visitante = ""
 
-        if " vs " in ultima_coluna or " x " in ultima_coluna.lower():
-            partes = ultima_coluna.replace(" vs ", " ").replace("(", "").replace(")", "").split()
-            for i, parte in enumerate(partes):
-                if parte.isdigit() and i > 0 and partes[i-1].isdigit():
-                    placar2 = parte
-                elif parte.isdigit():
-                    placar1 = parte
-                elif "x" in parte.lower():
-                    continue  # Ignora o "x" ou "X"
-                elif not placar1 and not mandante:
-                    mandante = " ".join(partes[:i]).strip()
-                elif placar2 or (placar1 and "x" in partes[i-1].lower()):
-                    visitante = " ".join(partes[i+1:]).strip()
+        # Procurar o placar (ex.: "1 x 2") como delimitador
+        partes = ultima_coluna.split()
+        placar_index = -1
+        for i, parte in enumerate(partes):
+            if parte.lower() == "x" and i > 0 and i < len(partes)-1 and partes[i-1].isdigit() and partes[i+1].isdigit():
+                placar_index = i
+                placar1 = partes[i-1]
+                placar2 = partes[i+1]
+                break
+
+        if placar_index != -1:
+            # Tudo antes do placar1 é o Mandante
+            mandante = " ".join(partes[:placar_index-1]).strip()
+            # Tudo depois do placar2 é o Visitante
+            visitante = " ".join(partes[placar_index+2:]).strip()
 
         formatted_jogos.append([data, horario, ginasio, mandante, placar1, "X", placar2, visitante])
 
