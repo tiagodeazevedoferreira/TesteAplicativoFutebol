@@ -5,12 +5,14 @@ const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
 
 let allDataSheet1 = []; // Dados da Sheet1 (abas Jogos, Tabela, Resumo)
 let allDataSheet2 = []; // Dados da Sheet2 (aba Convocações)
-let allDataSheet3 = []; // Dados da aba Classificação (nova aba)
+let allDataSheet3 = []; // Dados da aba Classificação
+let allDataSheet4 = []; // Dados da aba Placar
 let filteredDataTab1 = []; // Jogos
 let filteredDataTab2 = []; // Tabela
 let filteredDataTab3 = []; // Resumo
 let filteredDataTab4 = []; // Convocações
 let filteredDataTab5 = []; // Classificação
+let filteredDataTab6 = []; // Placar
 let isPivotTab1 = false; // Estado do Transpor para Aba 1 (Jogos)
 let isPivotTab2 = false; // Estado do Transpor para Aba 2 (Tabela)
 let isPivotTab5 = false; // Estado do Transpor para Aba 5 (Classificação)
@@ -149,6 +151,28 @@ function populateFiltersSheet3(data) {
   ];
 
   const tab = 'tab5';
+  filters.forEach(filter => {
+    const select = document.getElementById(`${filter.id}-${tab}`);
+    if (select) {
+      select.innerHTML = '<option value="">Todos</option>';
+      const values = [...new Set(data.slice(1).map(row => row[filter.index]?.trim()).filter(v => v))].sort();
+      values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+    }
+  });
+}
+
+function populateFiltersSheet4(data) {
+  console.log('Populando filtros da aba Placar com', data.length, 'linhas');
+  const filters = [
+    { id: 'campeonato', index: 2 } // Mapeando Campeonato para Ginásio (índice 2)
+  ];
+
+  const tab = 'tab6';
   filters.forEach(filter => {
     const select = document.getElementById(`${filter.id}-${tab}`);
     if (select) {
@@ -326,12 +350,11 @@ function displayData(data, filteredData, tabId) {
     headers = ['Campeonato', 'Data', 'Horário', 'Ginásio', 'Mandante', '', '', 'Visitante', 'Local', 'Rodada', 'Dia da Semana', 'Gol', 'Assistências', 'Vitória', 'Derrota', 'Empate'];
     sortConfig = sortConfigTab2;
   } else if (tabId === 'tab5') {
-    //headers = ['#', 'Time', 'Pontos', 'Jogos', 'Vitórias', 'Empates', 'Derrotas', 'GP', 'GC', 'SG', 'Aproveitamento'];
-	headers = ['#', 'Time', 'Pontos', 'Jogos', 'V', 'E', 'D', 'GP', 'GC', 'SG', 'Índice'];
+    headers = ['#', 'Time', 'Pontos', 'Jogos', 'V', 'E', 'D', 'GP', 'GC', 'SG', 'Índice'];
     sortConfig = sortConfigTab5;
   } else if (tabId === 'tab6') {
-    headers = ['Campeonato', 'Mandante', 'Visitante', 'Data', 'Horário', 'Ginásio', 'Local', 'Rodada', 'Dia da Semana'];
-    sortConfig = sortConfigTab1;
+    headers = ['Data', 'Horário', 'Ginásio', 'Mandante', 'Placar 1', 'X', 'Placar 2', 'Visitante'];
+    sortConfig = sortConfigTab1; // Reutilizando sortConfigTab1
   }
 
   headers.forEach((text, index) => {
@@ -397,16 +420,14 @@ function displayData(data, filteredData, tabId) {
     } else if (tabId === 'tab5') {
       columnIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     } else if (tabId === 'tab6') {
-      columnIndices = [0, 4, 7, 1, 2, 3, 8, 9, 10];
+      columnIndices = [0, 1, 2, 3, 4, 5, 6, 7]; // Data, Horário, Ginásio, Mandante, Placar 1, X, Placar 2, Visitante
     }
 
     columnIndices.forEach(index => {
       const td = document.createElement('td');
       const cell = row[index];
-      if (index === 2 && (tabId === 'tab1' || tabId === 'tab2' || tabId === 'tab6')) {
-        td.textContent = formatTime(cell);
-      } else if (tabId === 'tab2' && (index === 13 || index === 14 || index === 15)) {
-        td.textContent = cell === '1' ? 'Sim' : '';
+      if (index === 1 && tabId === 'tab6') {
+        td.textContent = formatTime(cell); // Formatar Horário
       } else {
         td.textContent = cell || '';
       }
@@ -443,7 +464,7 @@ function pivotTable(data, filteredData, tabId) {
     headers = data[0].slice(0, 11);
     headers[0] = '#';
   } else if (tabId === 'tab6') {
-    headers = data[0].slice(0, 5).concat(data[0].slice(7, 11));
+    headers = data[0].slice(0, 8); // Data, Horário, Ginásio, Mandante, Placar 1, X, Placar 2, Visitante
   }
   console.log(`Cabeçalho para Transpor (${tabId}):`, headers);
 
@@ -456,17 +477,10 @@ function pivotTable(data, filteredData, tabId) {
 
     filteredData.forEach(row => {
       const td = document.createElement('td');
-      let actualIndex;
-      if (tabId === 'tab1' || tabId === 'tab6') {
-        actualIndex = colIndex < 5 ? colIndex : colIndex + 2;
-      } else {
-        actualIndex = colIndex;
-      }
+      let actualIndex = colIndex;
       let cellValue = row[actualIndex];
-      if (actualIndex === 2 && (tabId === 'tab1' || tabId === 'tab2' || tabId === 'tab6')) {
-        cellValue = formatTime(cellValue);
-      } else if (tabId === 'tab2' && (actualIndex === 13 || actualIndex === 14 || actualIndex === 15)) {
-        cellValue = cellValue === '1' ? 'Sim' : '';
+      if (actualIndex === 1 && tabId === 'tab6') {
+        cellValue = formatTime(cellValue); // Formatar Horário
       } else {
         cellValue = cellValue || '';
       }
@@ -558,6 +572,29 @@ function filterDataSheet3(data, filters) {
 
     return (
       (!filters.time || time === filters.time)
+    );
+  });
+}
+
+function filterDataSheet4(data, filters) {
+  console.log('Aplicando filtros (Sheet4 - Placar):', filters);
+
+  return data.slice(1).filter((row, index) => {
+    if (!row || row.length < 8) {
+      console.log(`Linha ${index + 2} inválida na aba Placar:`, row);
+      return false;
+    }
+
+    const [dataStr, horario, ginasio, mandante, placar1, x, placar2, visitante] = row;
+
+    const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
+    const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
+    const dataJogo = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
+
+    return (
+      (!filters.campeonato || ginasio === filters.campeonato) &&
+      (!dataInicio || (dataJogo && dataJogo >= dataInicio)) &&
+      (!dataFim || (dataJogo && dataJogo <= dataFim))
     );
   });
 }
@@ -724,17 +761,16 @@ function displayTab5() {
 
 function displayTab6() {
   const filters = {
-    campeonato: document.getElementById('campeonato-tab1')?.value || '',
-    dataInicio: document.getElementById('dataInicio-tab1')?.value || '',
-    dataFim: document.getElementById('dataFim-tab1')?.value || '',
-    considerar: true
+    campeonato: document.getElementById('campeonato-tab6')?.value || '',
+    dataInicio: document.getElementById('dataInicio-tab6')?.value || '',
+    dataFim: document.getElementById('dataFim-tab6')?.value || ''
   };
-  filteredDataTab1 = filterDataSheet1(allDataSheet1, filters);
-  displayData(allDataSheet1, filteredDataTab1, 'tab6');
+  filteredDataTab6 = filterDataSheet4(allDataSheet4, filters);
+  displayData(allDataSheet4, filteredDataTab6, 'tab6');
 }
 
 function clearFilters() {
-  const tabs = ['tab1', 'tab2', 'tab4', 'tab5'];
+  const tabs = ['tab1', 'tab2', 'tab4', 'tab5', 'tab6'];
   tabs.forEach(tab => {
     const campeonato = document.getElementById(`campeonato-${tab}`);
     const dataInicio = document.getElementById(`dataInicio-${tab}`);
@@ -864,13 +900,31 @@ document.getElementById('pivotMode-tab5')?.addEventListener('click', () => {
   displayTab5();
 });
 
+// Aba 6: Placar
+document.getElementById('aplicarFiltros-tab6')?.addEventListener('click', () => {
+  console.log('Aplicando filtros (Tab 6)');
+  displayTab6();
+});
+
+document.getElementById('limparFiltros-tab6')?.addEventListener('click', () => {
+  console.log('Limpando filtros (Tab 6)');
+  const campeonato = document.getElementById('campeonato-tab6');
+  const dataInicio = document.getElementById('dataInicio-tab6');
+  const dataFim = document.getElementById('dataFim-tab6');
+  if (campeonato) campeonato.value = '';
+  if (dataInicio) dataInicio.value = '';
+  if (dataFim) dataFim.value = '';
+  displayTab6();
+});
+
 async function init() {
   console.log('Iniciando a aplicação');
   try {
-    const [sheet1Data, sheet2Data, sheet3Data] = await Promise.all([
+    const [sheet1Data, sheet2Data, sheet3Data, sheet4Data] = await Promise.all([
       fetchSheetData('Sheet1'),
       fetchSheetData('Sheet2'),
-      fetchSheetData('Classificação')
+      fetchSheetData('Classificação'),
+      fetchSheetData('Placar')
     ]);
 
     if (sheet1Data.length > 0) {
@@ -880,7 +934,6 @@ async function init() {
       displayTab1();
       displayTab2();
       displayTab3();
-      displayTab6();
     } else {
       showError('Nenhum dado encontrado na Sheet1.');
     }
@@ -899,6 +952,15 @@ async function init() {
       displayTab5();
     } else {
       showError('Nenhum dado encontrado na aba Classificação.');
+    }
+
+    if (sheet4Data.length > 0) {
+      allDataSheet4 = sheet4Data;
+      populateFiltersSheet4(allDataSheet4);
+      displayTab6();
+      console.log('Dados da aba Placar carregados:', sheet4Data.length, 'linhas');
+    } else {
+      showError('Nenhum dado encontrado na aba Placar.');
     }
   } catch (error) {
     console.error('Erro durante a inicialização:', error);
