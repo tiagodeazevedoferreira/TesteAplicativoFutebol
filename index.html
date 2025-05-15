@@ -369,6 +369,39 @@
     </div>
 
     <div id="tab6" class="tab-content hidden">
+
+
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="time-tab6" class="block text-sm font-medium text-gray-700">Time:</label>
+              <select id="time-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataInicio-tab6" class="block text-sm font-medium text-gray-700">Data Início:</label>
+              <input type="date" id="dataInicio-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="dataFim-tab6" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+              <input type="date" id="dataFim-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab6" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab6" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+            <button id="pivotMode-tab6" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>
+          </div>
+        </details>
+      </div>
+
+
+
+
       <div class="overflow-x-auto">
         <table id="jogosTable-tab6" class="min-w-full bg-white border border-gray-300">
           <thead id="tableHead-tab6"></thead>
