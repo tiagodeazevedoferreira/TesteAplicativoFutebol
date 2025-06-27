@@ -26,6 +26,20 @@ function normalizeString(str) {
     return str.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ');
 }
 
+function normalizePlayerName(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str.trim().toLowerCase();
+}
+
+function capitalizeWords(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
 async function fetchTimesApelidos() {
     const cacheKey = 'times_apelidos_cache';
     const cachedData = localStorage.getItem(cacheKey);
@@ -61,7 +75,8 @@ async function fetchTimesApelidos() {
         console.log('Mapa de times_apelidos:', apelidosMap);
         timesApelidos = apelidosMap;
         return apelidosMap;
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Erro ao buscar DE-PARA:', error.message);
         showError(`Erro ao carregar DE-PARA: ${error.message}. Usando nomes originais.`);
         return {};
@@ -790,10 +805,13 @@ function displayTab4() {
     filteredDataTab4 = filterDataSheet2(allDataSheet2, filters);
 
     const convocacoesPorJogador = {};
+    const nomeOriginalMap = {};
     filteredDataTab4.forEach(row => {
-        const jogador = row[0];
-        if (jogador) {
-            convocacoesPorJogador[jogador] = (convocacoesPorJogador[jogador] || 0) + 1;
+        const jogadorOriginal = row[0];
+        if (jogadorOriginal) {
+            const jogadorNormalizado = normalizePlayerName(jogadorOriginal);
+            convocacoesPorJogador[jogadorNormalizado] = (convocacoesPorJogador[jogadorNormalizado] || 0) + 1;
+            nomeOriginalMap[jogadorNormalizado] = jogadorOriginal; // Guarda o nome original mais recente
         }
     });
 
@@ -801,6 +819,7 @@ function displayTab4() {
         return convocacoesPorJogador[b] - convocacoesPorJogador[a];
     });
 
+    const jogadoresFormatados = jogadoresOrdenados.map(jogador => capitalizeWords(nomeOriginalMap[jogador]));
     const contagens = jogadoresOrdenados.map(jogador => convocacoesPorJogador[jogador]);
 
     const canvas = document.getElementById('convocacoesChart');
@@ -817,7 +836,7 @@ function displayTab4() {
     convocacoesChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: jogadoresOrdenados,
+            labels: jogadoresFormatados,
             datasets: [{
                 label: '',
                 data: contagens,
