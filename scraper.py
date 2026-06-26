@@ -20,27 +20,32 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 
 try:
     # Extrair tabela de classificação
-    url_classificacao = "https://eventos.admfutsal.com.br/evento/911"
+    url_classificacao = "https://eventos.admfutsal.com.br/evento/911"  # ATUALIZADO: era 864
     driver.get(url_classificacao)
     time.sleep(10)
-    table_classificacao = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, '.classification_table'))
+    WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, 'table'))
     )
+    # CORRIGIDO: seletor '.classification_table' não existe no evento 911
+    # Pega a primeira tabela da página, que é a classificação principal
+    tables_classificacao = driver.find_elements(By.CSS_SELECTOR, 'table')
+    table_classificacao = tables_classificacao[0]
     rows_classificacao = table_classificacao.find_elements(By.TAG_NAME, 'tr')
     data_classificacao = []
     for row in rows_classificacao:
         cols = row.find_elements(By.TAG_NAME, 'td')
         cols = [col.text for col in cols]
-        data_classificacao.append(cols)
+        if any(cols):  # Ignora linhas completamente vazias
+            data_classificacao.append(cols)
     df_classificacao = pd.DataFrame(data_classificacao)
     print(f"Dados de classificação extraídos: {len(data_classificacao)} linhas.")
 
     # Extrair tabela de jogos
-    url_jogos = "https://eventos.admfutsal.com.br/evento/911/jogos"
+    url_jogos = "https://eventos.admfutsal.com.br/evento/911/jogos"  # ATUALIZADO: era 864
     driver.get(url_jogos)
     time.sleep(10)
     table_jogos = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, 'table'))  # Ajuste este seletor se necessário
+        EC.presence_of_element_located((By.CSS_SELECTOR, 'table'))
     )
     rows_jogos = table_jogos.find_elements(By.TAG_NAME, 'tr')
     data_jogos = []
