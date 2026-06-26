@@ -854,7 +854,7 @@ function displayTab4() {
                     display: false
                 },
                 datalabels: {
-                    anchor: 'center',
+                    anchor: 'end',
                     align: 'start',
                     color: '#fff',
                     font: {
