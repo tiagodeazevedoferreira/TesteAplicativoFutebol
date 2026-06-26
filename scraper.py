@@ -20,7 +20,7 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 
 try:
     # Extrair tabela de classificação
-    url_classificacao = "https://eventos.admfutsal.com.br/evento/864"
+    url_classificacao = "https://eventos.admfutsal.com.br/evento/911"
     driver.get(url_classificacao)
     time.sleep(10)
     table_classificacao = WebDriverWait(driver, 20).until(
@@ -36,7 +36,7 @@ try:
     print(f"Dados de classificação extraídos: {len(data_classificacao)} linhas.")
 
     # Extrair tabela de jogos
-    url_jogos = "https://eventos.admfutsal.com.br/evento/864/jogos"
+    url_jogos = "https://eventos.admfutsal.com.br/evento/911/jogos"
     driver.get(url_jogos)
     time.sleep(10)
     table_jogos = WebDriverWait(driver, 20).until(
