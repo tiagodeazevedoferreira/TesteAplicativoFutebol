@@ -808,7 +808,9 @@ function displayTab4() {
     filteredDataTab4 = filterDataSheet2(allDataSheet2, filters);
 
     const canvas = document.getElementById('convocacoesChart');
-    if (!canvas) return;
+    const chartContainer = document.getElementById('convocacoesChartContainer');
+    const chartInner = document.getElementById('convocacoesChartInner');
+    if (!canvas || !chartContainer || !chartInner) return;
 
     if (convocacoesChart) {
         convocacoesChart.destroy();
@@ -844,6 +846,8 @@ function displayTab4() {
         const jogadoresFormatados = jogadoresOrdenados.map(jogador => capitalizeWords(nomeOriginalMap[jogador]));
         const contagens = jogadoresOrdenados.map(jogador => convocacoesPorJogador[jogador]);
 
+        chartInner.style.width = '100%';
+        canvas.style.width = '100%';
         canvas.style.height = `${Math.max(jogadoresOrdenados.length, 1) * 40}px`;
         convocacoesChart = new Chart(canvas.getContext('2d'), {
             type: 'bar',
@@ -925,8 +929,14 @@ function displayTab4() {
             .map(row => JSON.stringify([chaveJogo(row), normalizePlayerName(row[0])]))
     );
 
-    const alturaPorJogador = 48;
-    canvas.style.height = `${Math.max(jogadores.length, 1) * alturaPorJogador + 30}px`;
+    // Na Visão 2, cada jogador ocupa uma faixa vertical e cada jogo ganha
+    // espaço horizontal próprio. O contêiner permite rolagem quando necessário.
+    const alturaPorJogador = 40;
+    const larguraPorJogo = 110;
+    const larguraMinima = chartContainer.clientWidth || 320;
+    chartInner.style.width = `${Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo)}px`;
+    canvas.style.width = '100%';
+    canvas.style.height = `${Math.max(jogadores.length, 1) * alturaPorJogador + 50}px`;
     const nomesFormatados = jogadores.map(([, nome]) => capitalizeWords(nome));
     const datasets = jogadores.map(([jogadorNormalizado, nome], indice) => ({
         label: capitalizeWords(nome),
@@ -934,14 +944,16 @@ function displayTab4() {
             const presente = convocacoesPorJogoJogador.has(
                 JSON.stringify([chaveJogo(jogo), jogadorNormalizado])
             );
-            // Valor menor = parte superior da faixa; valor maior = parte inferior.
+            // Posição superior = convocado; inferior = não convocado.
             return indice + (presente ? -0.22 : 0.22);
         }),
         borderColor: 'rgba(59, 130, 246, 0.95)',
         backgroundColor: 'rgba(59, 130, 246, 0.95)',
-        borderWidth: 2,
-        pointRadius: 3,
-        pointHoverRadius: 5,
+        showLine: false,
+        borderWidth: 0,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointHitRadius: 10,
         tension: 0,
         fill: false
     }));
@@ -975,7 +987,7 @@ function displayTab4() {
             scales: {
                 x: {
                     title: { display: true, text: 'Data do jogo' },
-                    ticks: { autoSkip: false, maxRotation: 60, minRotation: 30 }
+                    ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, padding: 8 }
                 },
                 y: {
                     reverse: true,
@@ -986,6 +998,8 @@ function displayTab4() {
                     },
                     ticks: {
                         stepSize: 1,
+                        padding: 8,
+                        font: { size: 12 },
                         callback: value => Number.isInteger(Number(value)) ? (nomesFormatados[Number(value)] || '') : ''
                     },
                     title: { display: false },
