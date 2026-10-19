@@ -19,6 +19,7 @@ let isPivotTab2 = false; // Estado do Transpor para Aba 2 (Tabela)
 let isPivotTab5 = false; // Estado do Transpor para Aba 5 (Classificação)
 let isPivotTab6 = false; // Estado do Transpor para Aba 6 (Placar)
 let convocacoesChart = null; // Instância do gráfico Chart.js
+let convocacoesView = 1; // Visão ativa na aba Convocações (1 = barras, 2 = linha do tempo)
 let timesApelidos = {}; // Mapa de times/clubes para apelidos
 
 function normalizeString(str) {
@@ -802,95 +803,203 @@ function displayTab4() {
         dataInicio: document.getElementById('dataInicio-tab4')?.value || '',
         dataFim: document.getElementById('dataFim-tab4')?.value || ''
     };
+
+    // A lista de jogadores respeita todos os filtros, inclusive o jogador selecionado.
     filteredDataTab4 = filterDataSheet2(allDataSheet2, filters);
 
-    const convocacoesPorJogador = {};
-    const nomeOriginalMap = {};
-    filteredDataTab4.forEach(row => {
-        const jogadorOriginal = row[0];
-        if (jogadorOriginal) {
-            const jogadorNormalizado = normalizePlayerName(jogadorOriginal);
-            convocacoesPorJogador[jogadorNormalizado] = (convocacoesPorJogador[jogadorNormalizado] || 0) + 1;
-            nomeOriginalMap[jogadorNormalizado] = jogadorOriginal; // Guarda o nome original mais recente
-        }
-    });
-
-    const jogadoresOrdenados = Object.keys(convocacoesPorJogador).sort((a, b) => {
-        return convocacoesPorJogador[b] - convocacoesPorJogador[a];
-    });
-
-    const jogadoresFormatados = jogadoresOrdenados.map(jogador => capitalizeWords(nomeOriginalMap[jogador]));
-    const contagens = jogadoresOrdenados.map(jogador => convocacoesPorJogador[jogador]);
-
     const canvas = document.getElementById('convocacoesChart');
-    const numJogadores = jogadoresOrdenados.length;
-    const alturaPorJogador = 40;
-    const novaAltura = numJogadores * alturaPorJogador;
-    canvas.style.height = `${novaAltura}px`;
+    if (!canvas) return;
 
     if (convocacoesChart) {
         convocacoesChart.destroy();
+        convocacoesChart = null;
     }
 
-    const ctx = canvas.getContext('2d');
-    convocacoesChart = new Chart(ctx, {
-        type: 'bar',
+    const visao1Button = document.getElementById('convocacoes-visao1');
+    const visao2Button = document.getElementById('convocacoes-visao2');
+    if (visao1Button && visao2Button) {
+        visao1Button.classList.toggle('bg-blue-500', convocacoesView === 1);
+        visao1Button.classList.toggle('bg-gray-500', convocacoesView !== 1);
+        visao2Button.classList.toggle('bg-blue-500', convocacoesView === 2);
+        visao2Button.classList.toggle('bg-gray-500', convocacoesView !== 2);
+        visao1Button.setAttribute('aria-pressed', String(convocacoesView === 1));
+        visao2Button.setAttribute('aria-pressed', String(convocacoesView === 2));
+    }
+
+    if (convocacoesView === 1) {
+        const convocacoesPorJogador = {};
+        const nomeOriginalMap = {};
+        filteredDataTab4.forEach(row => {
+            const jogadorOriginal = row[0];
+            if (jogadorOriginal) {
+                const jogadorNormalizado = normalizePlayerName(jogadorOriginal);
+                convocacoesPorJogador[jogadorNormalizado] = (convocacoesPorJogador[jogadorNormalizado] || 0) + 1;
+                nomeOriginalMap[jogadorNormalizado] = jogadorOriginal;
+            }
+        });
+
+        const jogadoresOrdenados = Object.keys(convocacoesPorJogador).sort((a, b) =>
+            convocacoesPorJogador[b] - convocacoesPorJogador[a]
+        );
+        const jogadoresFormatados = jogadoresOrdenados.map(jogador => capitalizeWords(nomeOriginalMap[jogador]));
+        const contagens = jogadoresOrdenados.map(jogador => convocacoesPorJogador[jogador]);
+
+        canvas.style.height = `${Math.max(jogadoresOrdenados.length, 1) * 40}px`;
+        convocacoesChart = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: jogadoresFormatados,
+                datasets: [{
+                    label: '',
+                    data: contagens,
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: '#1d4ed8',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'start',
+                        color: '#fff',
+                        font: { weight: 'bold', size: 8 },
+                        formatter: (value, context) => context.chart.data.labels[context.dataIndex]
+                    }
+                },
+                scales: {
+                    x: { display: true, title: { display: false }, ticks: { stepSize: 1 } },
+                    y: { display: true, title: { display: false }, ticks: { display: false } }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+
+        if (jogadoresOrdenados.length === 0) {
+            showError('Nenhum dado encontrado com os filtros aplicados.');
+        } else {
+            clearError();
+        }
+        return;
+    }
+
+    // Datas/jogos respeitam campeonato, adversário e período, mas não o filtro de jogador,
+    // para que a ausência de um atleta em um jogo continue aparecendo na linha do tempo.
+    const filtrosDeJogos = { ...filters, jogador: '' };
+    const registrosDosJogos = filterDataSheet2(allDataSheet2, filtrosDeJogos);
+    const chaveJogo = row => JSON.stringify([
+        (row[1] || '').trim(),
+        (row[2] || '').trim(),
+        (row[3] || '').trim()
+    ]);
+    const jogosPorChave = new Map();
+    registrosDosJogos.forEach(row => {
+        if (row[1]) jogosPorChave.set(chaveJogo(row), row);
+    });
+
+    const jogosOrdenados = Array.from(jogosPorChave.values()).sort((a, b) => {
+        const dataA = new Date((a[1] || '').split('/').reverse().join('-'));
+        const dataB = new Date((b[1] || '').split('/').reverse().join('-'));
+        return dataA - dataB ||
+            String(a[3] || '').localeCompare(String(b[3] || ''), 'pt-BR') ||
+            String(a[2] || '').localeCompare(String(b[2] || ''), 'pt-BR');
+    });
+
+    const nomesPorJogador = new Map();
+    filteredDataTab4.forEach(row => {
+        if (!row[0]) return;
+        const chave = normalizePlayerName(row[0]);
+        if (!nomesPorJogador.has(chave)) nomesPorJogador.set(chave, row[0]);
+    });
+    const jogadores = Array.from(nomesPorJogador.entries()).sort((a, b) =>
+        a[1].localeCompare(b[1], 'pt-BR')
+    );
+
+    const convocacoesPorJogoJogador = new Set(
+        registrosDosJogos
+            .filter(row => row[0])
+            .map(row => JSON.stringify([chaveJogo(row), normalizePlayerName(row[0])]))
+    );
+
+    const alturaPorJogador = 48;
+    canvas.style.height = `${Math.max(jogadores.length, 1) * alturaPorJogador + 30}px`;
+    const nomesFormatados = jogadores.map(([, nome]) => capitalizeWords(nome));
+    const datasets = jogadores.map(([jogadorNormalizado, nome], indice) => ({
+        label: capitalizeWords(nome),
+        data: jogosOrdenados.map(jogo => {
+            const presente = convocacoesPorJogoJogador.has(
+                JSON.stringify([chaveJogo(jogo), jogadorNormalizado])
+            );
+            // Valor menor = parte superior da faixa; valor maior = parte inferior.
+            return indice + (presente ? -0.22 : 0.22);
+        }),
+        borderColor: 'rgba(59, 130, 246, 0.95)',
+        backgroundColor: 'rgba(59, 130, 246, 0.95)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        tension: 0,
+        fill: false
+    }));
+
+    convocacoesChart = new Chart(canvas.getContext('2d'), {
+        type: 'line',
         data: {
-            labels: jogadoresFormatados,
-            datasets: [{
-                label: '',
-                data: contagens,
-                backgroundColor: 'rgba(59, 130, 246, 0.6)',
-                borderColor: '#1d4ed8',
-                borderWidth: 1
-            }]
+            labels: jogosOrdenados.map(jogo => jogo[1]),
+            datasets
         },
         options: {
-            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: 'nearest', intersect: false },
             plugins: {
-                legend: {
-                    display: false
-                },
-                datalabels: {
-                    anchor: 'end',
-                    align: 'start',
-                    color: '#fff',
-                    font: {
-                        weight: 'bold',
-                        size: 8
-                    },
-                    formatter: (value, context) => {
-                        return context.chart.data.labels[context.dataIndex];
+                legend: { display: false },
+                datalabels: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: items => {
+                            const jogo = jogosOrdenados[items[0]?.dataIndex];
+                            return jogo ? [jogo[1], jogo[2] || '', jogo[3] || ''].filter(Boolean).join(' — ') : '';
+                        },
+                        label: context => {
+                            const presente = context.parsed.y < context.datasetIndex;
+                            return `${context.dataset.label}: ${presente ? 'Convocado' : 'Não convocado'}`;
+                        }
                     }
                 }
             },
             scales: {
                 x: {
-                    display: true,
-                    title: {
-                        display: false
-                    },
-                    ticks: {
-                        stepSize: 1
-                    }
+                    title: { display: true, text: 'Data do jogo' },
+                    ticks: { autoSkip: false, maxRotation: 60, minRotation: 30 }
                 },
                 y: {
-                    display: true,
-                    title: {
-                        display: false
+                    reverse: true,
+                    min: -0.5,
+                    max: Math.max(jogadores.length - 0.5, 0.5),
+                    afterBuildTicks: axis => {
+                        axis.ticks = jogadores.map((_, indice) => ({ value: indice }));
                     },
                     ticks: {
-                        display: false
+                        stepSize: 1,
+                        callback: value => Number.isInteger(Number(value)) ? (nomesFormatados[Number(value)] || '') : ''
+                    },
+                    title: { display: false },
+                    grid: {
+                        color: context => Number.isInteger(Number(context.tick.value))
+                            ? 'rgba(148, 163, 184, 0.25)'
+                            : 'rgba(0,0,0,0)'
                     }
                 }
             }
-        },
-        plugins: [ChartDataLabels]
+        }
     });
 
-    if (jogadoresOrdenados.length === 0) {
+    if (jogadores.length === 0 || jogosOrdenados.length === 0) {
         showError('Nenhum dado encontrado com os filtros aplicados.');
     } else {
         clearError();
@@ -1028,6 +1137,16 @@ document.getElementById('pivot-tab2')?.addEventListener('click', () => {
     console.log('Botão Transpor clicado (Tab 2)');
     isPivotTab2 = !isPivotTab2;
     displayTab2();
+});
+
+document.getElementById('convocacoes-visao1')?.addEventListener('click', () => {
+    convocacoesView = 1;
+    displayTab4();
+});
+
+document.getElementById('convocacoes-visao2')?.addEventListener('click', () => {
+    convocacoesView = 2;
+    displayTab4();
 });
 
 document.getElementById('aplicarFiltros-tab4')?.addEventListener('click', () => {
