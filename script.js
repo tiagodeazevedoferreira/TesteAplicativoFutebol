@@ -916,7 +916,7 @@ function displayTab4() {
         if (!nomesPorJogador.has(chave)) nomesPorJogador.set(chave, row[0]);
     });
     const jogadores = Array.from(nomesPorJogador.entries()).sort((a, b) =>
-        a[1].localeCompare(b[1], 'pt-BR')
+        a[1].localeCompare(b[1], 'pt-BR', { sensitivity: 'base' })
     );
 
     const convocacoesPorJogoJogador = new Set(
