@@ -167,14 +167,14 @@ function parseDateString(dateStr) {
     let match;
 
     // Aceita datas ISO, inclusive quando a planilha inclui horário.
-    match = value.match(/^(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})(?:$|[T\\s])/);
+    match = value.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:$|[T\s])/);
     if (match) {
         year = Number(match[1]);
         month = Number(match[2]);
         day = Number(match[3]);
     } else {
         // Aceita D/M/AAAA ou DD/MM/AAAA, com ou sem horário ao final.
-        match = value.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})(?:$|[T\\s])/);
+        match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:$|[T\s])/);
         if (!match) return null;
         day = Number(match[1]);
         month = Number(match[2]);
