@@ -675,12 +675,12 @@ function filterDataSheet2(data, filters) {
     console.log('Aplicando filtros (Sheet2):', filters);
 
     return data.slice(1).filter((row, index) => {
-        if (!row || row.length < 4) {
+        if (!row || row.length < 5) {
             console.log(`Linha ${index + 2} inválida na Sheet2:`, row);
             return false;
         }
 
-        const [jogador, dataStr, adversario, campeonato] = row;
+        const [jogador, time, adversario, campeonato, dataStr] = row;
 
         // "Referência" é um registro auxiliar, não um jogador, e não deve aparecer no gráfico.
         if (normalizeString(jogador) === 'referencia') return false;
@@ -938,24 +938,24 @@ function displayTab4() {
     const filtrosDeJogos = { ...filters, jogador: '' };
     const registrosDosJogos = filterDataSheet2(allDataSheet2, filtrosDeJogos);
     const chaveJogo = row => JSON.stringify([
-        (row[1] || '').trim(),
+        (row[4] || '').trim(),
         (row[2] || '').trim(),
         (row[3] || '').trim()
     ]);
     const jogosPorChave = new Map();
     registrosDosJogos.forEach(row => {
-        if (row[1]) jogosPorChave.set(chaveJogo(row), row);
+        if (row[4]) jogosPorChave.set(chaveJogo(row), row);
     });
 
     const jogosOrdenados = Array.from(jogosPorChave.values()).sort((a, b) => {
-        const dataA = parseDateString(a[1]);
-        const dataB = parseDateString(b[1]);
+        const dataA = parseDateString(a[4]);
+        const dataB = parseDateString(b[4]);
         // Datas válidas sempre ficam em ordem cronológica; formatos inesperados
         // usam o texto original como fallback, em vez de irem todos para o início.
         if (dataA && dataB && dataA.getTime() !== dataB.getTime()) return dataA - dataB;
         if (dataA && !dataB) return -1;
         if (!dataA && dataB) return 1;
-        return String(a[1] || '').localeCompare(String(b[1] || ''), 'pt-BR') ||
+        return String(a[4] || '').localeCompare(String(b[4] || ''), 'pt-BR') ||
             String(a[3] || '').localeCompare(String(b[3] || ''), 'pt-BR') ||
             String(a[2] || '').localeCompare(String(b[2] || ''), 'pt-BR');
     });
@@ -965,7 +965,7 @@ function displayTab4() {
     // em alguma das datas exibidas.
     const nomesPorJogador = new Map();
     allDataSheet2.slice(1).forEach(row => {
-        if (!row || row.length < 4 || !row[0]) return;
+        if (!row || row.length < 5 || !row[0]) return;
         if (normalizeString(row[0]) === 'referencia') return;
         if (filters.jogador && row[0] !== filters.jogador) return;
         if (filters.campeonato && row[3] !== filters.campeonato) return;
@@ -1032,7 +1032,7 @@ function displayTab4() {
     convocacoesChart = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: {
-            labels: jogosOrdenados.map(jogo => formatConvocacoesDate(jogo[1])),
+            labels: jogosOrdenados.map(jogo => formatConvocacoesDate(jogo[4])),
             datasets
         },
         options: {
@@ -1046,7 +1046,7 @@ function displayTab4() {
                     callbacks: {
                         title: items => {
                             const jogo = jogosOrdenados[items[0]?.dataIndex];
-                            return jogo ? [jogo[1], jogo[2] || '', jogo[3] || ''].filter(Boolean).join(' — ') : '';
+                            return jogo ? [jogo[4], jogo[2] || '', jogo[3] || ''].filter(Boolean).join(' — ') : '';
                         },
                         label: context => {
                             const jogo = jogosOrdenados[context.dataIndex];
