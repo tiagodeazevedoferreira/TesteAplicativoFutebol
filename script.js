@@ -874,8 +874,10 @@ function displayTab4() {
         const contagens = jogadoresOrdenados.map(jogador => convocacoesPorJogador[jogador]);
 
         chartInner.style.width = '100%';
+        const alturaGrafico = Math.max(jogadoresOrdenados.length, 1) * 40;
+        chartInner.style.height = `${alturaGrafico}px`;
         canvas.style.width = '100%';
-        canvas.style.height = `${Math.max(jogadoresOrdenados.length, 1) * 40}px`;
+        canvas.style.height = `${alturaGrafico}px`;
         convocacoesChart = new Chart(canvas.getContext('2d'), {
             type: 'bar',
             data: {
@@ -961,8 +963,10 @@ function displayTab4() {
     const larguraPorJogo = 82;
     const larguraMinima = chartContainer.clientWidth || 320;
     chartInner.style.width = Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo) + 'px';
+    const alturaGrafico = Math.max(jogadores.length, 1) * alturaPorJogador + 64;
+    chartInner.style.height = `${alturaGrafico}px`;
     canvas.style.width = '100%';
-    canvas.style.height = (Math.max(jogadores.length, 1) * alturaPorJogador + 64) + 'px';
+    canvas.style.height = `${alturaGrafico}px`;
     const nomesFormatados = jogadores.map(([, nome]) => capitalizeWords(nome));
     const verdeConvocado = '#16a34a';
     const cinzaNaoConvocado = '#d1d5db';

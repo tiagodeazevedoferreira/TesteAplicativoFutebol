@@ -145,9 +145,22 @@ th.sort-desc::after {
   object-fit: cover;
 }
 
+/* O gráfico pode ser maior que a área visível; o contêiner permite navegar sem cortar jogadores. */
+#convocacoesChartContainer {
+  max-height: 70vh;
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#convocacoesChartInner {
+  position: relative;
+  min-width: 100%;
+}
+
 #convocacoesChart {
-  max-width: 100%;
-  height: auto;
+  display: block;
+  max-width: none;
 }
 
 #jogosTable-tab5 {
@@ -172,10 +185,6 @@ th.sort-desc::after {
   th, td {
     padding: 4px;
     max-width: 150px;
-  }
-
-  #convocacoesChart {
-    max-height: 300px;
   }
 
   #jogosTable-tab5 {
