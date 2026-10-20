@@ -46,7 +46,7 @@ button{border:0;border-radius:7px;padding:10px 15px;font-weight:700;cursor:point
 <section class="panel">
   <div class="legend"><span><i class="dot green"></i>Convocado</span><span><i class="dot gray"></i>Não convocado</span><span id="summary"></span></div>
   <div class="chart-shell" id="chartShell"><div class="chart-track" id="chartTrack"><div class="names-column" id="namesColumn"></div><div class="chart-inner" id="chartInner"><canvas id="timeline"></canvas></div></div></div>
-  <p class="note">Nesta prévia, a lista de jogadores é independente dos filtros de período, campeonato e adversário. Assim, um atleta sem convocação no recorte continua visível, com pontos cinza. A largura por jogo foi reduzida para cerca de 30% da configuração anterior (aproximadamente 25 px por data). As datas aparecem na vertical, em DD/MM. Role verticalmente para percorrer até 35 jogadores e horizontalmente para percorrer os jogos.</p>
+  <p class="note">Nesta prévia, a lista de jogadores é independente dos filtros de período, campeonato e adversário. Assim, um atleta sem convocação no recorte continua visível, com pontos cinza. A largura por jogo foi reduzida para cerca de 30% da configuração anterior (aproximadamente 25 px por data). As datas aparecem na vertical, em DD/MM. Os nomes ficam fixos à esquerda mesmo durante a rolagem horizontal. Role verticalmente para percorrer até 35 jogadores e horizontalmente para percorrer os jogos.</p>
 </section>
 <script>
 const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
@@ -95,7 +95,7 @@ function draw(){
   const called=new Set(filteredGamesRows.filter(r=>r[0]&&!isReference(r[0])).map(r=>JSON.stringify([gameKey(r),norm(r[0])])));
   const rowHeight=10;
   const plotWidth=Math.max($('chartShell').clientWidth-212, games.length*25, 240);
-  const height=Math.max(players.length,1)*rowHeight+88;
+  const height=Math.max(players.length,1)*rowHeight+60;
   $('chartTrack').style.height=height+'px';
   $('namesColumn').style.height=(players.length*rowHeight+8)+'px';
   $('namesColumn').innerHTML=players.map(([,name])=>{
