@@ -959,7 +959,7 @@ function displayTab4() {
     );
 
     // Visão 2: uma única faixa por jogador; a cor do ponto indica o status.
-    const alturaPorJogador = 23;
+    const alturaPorJogador = 10;
     const larguraPorJogo = 82;
     const larguraMinima = chartContainer.clientWidth || 320;
     chartInner.style.width = Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo) + 'px';
