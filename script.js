@@ -929,31 +929,34 @@ function displayTab4() {
             .map(row => JSON.stringify([chaveJogo(row), normalizePlayerName(row[0])]))
     );
 
-    // Na Visão 2, cada jogador ocupa uma faixa vertical e cada jogo ganha
-    // espaço horizontal próprio. O contêiner permite rolagem quando necessário.
-    const alturaPorJogador = 40;
-    const larguraPorJogo = 110;
+    // Visão 2: uma única faixa por jogador; a cor do ponto indica o status.
+    const alturaPorJogador = 32;
+    const larguraPorJogo = 82;
     const larguraMinima = chartContainer.clientWidth || 320;
-    chartInner.style.width = `${Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo)}px`;
+    chartInner.style.width = Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo) + 'px';
     canvas.style.width = '100%';
-    canvas.style.height = `${Math.max(jogadores.length, 1) * alturaPorJogador + 50}px`;
+    canvas.style.height = (Math.max(jogadores.length, 1) * alturaPorJogador + 42) + 'px';
     const nomesFormatados = jogadores.map(([, nome]) => capitalizeWords(nome));
+    const verdeConvocado = '#16a34a';
+    const cinzaNaoConvocado = '#d1d5db';
     const datasets = jogadores.map(([jogadorNormalizado, nome], indice) => ({
         label: capitalizeWords(nome),
-        data: jogosOrdenados.map(jogo => {
-            const presente = convocacoesPorJogoJogador.has(
-                JSON.stringify([chaveJogo(jogo), jogadorNormalizado])
-            );
-            // Posição superior = convocado; inferior = não convocado.
-            return indice + (presente ? -0.22 : 0.22);
-        }),
-        borderColor: 'rgba(59, 130, 246, 0.95)',
-        backgroundColor: 'rgba(59, 130, 246, 0.95)',
+        data: jogosOrdenados.map(() => indice),
+        backgroundColor: jogosOrdenados.map(jogo =>
+            convocacoesPorJogoJogador.has(JSON.stringify([chaveJogo(jogo), jogadorNormalizado]))
+                ? verdeConvocado
+                : cinzaNaoConvocado
+        ),
+        borderColor: jogosOrdenados.map(jogo =>
+            convocacoesPorJogoJogador.has(JSON.stringify([chaveJogo(jogo), jogadorNormalizado]))
+                ? verdeConvocado
+                : cinzaNaoConvocado
+        ),
         showLine: false,
         borderWidth: 0,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        pointHitRadius: 10,
+        pointRadius: 3,
+        pointHoverRadius: 4.5,
+        pointHitRadius: 7,
         tension: 0,
         fill: false
     }));
@@ -961,13 +964,18 @@ function displayTab4() {
     convocacoesChart = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: {
-            labels: jogosOrdenados.map(jogo => jogo[1]),
+            labels: jogosOrdenados.map(jogo => {
+                const partes = String(jogo[1] || '').split('/');
+                return partes.length >= 2
+                    ? partes[0].padStart(2, '0') + '/' + partes[1].padStart(2, '0')
+                    : jogo[1];
+            }),
             datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: { mode: 'nearest', intersect: false },
+            interaction: { mode: 'nearest', intersect: true },
             plugins: {
                 legend: { display: false },
                 datalabels: { display: false },
@@ -978,16 +986,26 @@ function displayTab4() {
                             return jogo ? [jogo[1], jogo[2] || '', jogo[3] || ''].filter(Boolean).join(' — ') : '';
                         },
                         label: context => {
-                            const presente = context.parsed.y < context.datasetIndex;
-                            return `${context.dataset.label}: ${presente ? 'Convocado' : 'Não convocado'}`;
+                            const jogo = jogosOrdenados[context.dataIndex];
+                            const jogador = jogadores[context.datasetIndex]?.[0];
+                            const presente = Boolean(jogo && jogador && convocacoesPorJogoJogador.has(
+                                JSON.stringify([chaveJogo(jogo), jogador])
+                            ));
+                            return context.dataset.label + ': ' + (presente ? 'Convocado' : 'Não convocado');
                         }
                     }
                 }
             },
             scales: {
                 x: {
-                    title: { display: true, text: 'Data do jogo' },
-                    ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, padding: 8 }
+                    title: { display: true, text: 'Data' },
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        padding: 5,
+                        font: { size: 9 }
+                    }
                 },
                 y: {
                     reverse: true,
@@ -998,14 +1016,14 @@ function displayTab4() {
                     },
                     ticks: {
                         stepSize: 1,
-                        padding: 8,
-                        font: { size: 12 },
+                        padding: 6,
+                        font: { size: 10 },
                         callback: value => Number.isInteger(Number(value)) ? (nomesFormatados[Number(value)] || '') : ''
                     },
                     title: { display: false },
                     grid: {
                         color: context => Number.isInteger(Number(context.tick.value))
-                            ? 'rgba(148, 163, 184, 0.25)'
+                            ? 'rgba(148, 163, 184, 0.18)'
                             : 'rgba(0,0,0,0)'
                     }
                 }
@@ -1013,6 +1031,7 @@ function displayTab4() {
         }
     });
 
+    
     if (jogadores.length === 0 || jogosOrdenados.length === 0) {
         showError('Nenhum dado encontrado com os filtros aplicados.');
     } else {
