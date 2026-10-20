@@ -22,7 +22,7 @@ button{border:0;border-radius:7px;padding:10px 15px;font-weight:700;cursor:point
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
 .green{background:#16a34a}.gray{background:#d1d5db}
 .chart-shell{max-height:70vh;overflow:auto;border:1px solid #e2e8f0;border-radius:8px;overscroll-behavior:contain}
-.chart-inner{position:relative;min-width:100%}
+.chart-track{display:flex;align-items:flex-start;min-width:100%;width:max-content}.names-column{position:sticky;left:0;z-index:3;flex:0 0 210px;width:210px;background:#fff;border-right:1px solid #dce2ea;padding-top:8px}.name-row{height:10px;line-height:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px;font-size:8px;border-bottom:1px solid rgba(148,163,184,.12)}.chart-inner{position:relative;flex:0 0 auto}
 .note{font-size:.85rem;color:#536174;line-height:1.45;margin-top:12px}
 @media(max-width:600px){body{padding:10px}.panel{padding:12px}header h1{font-size:1.25rem}}
 </style>
@@ -45,7 +45,7 @@ button{border:0;border-radius:7px;padding:10px 15px;font-weight:700;cursor:point
 </section>
 <section class="panel">
   <div class="legend"><span><i class="dot green"></i>Convocado</span><span><i class="dot gray"></i>Não convocado</span><span id="summary"></span></div>
-  <div class="chart-shell" id="chartShell"><div class="chart-inner" id="chartInner"><canvas id="timeline"></canvas></div></div>
+  <div class="chart-shell" id="chartShell"><div class="chart-track" id="chartTrack"><div class="names-column" id="namesColumn"></div><div class="chart-inner" id="chartInner"><canvas id="timeline"></canvas></div></div></div>
   <p class="note">Nesta prévia, a lista de jogadores é independente dos filtros de período, campeonato e adversário. Assim, um atleta sem convocação no recorte continua visível, com pontos cinza. A largura por jogo foi reduzida para cerca de 30% da configuração anterior (aproximadamente 25 px por data). As datas aparecem na vertical, em DD/MM. Role verticalmente para percorrer até 35 jogadores e horizontalmente para percorrer os jogos.</p>
 </section>
 <script>
@@ -93,10 +93,18 @@ function draw(){
   let players=[...playersMap.entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR',{sensitivity:'base'}));
   if(selectedPlayer)players=players.filter(([,name])=>name===selectedPlayer);
   const called=new Set(filteredGamesRows.filter(r=>r[0]&&!isReference(r[0])).map(r=>JSON.stringify([gameKey(r),norm(r[0])])));
-  const width=Math.max($('chartShell').clientWidth-2, games.length*25, 320);
-  const height=Math.max(players.length,1)*10+88;
-  $('chartInner').style.width=width+'px';$('chartInner').style.height=height+'px';
-  $('timeline').style.width=width+'px';$('timeline').style.height=height+'px';
+  const rowHeight=10;
+  const plotWidth=Math.max($('chartShell').clientWidth-212, games.length*25, 240);
+  const height=Math.max(players.length,1)*rowHeight+88;
+  $('chartTrack').style.height=height+'px';
+  $('namesColumn').style.height=(players.length*rowHeight+8)+'px';
+  $('namesColumn').innerHTML=players.map(([,name])=>{
+    const safeName=String(name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const safeTitle=safeName.replace(/"/g,'&quot;');
+    return '<div class="name-row" title="'+safeTitle+'">'+safeName+'</div>';
+  }).join('');
+  $('chartInner').style.width=plotWidth+'px';$('chartInner').style.height=height+'px';
+  $('timeline').style.width=plotWidth+'px';$('timeline').style.height=height+'px';
   if(chart)chart.destroy();
   const labels=games.map(g=>dateLabel(g[1]));
   const datasets=players.map(([key,name],index)=>({
@@ -125,9 +133,9 @@ function draw(){
           afterBuildTicks:axis=>{axis.ticks=games.map((_,i)=>({value:i}))},
           ticks:{autoSkip:false,minRotation:90,maxRotation:90,padding:4,font:{size:9},callback:value=>Number.isInteger(Number(value))?(labels[Number(value)]||''):''}
         },
-        y:{reverse:true,min:-0.5,max:Math.max(players.length-0.5,0.5),grid:{color:'rgba(148,163,184,.16)'},
+        y:{reverse:true,min:-0.5,max:Math.max(players.length-0.5,0.5),grid:{color:'rgba(148,163,184,.16)',drawTicks:false},border:{display:false},
           afterBuildTicks:axis=>{axis.ticks=players.map((_,i)=>({value:i}))},
-          ticks:{stepSize:1,padding:4,font:{size:8},callback:value=>Number.isInteger(Number(value))?(players[Number(value)]?.[1]||''):''}
+          ticks:{display:false,stepSize:1,padding:0,font:{size:8}}
         }
       }
     }
