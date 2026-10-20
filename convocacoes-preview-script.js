@@ -164,13 +164,23 @@ function parseDateString(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return null;
     const value = dateStr.trim();
     let year, month, day;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        [year, month, day] = value.split('-').map(Number);
-    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
-        [day, month, year] = value.split('/').map(Number);
+    let match;
+
+    // Aceita datas ISO, inclusive quando a planilha inclui horário.
+    match = value.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:$|[T\s])/);
+    if (match) {
+        year = Number(match[1]);
+        month = Number(match[2]);
+        day = Number(match[3]);
     } else {
-        return null;
+        // Aceita D/M/AAAA ou DD/MM/AAAA, com ou sem horário ao final.
+        match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:$|[T\s])/);
+        if (!match) return null;
+        day = Number(match[1]);
+        month = Number(match[2]);
+        year = Number(match[3]);
     }
+
     const date = new Date(year, month - 1, day);
     return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
         ? date
@@ -179,9 +189,9 @@ function parseDateString(dateStr) {
 
 function formatConvocacoesDate(dateStr) {
     const date = parseDateString(dateStr);
-    return date
-        ? String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0')
-        : '';
+    // Não deixa o rótulo desaparecer caso a fonte traga uma data em formato inesperado.
+    if (!date) return String(dateStr || '').trim();
+    return String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0');
 }
 
 function isValidDateFormat(dateStr) {
@@ -938,9 +948,14 @@ function displayTab4() {
     });
 
     const jogosOrdenados = Array.from(jogosPorChave.values()).sort((a, b) => {
-        const dataA = parseDateString(a[1]) || new Date(0);
-        const dataB = parseDateString(b[1]) || new Date(0);
-        return dataA - dataB ||
+        const dataA = parseDateString(a[1]);
+        const dataB = parseDateString(b[1]);
+        // Datas válidas sempre ficam em ordem cronológica; formatos inesperados
+        // usam o texto original como fallback, em vez de irem todos para o início.
+        if (dataA && dataB && dataA.getTime() !== dataB.getTime()) return dataA - dataB;
+        if (dataA && !dataB) return -1;
+        if (!dataA && dataB) return 1;
+        return String(a[1] || '').localeCompare(String(b[1] || ''), 'pt-BR') ||
             String(a[3] || '').localeCompare(String(b[3] || ''), 'pt-BR') ||
             String(a[2] || '').localeCompare(String(b[2] || ''), 'pt-BR');
     });
@@ -980,8 +995,8 @@ function displayTab4() {
 
     // Visão 2: matriz compacta de células por jogador e jogo.
     // Cada célula indica convocação (verde) ou ausência (cinza).
-    const alturaPorJogador = 21;
-    const larguraPorJogo = 16;
+    const alturaPorJogador = 18;
+    const larguraPorJogo = 14;
     const larguraMinima = chartContainer.clientWidth || 320;
     chartInner.style.width = Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo) + 'px';
     const alturaGrafico = Math.max(jogadores.length, 1) * alturaPorJogador + 64;
@@ -1007,9 +1022,9 @@ function displayTab4() {
         showLine: false,
         borderWidth: 0,
         pointStyle: 'rectRounded',
-        pointRadius: 7,
-        pointHoverRadius: 7.5,
-        pointHitRadius: 8,
+        pointRadius: 6,
+        pointHoverRadius: 6.5,
+        pointHitRadius: 7,
         tension: 0,
         fill: false
     }));
@@ -1052,8 +1067,7 @@ function displayTab4() {
                         maxRotation: 90,
                         minRotation: 90,
                         padding: 8,
-                        font: { size: 9 },
-                        callback: (value, index) => formatConvocacoesDate(jogosOrdenados[index]?.[1])
+                        font: { size: 9 }
                     }
                 },
                 y: {
