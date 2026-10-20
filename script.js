@@ -20,6 +20,7 @@ let isPivotTab5 = false; // Estado do Transpor para Aba 5 (Classificação)
 let isPivotTab6 = false; // Estado do Transpor para Aba 6 (Placar)
 let convocacoesChart = null; // Instância do gráfico Chart.js
 let convocacoesView = 1; // Visão ativa na aba Convocações (1 = barras, 2 = linha do tempo)
+let convocacoesSortOrder = 'alfabetica'; // Ordenação da Visão 2: alfabeticamente ou por quantidade de jogos
 let timesApelidos = {}; // Mapa de times/clubes para apelidos
 
 function normalizeString(str) {
@@ -860,6 +861,11 @@ function displayTab4() {
         visao2Button.setAttribute('aria-pressed', String(convocacoesView === 2));
     }
 
+    const ordenacaoVisao2 = document.getElementById('convocacoes-visao2-ordenacao');
+    if (ordenacaoVisao2) {
+        ordenacaoVisao2.style.display = convocacoesView === 2 ? 'flex' : 'none';
+    }
+
     if (convocacoesView === 1) {
         const convocacoesPorJogador = {};
         const nomeOriginalMap = {};
@@ -954,15 +960,31 @@ function displayTab4() {
         const chave = normalizePlayerName(row[0]);
         if (!nomesPorJogador.has(chave)) nomesPorJogador.set(chave, row[0]);
     });
-    const jogadores = Array.from(nomesPorJogador.entries()).sort((a, b) =>
-        a[1].localeCompare(b[1], 'pt-BR', { sensitivity: 'base' })
-    );
+    const jogadores = Array.from(nomesPorJogador.entries());
 
+    // Cada combinação jogador/jogo é contada uma única vez, mesmo que haja registros duplicados na fonte.
     const convocacoesPorJogoJogador = new Set(
         registrosDosJogos
             .filter(row => row[0])
             .map(row => JSON.stringify([chaveJogo(row), normalizePlayerName(row[0])]))
     );
+    const quantidadePorJogador = new Map();
+    convocacoesPorJogoJogador.forEach(registro => {
+        const [, jogadorNormalizado] = JSON.parse(registro);
+        quantidadePorJogador.set(
+            jogadorNormalizado,
+            (quantidadePorJogador.get(jogadorNormalizado) || 0) + 1
+        );
+    });
+
+    jogadores.sort((a, b) => {
+        if (convocacoesSortOrder === 'quantidade') {
+            const diferencaQuantidade =
+                (quantidadePorJogador.get(b[0]) || 0) - (quantidadePorJogador.get(a[0]) || 0);
+            if (diferencaQuantidade !== 0) return diferencaQuantidade;
+        }
+        return a[1].localeCompare(b[1], 'pt-BR', { sensitivity: 'base' });
+    });
 
     // Visão 2: matriz compacta de células por jogador e jogo.
     // Cada célula indica convocação (verde) ou ausência (cinza).
@@ -1216,6 +1238,11 @@ document.getElementById('convocacoes-visao1')?.addEventListener('click', () => {
 
 document.getElementById('convocacoes-visao2')?.addEventListener('click', () => {
     convocacoesView = 2;
+    displayTab4();
+});
+
+document.getElementById('convocacoes-visao2-ordem')?.addEventListener('change', event => {
+    convocacoesSortOrder = event.target.value === 'quantidade' ? 'quantidade' : 'alfabetica';
     displayTab4();
 });
 
