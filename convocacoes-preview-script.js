@@ -945,17 +945,30 @@ function displayTab4() {
             String(a[2] || '').localeCompare(String(b[2] || ''), 'pt-BR');
     });
 
-    // Elenco mestre independente dos filtros de jogo. Assim, atletas sem registro
-    // no recorte continuam visíveis e recebem pontos cinza nos jogos selecionados.
+    // Define o elenco pelo campeonato/adversário selecionados, mas ignora o período
+    // para manter visíveis os atletas do recorte mesmo quando não foram convocados
+    // em alguma das datas exibidas.
     const nomesPorJogador = new Map();
     allDataSheet2.slice(1).forEach(row => {
         if (!row || row.length < 4 || !row[0]) return;
         if (normalizeString(row[0]) === 'referencia') return;
         if (filters.jogador && row[0] !== filters.jogador) return;
+        if (filters.campeonato && row[3] !== filters.campeonato) return;
+        if (filters.adversario && row[2] !== filters.adversario) return;
         const chave = normalizePlayerName(row[0]);
         if (!nomesPorJogador.has(chave)) nomesPorJogador.set(chave, row[0]);
     });
+
+    // Ordena o elenco pela quantidade de convocações no recorte atual.
+    // Em caso de empate, usa ordem alfabética apenas como critério secundário.
+    const contagensPorJogador = new Map();
+    registrosDosJogos.forEach(row => {
+        if (!row[0]) return;
+        const chave = normalizePlayerName(row[0]);
+        contagensPorJogador.set(chave, (contagensPorJogador.get(chave) || 0) + 1);
+    });
     const jogadores = Array.from(nomesPorJogador.entries()).sort((a, b) =>
+        (contagensPorJogador.get(b[0]) || 0) - (contagensPorJogador.get(a[0]) || 0) ||
         a[1].localeCompare(b[1], 'pt-BR', { sensitivity: 'base' })
     );
 
