@@ -1,164 +1,454 @@
-<!doctype html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prévia — Linha do tempo de convocações</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<style>
-:root{font-family:Arial,Helvetica,sans-serif;color:#172033;background:#f3f5f8}
-*{box-sizing:border-box}body{margin:0;padding:20px}
-header,.panel{max-width:1500px;margin:0 auto 16px}
-header h1{margin:0 0 8px;font-size:1.55rem}header p{margin:0;color:#536174;line-height:1.45}
-.panel{background:#fff;border:1px solid #dce2ea;border-radius:12px;padding:16px;box-shadow:0 2px 8px #1720330a}
-.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-label{display:block;font-size:.85rem;font-weight:700;margin-bottom:5px}
-select,input{width:100%;min-height:38px;border:1px solid #c7d0dc;border-radius:6px;padding:7px;background:white;color:#172033}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-button{border:0;border-radius:7px;padding:10px 15px;font-weight:700;cursor:pointer}
-.primary{background:#1769aa;color:white}.secondary{background:#e6ebf1;color:#172033}
-.status{margin:12px 0 0;color:#536174;font-size:.9rem}.error{color:#b42318}
-.legend{display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-size:.9rem;margin-bottom:12px}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
-.green{background:#16a34a}.gray{background:#d1d5db}
-.chart-shell{max-height:70vh;overflow:auto;border:1px solid #e2e8f0;border-radius:8px;overscroll-behavior:contain}
-.chart-track{display:flex;align-items:flex-start;min-width:100%;width:max-content}.names-column{position:sticky;left:0;z-index:3;flex:0 0 210px;width:210px;background:#fff;border-right:1px solid #dce2ea;padding-top:8px}.name-row{height:10px;line-height:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px;font-size:8px;border-bottom:1px solid rgba(148,163,184,.12)}.chart-inner{position:relative;flex:0 0 auto}
-.note{font-size:.85rem;color:#536174;line-height:1.45;margin-top:12px}
-@media(max-width:600px){body{padding:10px}.panel{padding:12px}header h1{font-size:1.25rem}}
-</style>
-</head>
-<body>
-<header>
-  <h1>Pré-visualização — Convocações por jogador</h1>
-  <p>Ambiente separado para validar a linha do tempo antes de alterar o dashboard principal. Os dados são carregados da planilha de origem.</p>
-</header>
-<section class="panel">
-  <div class="filters">
-    <div><label for="player">Jogador</label><select id="player"><option value="">Todos os jogadores</option></select></div>
-    <div><label for="opponent">Adversário</label><select id="opponent"><option value="">Todos</option></select></div>
-    <div><label for="competition">Campeonato</label><select id="competition"><option value="">Todos</option></select></div>
-    <div><label for="start">Data inicial</label><input id="start" type="date"></div>
-    <div><label for="end">Data final</label><input id="end" type="date"></div>
-  </div>
-  <div class="actions"><button class="primary" id="apply">Aplicar filtros</button><button class="secondary" id="reset">Limpar filtros</button></div>
-  <p class="status" id="status">Carregando dados da planilha…</p>
-</section>
-<section class="panel">
-  <div class="legend"><span><i class="dot green"></i>Convocado</span><span><i class="dot gray"></i>Não convocado</span><span id="summary"></span></div>
-  <div class="chart-shell" id="chartShell"><div class="chart-track" id="chartTrack"><div class="names-column" id="namesColumn"></div><div class="chart-inner" id="chartInner"><canvas id="timeline"></canvas></div></div></div>
-  <p class="note">Nesta prévia, a lista de jogadores é independente dos filtros de período, campeonato e adversário. Assim, um atleta sem convocação no recorte continua visível, com pontos cinza. A largura por jogo foi reduzida para cerca de 30% da configuração anterior (aproximadamente 25 px por data). As datas aparecem na vertical, em DD/MM. Os nomes ficam fixos à esquerda mesmo durante a rolagem horizontal. Role verticalmente para percorrer até 35 jogadores e horizontalmente para percorrer os jogos.</p>
-</section>
-<script>
-const API_KEY = 'AIzaSyB7mXFld0FYeZzr_0zNptLKxu2Sn3CEH2w';
-const SPREADSHEET_ID = '1XAI5jFEFeXic73aFvOXYMs70SixhKlVhEriJup2G2FA';
-let rows = [];
-let chart = null;
-const $ = id => document.getElementById(id);
-const norm = value => String(value ?? '').trim().toLocaleLowerCase('pt-BR');
-const isReference = name => norm(name).normalize('NFD').replace(/[\u0300-\u036f]/g,'') === 'referencia';
-function parseDate(value){
-  const s=String(value??'').trim();
-  let y,m,d;
-  if(/^\d{4}-\d{2}-\d{2}$/.test(s)){[y,m,d]=s.split('-').map(Number)}
-  else if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){[d,m,y]=s.split('/').map(Number)}
-  else return null;
-  const dt=new Date(y,m-1,d);
-  return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d?dt:null;
-}
-function dateLabel(value){const d=parseDate(value);return d?String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'):String(value??'')}
-function dateInputValue(value){const d=parseDate(value);return d?d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'):''}
-function uniqueSorted(values){return [...new Set(values.map(v=>String(v??'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}))}
-function addOptions(id,values,firstLabel){const select=$(id);select.innerHTML='';const first=document.createElement('option');first.value='';first.textContent=firstLabel;select.appendChild(first);values.forEach(value=>{const o=document.createElement('option');o.value=value;o.textContent=value;select.appendChild(o)})}
-function gameKey(row){return JSON.stringify([String(row[1]??'').trim(),norm(row[2]),norm(row[3])])}
-function fillFilters(){
-  const players=uniqueSorted(rows.filter(r=>r[0]&&!isReference(r[0])).map(r=>r[0]));
-  addOptions('player',players,'Todos os jogadores');
-  addOptions('opponent',uniqueSorted(rows.filter(r=>r[2]&&!isReference(r[0])).map(r=>r[2])),'Todos');
-  addOptions('competition',uniqueSorted(rows.filter(r=>r[3]&&!isReference(r[0])).map(r=>r[3])),'Todos');
-}
-function draw(){
-  const selectedPlayer=$('player').value, opponent=$('opponent').value, competition=$('competition').value;
-  const start=$('start').value?parseDate($('start').value):null, end=$('end').value?parseDate($('end').value):null;
-  const filteredGamesRows=rows.filter(r=>{
-    if(!r[1]||isReference(r[0]))return false;
-    const d=parseDate(r[1]);
-    return (!opponent||r[2]===opponent)&&(!competition||r[3]===competition)&&(!start||(d&&d>=start))&&(!end||(d&&d<=end));
-  });
-  const gamesMap=new Map();
-  filteredGamesRows.forEach(r=>{if(parseDate(r[1]))gamesMap.set(gameKey(r),r)});
-  const games=[...gamesMap.values()].sort((a,b)=>parseDate(a[1])-parseDate(b[1])||String(a[3]??'').localeCompare(String(b[3]??''),'pt-BR')||String(a[2]??'').localeCompare(String(b[2]??''),'pt-BR'));
-  // Elenco mestre: não aplicar filtros de data, campeonato ou adversário aqui.
-  const playersMap=new Map();
-  rows.forEach(r=>{if(!r[0]||isReference(r[0]))return;const key=norm(r[0]);if(!playersMap.has(key))playersMap.set(key,r[0])});
-  let players=[...playersMap.entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR',{sensitivity:'base'}));
-  if(selectedPlayer)players=players.filter(([,name])=>name===selectedPlayer);
-  const called=new Set(filteredGamesRows.filter(r=>r[0]&&!isReference(r[0])).map(r=>JSON.stringify([gameKey(r),norm(r[0])])));
-  const rowHeight=10;
-  const plotWidth=Math.max($('chartShell').clientWidth-212, games.length*25, 240);
-  const height=Math.max(players.length,1)*rowHeight+60;
-  $('chartTrack').style.height=height+'px';
-  $('namesColumn').style.height=(players.length*rowHeight+8)+'px';
-  $('namesColumn').innerHTML=players.map(([,name])=>{
-    const safeName=String(name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const safeTitle=safeName.replace(/"/g,'&quot;');
-    return '<div class="name-row" title="'+safeTitle+'">'+safeName+'</div>';
-  }).join('');
-  $('chartInner').style.width=plotWidth+'px';$('chartInner').style.height=height+'px';
-  $('timeline').style.width=plotWidth+'px';$('timeline').style.height=height+'px';
-  if(chart)chart.destroy();
-  const labels=games.map(g=>dateLabel(g[1]));
-  const datasets=players.map(([key,name],index)=>({
-    label:name,
-    data:games.map((g,gameIndex)=>({x:gameIndex,y:index})),
-    showLine:false,
-    pointRadius:2.5,
-    pointHoverRadius:4,
-    pointHitRadius:6,
-    borderWidth:0,
-    backgroundColor:games.map(g=>called.has(JSON.stringify([gameKey(g),key]))?'#16a34a':'#d1d5db'),
-    borderColor:games.map(g=>called.has(JSON.stringify([gameKey(g),key]))?'#16a34a':'#d1d5db')
-  }));
-  chart=new Chart($('timeline').getContext('2d'),{
-    type:'line',data:{datasets},
-    options:{
-      responsive:false,maintainAspectRatio:false,animation:false,
-      interaction:{mode:'nearest',intersect:true},
-      layout:{padding:{top:8,right:12,bottom:12,left:8}},
-      plugins:{legend:{display:false},tooltip:{callbacks:{
-        title:items=>{const g=games[items[0]?.dataIndex];return g?[g[1],g[2]||'',g[3]||''].filter(Boolean).join(' — '):''},
-        label:ctx=>{const g=games[ctx.dataIndex],player=players[ctx.datasetIndex];return (player?.[1]||'')+': '+(g&&called.has(JSON.stringify([gameKey(g),player?.[0]]))?'Convocado':'Não convocado')}
-      }}},
-      scales:{
-        x:{type:'linear',min:-0.5,max:Math.max(games.length-0.5,0.5),grid:{display:false},border:{display:true},title:{display:false},
-          afterBuildTicks:axis=>{axis.ticks=games.map((_,i)=>({value:i}))},
-          ticks:{autoSkip:false,minRotation:90,maxRotation:90,padding:4,font:{size:9},callback:value=>Number.isInteger(Number(value))?(labels[Number(value)]||''):''}
-        },
-        y:{reverse:true,min:-0.5,max:Math.max(players.length-0.5,0.5),grid:{color:'rgba(148,163,184,.16)',drawTicks:false},border:{display:false},
-          afterBuildTicks:axis=>{axis.ticks=players.map((_,i)=>({value:i}))},
-          ticks:{display:false,stepSize:1,padding:0,font:{size:8}}
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prévia fiel — Gerenciador de Jogos</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="convocacoes-preview-script.js" defer></script>
+  <link rel="stylesheet" href="convocacoes-preview-style.css">
+  <style>
+    @media (max-width: 640px) {
+      details[open] > summary + * {
+        animation: sweep .5s ease-in-out;
+      }
+      @keyframes sweep {
+        0%    {opacity: 0; transform: translateY(-10px);}
+        100%  {opacity: 1; transform: translateY(0);}
+      }
+      details > summary {
+        list-style: none;
+      }
+      details > summary::after {
+        content: "▼";
+        float: right;
+        font-size: 1.5rem;
+        transition: transform 0.3s ease;
+      }
+      details[open] > summary::after {
+        transform: rotate(180deg);
       }
     }
-  });
-  $('summary').textContent=players.length+' jogadores · '+games.length+' jogos';
-  $('status').className='status';
-  $('status').textContent=games.length?'Prévia atualizada. Lista de jogadores: '+players.length+'. Jogos no recorte: '+games.length+'.':'Nenhum jogo encontrado para os filtros selecionados.';
-}
-async function init(){
-  try{
-    const url='https://sheets.googleapis.com/v4/spreadsheets/'+SPREADSHEET_ID+'/values/Sheet2!A1:D1000?key='+API_KEY;
-    const response=await fetch(url);
-    if(!response.ok)throw new Error('A API da planilha retornou HTTP '+response.status+'.');
-    const data=await response.json();
-    if(!data.values||data.values.length<2)throw new Error('A aba Sheet2 não retornou registros.');
-    rows=data.values.slice(1).filter(r=>r&&r.length>=4);
-    fillFilters();draw();
-  }catch(error){$('status').className='status error';$('status').textContent='Não foi possível carregar a prévia: '+error.message}
-}
-$('apply').addEventListener('click',draw);
-$('reset').addEventListener('click',()=>{$('player').value='';$('opponent').value='';$('competition').value='';$('start').value='';$('end').value='';draw()});
-window.addEventListener('resize',()=>{if(rows.length)draw()});
-init();
-</script>
+  </style>
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+  </script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="preview-notice">PRÉVIA DE VALIDAÇÃO — esta página usa a estrutura, os filtros e o estilo da aplicação real. As mudanças aqui não alteram o dashboard principal.</div>
+  <header class="bg-blue-600 text-white p-4 flex flex-col justify-between items-center">
+    <h1 class="text-xl font-bold mb-2">Gerenciador de Jogos</h1>
+    <nav class="flex flex-col w-full">
+      <div class="flex w-full mb-2">
+        <button id="tab1-btn" class="tab-button active-tab flex-1 text-center" data-tab="tab1" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">Jogos</button>
+        <button id="tab2-btn" class="tab-button flex-1 text-center" data-tab="tab2" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none;">Tabela</button>
+        <button id="tab3-btn" class="tab-button flex-1 text-center" data-tab="tab3" style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 0 4px 4px 0;">Resumo</button>
+      </div>
+      <div class="flex w-full">
+        <button id="tab4-btn" class="tab-button flex-1 text-center" data-tab="tab4" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none; border-radius: 4px 0 0 4px;">Convocações</button>
+        <button id="tab5-btn" class="tab-button flex-1 text-center" data-tab="tab5" style="padding: 8px 16px; border: 1px solid #ccc; border-right: none;">Classificação</button>
+        <button id="tab6-btn" class="tab-button flex-1 text-center" data-tab="tab6" style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 0 4px 4px 0;">Placar</button>
+      </div>
+    </nav>
+  </header>
+
+  <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4 mx-4" role="alert"></div>
+
+  <div id="upcomingGames" class="mt-4 mx-4 hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+    <h2 class="font-bold">Jogos nos Próximos 3 Dias</h2>
+    <ul id="upcomingGamesList" class="list-disc list-inside"></ul>
+  </div>
+
+  <div class="container mx-auto p-4">
+    <div id="tab1" class="tab-content active">
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="campeonato-tab1" class="block text-sm font-medium text-gray-700">Campeonato:</label>
+              <select id="campeonato-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataInicio-tab1" class="block text-sm font-medium text-gray-700">Data Início:</label>
+              <input type="date" id="dataInicio-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="dataFim-tab1" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+              <input type="date" id="dataFim-tab1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab1" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab1" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+            <!--<button id="pivotMode-tab1" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>--!>
+          </div>
+        </details>
+      </div>
+      <div class="overflow-x-auto">
+        <table id="jogosTable-tab1" class="min-w-full bg-white border border-gray-300">
+          <thead id="tableHead-tab1"></thead>
+          <tbody id="jogosBody-tab1"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab2" class="tab-content hidden">
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="campeonato-tab2" class="block text-sm font-medium text-gray-700">Campeonato:</label>
+              <select id="campeonato-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataInicio-tab2" class="block text-sm font-medium text-gray-700">Data Início:</label>
+              <input type="date" id="dataInicio-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="dataFim-tab2" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+              <input type="date" id="dataFim-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="time-tab2" class="block text-sm font-medium text-gray-700">Time:</label>
+              <select id="time-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="local-tab2" class="block text-sm font-medium text-gray-700">Local:</label>
+              <select id="local-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="rodada-tab2" class="block text-sm font-medium text-gray-700">Rodada:</label>
+              <select id="rodada-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="diaSemana-tab2" class="block text-sm font-medium text-gray-700">Dia da Semana:</label>
+              <select id="diaSemana-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="gol-tab2" class="block text-sm font-medium text-gray-700">Gol:</label>
+              <select id="gol-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="assistencias-tab2" class="block text-sm font-medium text-gray-700">Assistências:</label>
+              <select id="assistencias-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="vitoria-tab2" class="block text-sm font-medium text-gray-700">Vitória:</label>
+              <select id="vitoria-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+                <option value="1">Sim</option>
+                <option value="0">Não</option>
+              </select>
+            </div>
+            <div>
+              <label for="empate-tab2" class="block text-sm font-medium text-gray-700">Empate:</label>
+              <select id="empate-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+                <option value="1">Sim</option>
+                <option value="0">Não</option>
+              </select>
+            </div>
+            <div>
+              <label for="derrota-tab2" class="block text-sm font-medium text-gray-700">Derrota:</label>
+              <select id="derrota-tab2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+                <option value="1">Sim</option>
+                <option value="0">Não</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab2" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab2" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+            <!--<button id="pivotMode-tab2" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>--!>
+          </div>
+        </details>
+      </div>
+      <div class="overflow-x-auto">
+        <table id="jogosTable-tab2" class="min-w-full bg-white border border-gray-300">
+          <thead id="tableHead-tab2"></thead>
+          <tbody id="jogosBody-tab2"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab3" class="tab-content hidden">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">Jogos</h3>
+          <p id="bigNumberJogos-tab3" class="text-2xl font-bold">0</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">Gols</h3>
+          <p id="bigNumberGols-tab3" class="text-2xl font-bold">0</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">Assistências</h3>
+          <p id="bigNumberAssistencias-tab3" class="text-2xl font-bold">0</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">Média</h3>
+          <p id="bigNumberMedia-tab3" class="text-2xl font-bold">0.00</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">Vitórias</h3>
+          <p id="bigNumberVitorias-tab3" class="text-2xl font-bold">0</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-medium text-gray-700">Empates</h3>
+          <p id="bigNumberEmpates-tab3" class="text-2xl font-bold">0</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">Derrotas</h3>
+          <p id="bigNumberDerrotas-tab3" class="text-2xl font-bold">0</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">Gol a Cada</h3>
+          <p id="bigNumberGolACada-tab3" class="text-2xl font-bold">0.00</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab4" class="tab-content hidden">
+      <div class="flex gap-2 mb-4" role="group" aria-label="Visão do gráfico de convocações">
+        <button id="convocacoes-visao1" type="button" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" aria-pressed="true">Visão 1</button>
+        <button id="convocacoes-visao2" type="button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" aria-pressed="false">Visão 2</button>
+      </div>
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="jogador-tab4" class="block text-sm font-medium text-gray-700">Jogador:</label>
+              <select id="jogador-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="adversario-tab4" class="block text-sm font-medium text-gray-700">Adversário:</label>
+              <select id="adversario-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="campeonato-tab4" class="block text-sm font-medium text-gray-700">Campeonato:</label>
+              <select id="campeonato-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataInicio-tab4" class="block text-sm font-medium text-gray-700">Data Início:</label>
+              <input type="date" id="dataInicio-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="dataFim-tab4" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+              <input type="date" id="dataFim-tab4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab4" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab4" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+          </div>
+        </details>
+      </div>
+      <div id="convocacoesChartContainer" class="w-full overflow-x-auto"><div id="convocacoesChartInner" class="relative w-full"><canvas id="convocacoesChart" class="block"></canvas></div></div>
+    </div>
+
+    <div id="tab5" class="tab-content hidden">
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="time-tab5" class="block text-sm font-medium text-gray-700">Time:</label>
+              <select id="time-tab5" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab5" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab5" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+            <!--<button id="pivotMode-tab5" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>--!>
+          </div>
+        </details>
+      </div>
+      <div class="overflow-x-auto">
+        <table id="jogosTable-tab5" class="min-w-full bg-white border border-gray-300">
+          <thead id="tableHead-tab5"></thead>
+          <tbody id="jogosBody-tab5"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab6" class="tab-content hidden">
+
+
+      <div class="filters mb-4">
+        <h2 class="text-lg font-semibold">Filtros</h2>
+        <details class="md:open">
+          <summary class="cursor-pointer font-semibold">Abrir Filtros</summary>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <div>
+              <label for="time-tab6" class="block text-sm font-medium text-gray-700">Time:</label>
+              <select id="time-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataInicio-tab6" class="block text-sm font-medium text-gray-700">Data Início:</label>
+              <input type="date" id="dataInicio-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+              <label for="dataFim-tab6" class="block text-sm font-medium text-gray-700">Data Fim:</label>
+              <input type="date" id="dataFim-tab6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button id="aplicarFiltros-tab6" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Aplicar Filtros</button>
+            <button id="limparFiltros-tab6" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Limpar Filtros</button>
+            <!--<button id="pivotMode-tab6" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Transpor</button>--!>
+          </div>
+        </details>
+      </div>
+
+
+
+
+      <div class="overflow-x-auto">
+        <table id="jogosTable-tab6" class="min-w-full bg-white border border-gray-300">
+          <thead id="tableHead-tab6"></thead>
+          <tbody id="jogosBody-tab6"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          tabButtons.forEach(btn => {
+            btn.classList.remove('active-tab');
+            btn.style.backgroundColor = '#e5e7eb';
+            btn.style.color = 'black';
+          });
+
+          this.classList.add('active-tab');
+          this.style.backgroundColor = '#3b82f6';
+          this.style.color = 'white';
+
+          tabContents.forEach(content => {
+            content.classList.remove('active');
+            content.style.display = 'none';
+          });
+
+          const tabId = this.getAttribute('data-tab');
+          const targetContent = document.getElementById(tabId);
+          targetContent.classList.add('active');
+          targetContent.style.display = 'block';
+        });
+      });
+
+      tabButtons[0].click();
+    });
+  </script>
+<!--<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d3744abf10bfec',t:'MTc0NjgxNzM3OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+--!>
 </body>
 </html>
