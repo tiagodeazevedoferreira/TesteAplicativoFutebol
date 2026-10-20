@@ -995,8 +995,8 @@ function displayTab4() {
 
     // Visão 2: matriz compacta de células por jogador e jogo.
     // Cada célula indica convocação (verde) ou ausência (cinza).
-    const alturaPorJogador = 18;
-    const larguraPorJogo = 14;
+    const alturaPorJogador = 21;
+    const larguraPorJogo = 8;
     const larguraMinima = chartContainer.clientWidth || 320;
     chartInner.style.width = Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo) + 'px';
     const alturaGrafico = Math.max(jogadores.length, 1) * alturaPorJogador + 64;
@@ -1022,9 +1022,9 @@ function displayTab4() {
         showLine: false,
         borderWidth: 0,
         pointStyle: 'rectRounded',
-        pointRadius: 6,
-        pointHoverRadius: 6.5,
-        pointHitRadius: 7,
+        pointRadius: 3.5,
+        pointHoverRadius: 4,
+        pointHitRadius: 4,
         tension: 0,
         fill: false
     }));
