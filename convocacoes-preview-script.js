@@ -978,9 +978,10 @@ function displayTab4() {
             .map(row => JSON.stringify([chaveJogo(row), normalizePlayerName(row[0])]))
     );
 
-    // Visão 2: uma única faixa por jogador; a cor do ponto indica o status.
-    const alturaPorJogador = 18;
-    const larguraPorJogo = 25;
+    // Visão 2: matriz compacta de células por jogador e jogo.
+    // Cada célula indica convocação (verde) ou ausência (cinza).
+    const alturaPorJogador = 21;
+    const larguraPorJogo = 16;
     const larguraMinima = chartContainer.clientWidth || 320;
     chartInner.style.width = Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo) + 'px';
     const alturaGrafico = Math.max(jogadores.length, 1) * alturaPorJogador + 64;
@@ -1005,9 +1006,10 @@ function displayTab4() {
         ),
         showLine: false,
         borderWidth: 0,
-        pointRadius: 3,
-        pointHoverRadius: 4.5,
-        pointHitRadius: 7,
+        pointStyle: 'rectRounded',
+        pointRadius: 7,
+        pointHoverRadius: 7.5,
+        pointHitRadius: 8,
         tension: 0,
         fill: false
     }));
