@@ -164,12 +164,18 @@ function parseDateString(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return null;
     const value = dateStr.trim();
     let year, month, day;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        [year, month, day] = value.split('-').map(Number);
-    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
-        [day, month, year] = value.split('/').map(Number);
+    // Aceita datas puras ou acompanhadas de horário, tanto em ISO quanto em DD/MM/AAAA.
+    let match = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+    if (match) {
+        year = Number(match[1]);
+        month = Number(match[2]);
+        day = Number(match[3]);
     } else {
-        return null;
+        match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s.*)?$/);
+        if (!match) return null;
+        day = Number(match[1]);
+        month = Number(match[2]);
+        year = Number(match[3]);
     }
     const date = new Date(year, month - 1, day);
     return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
@@ -179,11 +185,10 @@ function parseDateString(dateStr) {
 
 function formatConvocacoesDate(dateStr) {
     const date = parseDateString(dateStr);
-    return date
-        ? String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0')
-        : '';
+    // Mantém o rótulo visível caso a fonte acrescente horário à data.
+    if (!date) return String(dateStr || '').trim();
+    return String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0');
 }
-
 function isValidDateFormat(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return false;
     const regex = /^\d{2}\/\d{2}\/\d{4}$/;
