@@ -1024,7 +1024,7 @@ function displayTab4() {
         showLine: false,
         borderWidth: 0,
         pointStyle: 'rectRounded',
-        pointRadius: 10,
+        pointRadius: 5,
         pointHoverRadius: 3,
         pointHitRadius: 4,
         tension: 0,
