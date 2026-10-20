@@ -160,6 +160,30 @@ function convertDateFormat(dateStr) {
     return dateStr;
 }
 
+function parseDateString(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    const value = dateStr.trim();
+    let year, month, day;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        [year, month, day] = value.split('-').map(Number);
+    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+        [day, month, year] = value.split('/').map(Number);
+    } else {
+        return null;
+    }
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
+        ? date
+        : null;
+}
+
+function formatConvocacoesDate(dateStr) {
+    const date = parseDateString(dateStr);
+    return date
+        ? String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0')
+        : '';
+}
+
 function isValidDateFormat(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return false;
     const regex = /^\d{2}\/\d{2}\/\d{4}$/;
@@ -645,9 +669,12 @@ function filterDataSheet2(data, filters) {
 
         const [jogador, dataStr, adversario, campeonato] = row;
 
-        const dataInicio = filters.dataInicio ? new Date(filters.dataInicio) : null;
-        const dataFim = filters.dataFim ? new Date(filters.dataFim) : null;
-        const dataJogo = dataStr ? new Date(dataStr.split('/').reverse().join('-')) : null;
+        // "Referência" é um registro auxiliar, não um jogador, e não deve aparecer no gráfico.
+        if (normalizeString(jogador) === 'referencia') return false;
+
+        const dataInicio = filters.dataInicio ? parseDateString(filters.dataInicio) : null;
+        const dataFim = filters.dataFim ? parseDateString(filters.dataFim) : null;
+        const dataJogo = parseDateString(dataStr);
 
         return (
             (!filters.jogador || jogador === filters.jogador) &&
@@ -906,8 +933,8 @@ function displayTab4() {
     });
 
     const jogosOrdenados = Array.from(jogosPorChave.values()).sort((a, b) => {
-        const dataA = new Date((a[1] || '').split('/').reverse().join('-'));
-        const dataB = new Date((b[1] || '').split('/').reverse().join('-'));
+        const dataA = parseDateString(a[1]) || new Date(0);
+        const dataB = parseDateString(b[1]) || new Date(0);
         return dataA - dataB ||
             String(a[3] || '').localeCompare(String(b[3] || ''), 'pt-BR') ||
             String(a[2] || '').localeCompare(String(b[2] || ''), 'pt-BR');
@@ -930,12 +957,12 @@ function displayTab4() {
     );
 
     // Visão 2: uma única faixa por jogador; a cor do ponto indica o status.
-    const alturaPorJogador = 32;
+    const alturaPorJogador = 46;
     const larguraPorJogo = 82;
     const larguraMinima = chartContainer.clientWidth || 320;
     chartInner.style.width = Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo) + 'px';
     canvas.style.width = '100%';
-    canvas.style.height = (Math.max(jogadores.length, 1) * alturaPorJogador + 42) + 'px';
+    canvas.style.height = (Math.max(jogadores.length, 1) * alturaPorJogador + 64) + 'px';
     const nomesFormatados = jogadores.map(([, nome]) => capitalizeWords(nome));
     const verdeConvocado = '#16a34a';
     const cinzaNaoConvocado = '#d1d5db';
@@ -964,12 +991,7 @@ function displayTab4() {
     convocacoesChart = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: {
-            labels: jogosOrdenados.map(jogo => {
-                const partes = String(jogo[1] || '').split('/');
-                return partes.length >= 2
-                    ? partes[0].padStart(2, '0') + '/' + partes[1].padStart(2, '0')
-                    : jogo[1];
-            }),
+            labels: jogosOrdenados.map(jogo => formatConvocacoesDate(jogo[1])),
             datasets
         },
         options: {
@@ -1003,8 +1025,9 @@ function displayTab4() {
                         autoSkip: false,
                         maxRotation: 0,
                         minRotation: 0,
-                        padding: 5,
-                        font: { size: 9 }
+                        padding: 8,
+                        font: { size: 10 },
+                        callback: (value, index) => formatConvocacoesDate(jogosOrdenados[index]?.[1])
                     }
                 },
                 y: {
