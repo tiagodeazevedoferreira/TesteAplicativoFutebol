@@ -1037,8 +1037,8 @@ function displayTab4() {
                     title: { display: true, text: 'Data' },
                     ticks: {
                         autoSkip: false,
-                        maxRotation: 0,
-                        minRotation: 0,
+                        maxRotation: 90,
+                        minRotation: 90,
                         padding: 8,
                         font: { size: 10 },
                         callback: (value, index) => formatConvocacoesDate(jogosOrdenados[index]?.[4])
