@@ -996,9 +996,11 @@ function displayTab4() {
     // Visão 2: matriz compacta de células por jogador e jogo.
     // Cada célula indica convocação (verde) ou ausência (cinza).
     const alturaPorJogador = 21;
-    const larguraPorJogo = 8;
-    const larguraMinima = chartContainer.clientWidth || 320;
-    chartInner.style.width = Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo) + 'px';
+    // A Visão 2 deve caber na largura disponível, sem expandir por quantidade de jogos.
+    chartContainer.style.overflowX = 'hidden';
+    chartInner.style.width = '100%';
+    chartInner.style.minWidth = '0';
+    chartInner.style.maxWidth = '100%';
     const alturaGrafico = Math.max(jogadores.length, 1) * alturaPorJogador + 64;
     chartInner.style.height = `${alturaGrafico}px`;
     canvas.style.width = '100%';
@@ -1022,8 +1024,8 @@ function displayTab4() {
         showLine: false,
         borderWidth: 0,
         pointStyle: 'rectRounded',
-        pointRadius: 3.5,
-        pointHoverRadius: 4,
+        pointRadius: 2.5,
+        pointHoverRadius: 3,
         pointHitRadius: 4,
         tension: 0,
         fill: false
