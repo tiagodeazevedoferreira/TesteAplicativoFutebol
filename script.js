@@ -512,10 +512,6 @@ function displayData(data, filteredData, tabId) {
     thead.appendChild(trHead);
 
     console.log(`Total de linhas filtradas (tabela normal) para ${tabId}:`, filteredData.length);
-    if (filteredData.length === 0) {
-        showError('Nenhum dado encontrado com os filtros aplicados ou dados não carregados.');
-    }
-
     let hasInconsistency = false;
     filteredData.forEach((row, rowIndex) => {
         const tr = document.createElement('tr');
