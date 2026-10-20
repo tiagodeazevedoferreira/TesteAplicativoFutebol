@@ -874,7 +874,7 @@ function displayTab4() {
         const contagens = jogadoresOrdenados.map(jogador => convocacoesPorJogador[jogador]);
 
         chartInner.style.width = '100%';
-        const alturaGrafico = Math.max(jogadoresOrdenados.length, 1) * 40;
+        const alturaGrafico = Math.max(jogadoresOrdenados.length, 1) * 20;
         chartInner.style.height = `${alturaGrafico}px`;
         canvas.style.width = '100%';
         canvas.style.height = `${alturaGrafico}px`;
@@ -959,7 +959,7 @@ function displayTab4() {
     );
 
     // Visão 2: uma única faixa por jogador; a cor do ponto indica o status.
-    const alturaPorJogador = 46;
+    const alturaPorJogador = 23;
     const larguraPorJogo = 82;
     const larguraMinima = chartContainer.clientWidth || 320;
     chartInner.style.width = Math.max(larguraMinima, jogosOrdenados.length * larguraPorJogo) + 'px';
